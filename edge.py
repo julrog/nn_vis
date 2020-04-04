@@ -3,14 +3,34 @@ from typing import List
 from pyrr import Vector3
 import numpy as np
 
+from compute_shader import ComputeShader, ComputeShaderHandler
+from texture import Texture
+
 
 class Edge:
     def __init__(self, start_position: Vector3, end_position: Vector3):
         self.start: Vector3 = start_position
         self.end: Vector3 = end_position
-        self.sample_points: List[Vector3] | None = None
+        self.sample_points: List[Vector3] = [self.start, self.end]
         self.sample_length: float = 0.0
         self.squared_sample_length: float = 0.0
+
+    def set_sample_points(self, sample_length: float, data):
+        self.sample_length = sample_length
+        self.squared_sample_length = self.sample_length * self.sample_length
+        self.sample_points = []
+
+        def group_wise(it):
+            it = iter(it)
+            while True:
+                yield next(it), next(it), next(it), next(it)
+
+        for x, y, z, w in group_wise(data):
+            if w > 0.0:
+                self.sample_points.append(Vector3([x, y, z]))
+            else:
+                self.sample_points.append(Vector3([x, y, z]))
+                return
 
     def sample(self, sample_length: float):
         self.sample_length = sample_length
@@ -73,7 +93,15 @@ class Edge:
 
 
 class EdgeHandler:
-    def __init__(self, sample_length: float):
+    def __init__(self, sample_length: float, use_compute: bool = False):
+        self.use_compute = use_compute
+        if self.use_compute:
+            self.sample_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_sampler",
+                                                                                      "edge_sample.comp")
+            self.edge_sample_texture_read: Texture or None = None
+            self.edge_sample_texture_write: Texture or None = None
+            self.max_distance: float = 0
+            self.max_sample_points: int = 0
         self.edges: List[Edge] = []
         self.sampled: bool = False
         self.sample_length: float = sample_length
@@ -84,22 +112,67 @@ class EdgeHandler:
             while True:
                 yield next(it), next(it), next(it)
 
-        vec_nodes_layer_one = [Vector3([x, y, z]) for x, y, z in group_wise(node_positions_layer_one)]
-        vec_nodes_layer_two = [Vector3([x, y, z]) for x, y, z in group_wise(node_positions_layer_two)]
+        vec_nodes_layer_one: List[Vector3] = [Vector3([x, y, z]) for x, y, z in group_wise(node_positions_layer_one)]
+        vec_nodes_layer_two: List[Vector3] = [Vector3([x, y, z]) for x, y, z in group_wise(node_positions_layer_two)]
         self.edges = []
         for node_one in vec_nodes_layer_one:
             for node_two in vec_nodes_layer_two:
                 self.edges.append(Edge(node_one, node_two))
 
-    def sample_edges(self):
         for edge in self.edges:
-            edge.sample(self.sample_length)
+            point_data = []
+            point_data.extend(edge.start.data)
+            point_data.append(1.0)
+            point_data.extend(edge.end.data)
+
+        if self.use_compute:
+            for node_one in vec_nodes_layer_one:
+                for node_two in vec_nodes_layer_two:
+                    test_distance = (node_one - node_two).length
+                    if test_distance > self.max_distance:
+                        self.max_distance = test_distance
+            self.max_sample_points = int((self.max_distance * 2.0) / self.sample_length)
+            self.edge_sample_texture_read = Texture(self.max_sample_points, len(self.edges))
+            self.edge_sample_texture_write = Texture(self.max_sample_points, len(self.edges))
+            initial_data: List[float] = []
+            for edge in self.edges:
+                point_data = []
+                point_data.extend(edge.start.data)
+                point_data.append(1.0)
+                point_data.extend(edge.end.data)
+                point_data.append(0.0)
+                initial_data.extend(point_data)
+                initial_data.extend([0] * (self.max_sample_points * 4 - len(point_data)))
+            self.edge_sample_texture_read.setup(initial_data)
+            self.edge_sample_texture_write.setup(initial_data)
+
+    def sample_edges(self):
+        if self.use_compute:
+            self.sample_compute_shader.set_textures(
+                [(self.edge_sample_texture_read, "read"), (self.edge_sample_texture_write, "write")])
+            self.sample_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
+            self.sample_compute_shader.use(len(self.edges))
+            self.edge_sample_texture_write.bind("read")
+            edge_sample_data = self.edge_sample_texture_write.read()
+            edge_sample_data = edge_sample_data.flatten()
+
+            for i in range(len(self.edges)):
+                start_split = i * self.max_sample_points * 4 if i is not 0 else 0
+                end_split = ((i + 1) * self.max_sample_points * 4) - 0 if i is not len(self.edges) - 1 else None
+                split_data = edge_sample_data[start_split: end_split]
+                self.edges[i].set_sample_points(self.sample_length, split_data)
+            self.edge_sample_texture_read.deactivate()  # otherwise the binding positions are wrong next time TODO better solution
+            self.edge_sample_texture_write.deactivate()  # otherwise the binding positions are wrong next time TODO better solution
+            self.edge_sample_texture_read, self.edge_sample_texture_write = self.edge_sample_texture_write, self.edge_sample_texture_read
+        else:
+            for edge in self.edges:
+                edge.sample(self.sample_length)
         self.sampled = True
 
     def generate_buffer_data(self):
         buffer_data: List[Vector3] = []
         if not self.sampled:
-            self.sample_edges()
+            pass  # self.sample_edges()
 
         for edge in self.edges:
             for point in edge.sample_points:
@@ -115,5 +188,10 @@ class EdgeHandler:
             edge.sample_noise(strength)
 
     def resample(self, sample_length: float = None):
-        for edge in self.edges:
-            edge.resample(sample_length)
+        if sample_length is not None:
+            self.sample_length = sample_length
+        if self.use_compute:
+            self.sample_edges()
+        else:
+            for edge in self.edges:
+                edge.resample(self.sample_length)

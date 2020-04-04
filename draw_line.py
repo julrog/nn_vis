@@ -2,7 +2,6 @@ import glfw
 from OpenGL.GL import *
 from pyrr import Vector3
 
-from compute_shader import ComputeShaderHandler, ComputeTarget
 from edge import EdgeHandler
 from render_helper import VertexDataHandler
 from shader import ShaderHandler
@@ -37,20 +36,21 @@ layer_two = [0.5, -0.3, 0.0,
              0.5, 0, 0.0,
              0.5, 0.3, 0.0]
 
-edge_handler = EdgeHandler((Vector3([-0.5, -0.3, 0.0]) - Vector3([0.5, -0.3, 0.0])).length / 100.0)
+sample_length = (Vector3([-0.5, -0.3, 0.0]) - Vector3([0.5, -0.3, 0.0])).length / 100.0
+edge_handler = EdgeHandler(sample_length, True)
 edge_handler.set_data(layer_one, layer_two)
 edge_handler.sample_edges()
-edge_handler.sample_noise(1.0)
-sample_length = (Vector3([-0.5, -0.3, 0.0]) - Vector3([0.5, -0.3, 0.0])).length / 100.0
-edge_handler.resample(sample_length)
-for _ in range(10):
-    edge_handler.resample()
-    edge_handler.sample_noise(0.5)
+# edge_handler.sample_noise(1.0)
+#sample_length = (Vector3([-0.5, -0.3, 0.0]) - Vector3([0.5, -0.3, 0.0])).length / 100.0
+# edge_handler.resample(sample_length)
+# for _ in range(10):
+    # edge_handler.resample()
+    # edge_handler.sample_noise(0.5)
 
 sampled_point_buffer = edge_handler.generate_buffer_data()
 sampled_points = edge_handler.get_points()
 
-edge_handler.resample()
+# edge_handler.resample()
 
 resampled_point_buffer = edge_handler.generate_buffer_data()
 resampled_points = edge_handler.get_points()
@@ -73,14 +73,15 @@ print(glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2))
 print(glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS))
 print(glGetIntegerv(GL_MAX_COMPUTE_SHARED_MEMORY_SIZE))
 
-compute_shader_handler = ComputeShaderHandler()
+'''compute_shader_handler = ComputeShaderHandler()
 compute_shader = compute_shader_handler.create("test", "test.comp")
-compute_shader_target = ComputeTarget(10, 10)
-compute_shader.set_target(compute_shader_target)
+compute_shader_texture = Texture(10, 10)
+compute_shader_texture.setup()
+compute_shader.set_textures([(compute_shader_texture, "write")])
 compute_shader.set_uniform_data([('alpha', 0.42, 'float')])
-compute_shader.use()
+compute_shader.use(10)
 
-print(compute_shader_target.texture.read())
+print(compute_shader_texture.read())'''
 
 glUseProgram(shader.shader_handle)
 point_color_loc = glGetUniformLocation(shader.shader_handle, "point_color")
@@ -96,15 +97,17 @@ while window.active():
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-    edge_handler.sample_noise(0.5)
+    #edge_handler.sample_noise(0.5)
 
     sampled_point_buffer = edge_handler.generate_buffer_data()
     sampled_points = edge_handler.get_points()
 
-    edge_handler.resample()
+    #edge_handler.resample()
 
     resampled_point_buffer = edge_handler.generate_buffer_data()
     resampled_points = edge_handler.get_points()
+
+    glUseProgram(shader.shader_handle)
 
     sampled_vertex_data_handler.load_data(sampled_point_buffer)
     resampled_vertex_data_handler.load_data(resampled_point_buffer)

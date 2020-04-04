@@ -7,17 +7,6 @@ from OpenGL.GL.shaders import compileProgram, compileShader
 from texture import Texture
 
 
-class ComputeTarget:
-    def __init__(self, width: int, height: int, data=None):
-        self.width: int = width
-        self.height: int = height
-        self.texture: Texture = Texture(self.width, self.height)
-        self.texture.setup(data)
-
-    def set_data(self, data):
-        self.texture.setup(data)
-
-
 def uniform_setter_function(uniform_setter: str):
     if uniform_setter is "float":
         def usf_single_float(location, data):
@@ -29,37 +18,45 @@ def uniform_setter_function(uniform_setter: str):
 class ComputeShader:
     def __init__(self, shader_src: str):
         self.shader_handle: int = compileProgram(compileShader(shader_src, GL_COMPUTE_SHADER))
-        self.target: ComputeTarget or None = None
+        self.textures: List[Tuple[Texture, str]] = []
         self.uniform_cache: Dict[str, Tuple[int, any, any]] = dict()
 
-    def set_target(self, target: ComputeTarget):
-        self.target: ComputeTarget = target
+    def set_textures(self, textures: List[Tuple[Texture, str]]):
+        self.textures: List[Tuple[Texture, str]] = textures
 
-    def use(self):
-        if self.target is None:
-            raise Exception("[COMPUTE_SHADER] No target for compute shader output set!")
-        self.target.texture.activate()
-        self.target.texture.bind()
+    def set_uniform_data(self, data: List[Tuple[str, any, any]]):
+        glUseProgram(self.shader_handle)
+        for uniform_name, uniform_data, uniform_setter in data:
+            # if uniform_name in self.uniform_cache.keys():
+            # self.uniform_cache.get(uniform_name)[1] = uniform_data
+            # else:
+            uniform_location = glGetUniformLocation(self.shader_handle, uniform_name)
+            self.uniform_cache[uniform_name] = (
+                uniform_location, uniform_data, uniform_setter_function(uniform_setter))
+
+    def use(self, width: int):
+        for texture, flag in self.textures:
+            texture.activate()
+            texture.bind(flag)
         glUseProgram(self.shader_handle)
 
         for uniform_location, uniform_data, uniform_setter in self.uniform_cache.values():
             uniform_setter(uniform_location, uniform_data)
 
-        glDispatchCompute(self.target.width, 1, 1)
+        glDispatchCompute(width, 1, 1)
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
 
-    def set_uniform_data(self, data: List[Tuple[str, any, any]]):
-        glUseProgram(self.shader_handle)
-        for uniform_name, uniform_data, uniform_setter in data:
-            if uniform_name in self.uniform_cache.keys():
-                self.uniform_cache.get(uniform_name)[1] = uniform_data
-            else:
-                uniform_location = glGetUniformLocation(self.shader_handle, uniform_name)
-                self.uniform_cache[uniform_name] = (
-                    uniform_location, uniform_data, uniform_setter_function(uniform_setter))
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
 
 
-class ComputeShaderHandler:
+class ComputeShaderHandler(metaclass=Singleton):
     def __init__(self):
         self.shader_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'shader/compute')
         self.shader_list = dict()
@@ -67,6 +64,9 @@ class ComputeShaderHandler:
     def create(self, shader_name: str, shader_file_path: str) -> ComputeShader:
         shader_src = open(os.path.join(self.shader_dir, shader_file_path), 'r').read()
         self.shader_list[shader_name] = ComputeShader(shader_src)
+        return self.shader_list[shader_name]
+
+    def get(self, shader_name: str) -> ComputeShader:
         return self.shader_list[shader_name]
 
 

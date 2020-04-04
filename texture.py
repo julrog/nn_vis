@@ -23,8 +23,9 @@ class Texture:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, self.width, self.height, 0, GL_RGBA, GL_FLOAT, data)
 
-    def bind(self):
-        glBindImageTexture(self.active_index, self.ogl_handle, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F)
+    def bind(self, flag: str):
+        ogl_flag = GL_WRITE_ONLY if flag is "write" else GL_READ_ONLY if flag is "read" else GL_READ_WRITE
+        glBindImageTexture(self.active_index, self.ogl_handle, 0, GL_FALSE, 0, ogl_flag, GL_RGBA32F)
 
     def read(self):
         self.activate()

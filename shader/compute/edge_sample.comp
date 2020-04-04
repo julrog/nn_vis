@@ -1,0 +1,43 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D img_input;
+layout(rgba32f, binding = 1) uniform image2D img_output;
+
+uniform float sample_length;
+
+void main() {
+    int current_read_index = 0;
+    int current_write_index = 0;
+
+    vec3 last_written_point = imageLoad(img_input, ivec2(current_read_index++, gl_WorkGroupID.x)).xyz;
+
+    // always store first edge point
+    float test = 0.0 + gl_WorkGroupID.x;
+    imageStore(img_output, ivec2(gl_WorkGroupID.x, current_write_index++), vec4(last_written_point.xyz, 1.0));
+
+    // initialize variables used over the next loop
+    vec3 next_point = last_written_point;
+    float is_used = 1.0;
+    float distance_to_next = 0.0;
+
+    do {
+        vec4 next_point_data = imageLoad(img_input, ivec2(current_read_index++, gl_WorkGroupID.x));
+        next_point = next_point_data.xyz;
+        is_used = next_point_data.w;
+        distance_to_next = distance(next_point, last_written_point);
+
+        while (distance_to_next >= sample_length * 0.99) {
+            float prev_distance = 0;
+            float t = (sample_length - prev_distance) / (distance_to_next - prev_distance);
+            t = clamp(t, 0.0, 1.0);
+            last_written_point = (last_written_point * (1.0 - t) + next_point * t);
+            test = 0.0 + gl_WorkGroupID.x;
+            imageStore(img_output, ivec2(current_write_index++, gl_WorkGroupID.x), vec4(last_written_point.xyz, 1.0));
+            distance_to_next = distance(next_point, last_written_point);
+        }
+    } while(is_used >= 1.0);
+
+    // always store last edge point and mark it as last with w-value 0
+    test = 0.0 + gl_WorkGroupID.x;
+    imageStore(img_output, ivec2(current_write_index++, gl_WorkGroupID.x), vec4(next_point.xyz, 0.0));
+}
