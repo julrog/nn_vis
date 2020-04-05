@@ -131,9 +131,8 @@ class EdgeHandler:
                     test_distance = (node_one - node_two).length
                     if test_distance > self.max_distance:
                         self.max_distance = test_distance
+
             self.max_sample_points = int((self.max_distance * 2.0) / self.sample_length)
-            self.edge_sample_texture_read = Texture(self.max_sample_points, len(self.edges))
-            self.edge_sample_texture_write = Texture(self.max_sample_points, len(self.edges))
             initial_data: List[float] = []
             for edge in self.edges:
                 point_data = []
@@ -143,16 +142,18 @@ class EdgeHandler:
                 point_data.append(0.0)
                 initial_data.extend(point_data)
                 initial_data.extend([0] * (self.max_sample_points * 4 - len(point_data)))
-            self.edge_sample_texture_read.setup(initial_data)
-            self.edge_sample_texture_write.setup(initial_data)
+
+            self.edge_sample_texture_read = Texture(self.max_sample_points, len(self.edges))
+            self.edge_sample_texture_write = Texture(self.max_sample_points, len(self.edges))
+            self.edge_sample_texture_read.setup(0, initial_data)
+            self.edge_sample_texture_write.setup(0, initial_data)
 
     def sample_edges(self):
         if self.use_compute:
             self.sample_compute_shader.set_textures(
-                [(self.edge_sample_texture_read, "read"), (self.edge_sample_texture_write, "write")])
+                [(self.edge_sample_texture_read, "read", 0), (self.edge_sample_texture_write, "write", 1)])
             self.sample_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
-            self.sample_compute_shader.use(len(self.edges))
-            self.edge_sample_texture_write.bind("read")
+            self.sample_compute_shader.use(len(self.edges))  # use dynamic workgroup sizes
             edge_sample_data = self.edge_sample_texture_write.read()
             edge_sample_data = edge_sample_data.flatten()
 
@@ -161,8 +162,8 @@ class EdgeHandler:
                 end_split = ((i + 1) * self.max_sample_points * 4) - 0 if i is not len(self.edges) - 1 else None
                 split_data = edge_sample_data[start_split: end_split]
                 self.edges[i].set_sample_points(self.sample_length, split_data)
-            self.edge_sample_texture_read.deactivate()  # otherwise the binding positions are wrong next time TODO better solution
-            self.edge_sample_texture_write.deactivate()  # otherwise the binding positions are wrong next time TODO better solution
+
+            # switch textures, because the written textures resembles now the current edge samples
             self.edge_sample_texture_read, self.edge_sample_texture_write = self.edge_sample_texture_write, self.edge_sample_texture_read
         else:
             for edge in self.edges:

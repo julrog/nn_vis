@@ -18,26 +18,23 @@ def uniform_setter_function(uniform_setter: str):
 class ComputeShader:
     def __init__(self, shader_src: str):
         self.shader_handle: int = compileProgram(compileShader(shader_src, GL_COMPUTE_SHADER))
-        self.textures: List[Tuple[Texture, str]] = []
+        self.textures: List[Tuple[Texture, str, int]] = []
         self.uniform_cache: Dict[str, Tuple[int, any, any]] = dict()
 
-    def set_textures(self, textures: List[Tuple[Texture, str]]):
-        self.textures: List[Tuple[Texture, str]] = textures
+    def set_textures(self, textures: List[Tuple[Texture, str, int]]):
+        self.textures: List[Tuple[Texture, str, int]] = textures
 
     def set_uniform_data(self, data: List[Tuple[str, any, any]]):
         glUseProgram(self.shader_handle)
         for uniform_name, uniform_data, uniform_setter in data:
-            # if uniform_name in self.uniform_cache.keys():
-            # self.uniform_cache.get(uniform_name)[1] = uniform_data
-            # else:
+            # TODO add check for update, to not always update uniform data
             uniform_location = glGetUniformLocation(self.shader_handle, uniform_name)
             self.uniform_cache[uniform_name] = (
                 uniform_location, uniform_data, uniform_setter_function(uniform_setter))
 
     def use(self, width: int):
-        for texture, flag in self.textures:
-            texture.activate()
-            texture.bind(flag)
+        for texture, flag, image_position in self.textures:
+            texture.bind_as_image(flag, image_position)
         glUseProgram(self.shader_handle)
 
         for uniform_location, uniform_data, uniform_setter in self.uniform_cache.values():
