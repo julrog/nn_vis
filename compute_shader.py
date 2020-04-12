@@ -4,33 +4,17 @@ from typing import Dict, Tuple, List
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 
+from shader import BaseShader
+from singleton import Singleton
 from texture import Texture
 
 
-def uniform_setter_function(uniform_setter: str):
-    if uniform_setter is "float":
-        def usf_single_float(location, data):
-            glUniform1f(location, data)
-
-        return usf_single_float
-
-
-class ComputeShader:
+class ComputeShader(BaseShader):
     def __init__(self, shader_src: str):
+        BaseShader.__init__(self)
         self.shader_handle: int = compileProgram(compileShader(shader_src, GL_COMPUTE_SHADER))
         self.textures: List[Tuple[Texture, str, int]] = []
         self.uniform_cache: Dict[str, Tuple[int, any, any]] = dict()
-
-    def set_textures(self, textures: List[Tuple[Texture, str, int]]):
-        self.textures: List[Tuple[Texture, str, int]] = textures
-
-    def set_uniform_data(self, data: List[Tuple[str, any, any]]):
-        glUseProgram(self.shader_handle)
-        for uniform_name, uniform_data, uniform_setter in data:
-            # TODO add check for update, to not always update uniform data
-            uniform_location = glGetUniformLocation(self.shader_handle, uniform_name)
-            self.uniform_cache[uniform_name] = (
-                uniform_location, uniform_data, uniform_setter_function(uniform_setter))
 
     def use(self, width: int):
         for texture, flag, image_position in self.textures:
@@ -42,21 +26,13 @@ class ComputeShader:
 
         glDispatchCompute(width, 1, 1)
         glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
-
-
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+        glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
 
 class ComputeShaderHandler(metaclass=Singleton):
     def __init__(self):
-        self.shader_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'shader/compute')
-        self.shader_list = dict()
+        self.shader_dir: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'shader/compute')
+        self.shader_list: Dict[str, ComputeShader] = dict()
 
     def create(self, shader_name: str, shader_file_path: str) -> ComputeShader:
         shader_src = open(os.path.join(self.shader_dir, shader_file_path), 'r').read()

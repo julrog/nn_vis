@@ -5,7 +5,7 @@ import pyrr
 from TextureLoader import load_texture
 import numpy as np
 
-from Camera import Camera
+from camera import Camera
 
 cam = Camera()
 WIDTH, HEIGHT = 1280, 720

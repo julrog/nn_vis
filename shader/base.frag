@@ -6,5 +6,6 @@ uniform vec3 point_color;
 
 void main()
 {
-	 fColor =  vec4( point_color, 1.0 );
+     vec3 color = vec3(gl_FragCoord.x/1280.0, gl_FragCoord.y/900.0, 0.0);
+	 fColor =  vec4( color.xyz * 0.5 + point_color.xyz * 0.5, 1.0 );
 }
