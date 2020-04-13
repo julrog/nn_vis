@@ -2,6 +2,7 @@ from OpenGL.GL import *
 from pyrr import Vector3
 
 from edge import EdgeHandler, EdgeRenderer
+from file import FileHandler
 from window import WindowHandler
 
 WIDTH, HEIGHT = 1920, 1080
@@ -38,18 +39,18 @@ edge_handler.sample_edges()
 
 edge_renderer = EdgeRenderer(edge_handler)
 
+FileHandler().read_statistics()
 render_loop_index: int = 0
-
 while window.is_active():
     window_handler.update()
 
-    edge_handler.resample()
-    edge_handler.sample_noise(0.5)
+    edge_handler.sample_edges()
+    #edge_handler.sample_noise(0.5)
 
     edge_renderer.render_transparent(window)
-    print(edge_handler.get_extends())
 
     window.swap()
     render_loop_index += 1
 
+FileHandler().write_statistics()
 window_handler.destroy()

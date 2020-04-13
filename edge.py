@@ -1,23 +1,24 @@
 from random import random
 from typing import List, Tuple
-from pyrr import Vector3, matrix44, Vector4
+from pyrr import Vector3, matrix44, Vector4, vector3
 import numpy as np
 from OpenGL.GL import *
 
 from compute_shader import ComputeShader, ComputeShaderHandler
+from performance import track_time
 from render_helper import RenderSet, VertexDataHandler, render_setting_0, render_setting_1
 from shader import RenderShader, RenderShaderHandler
 from texture import Texture
-from window import WindowHandler, Window
+from window import Window
 
 LOG_SOURCE: str = "EDGE"
 
 
 class Edge:
     def __init__(self, start_position: Vector3, end_position: Vector3):
-        self.start: Vector3 = start_position
-        self.end: Vector3 = end_position
-        self.sample_points: List[Vector3] = [self.start, self.end]
+        self.start: Vector4 = Vector4([start_position.x, start_position.y, start_position.z, 1.0])
+        self.end: Vector4 = Vector4([end_position.x, end_position.y, end_position.z, 0.0])
+        self.sample_points: List[Vector4] = [self.start, self.end]
         self.sample_length: float = 0.0
         self.squared_sample_length: float = 0.0
 
@@ -33,58 +34,47 @@ class Edge:
 
         for x, y, z, w in group_wise(data):
             if w > 0.0:
-                self.sample_points.append(Vector3([x, y, z]))
+                self.sample_points.append(Vector4([x, y, z, w]))
             else:
-                self.sample_points.append(Vector3([x, y, z]))
+                self.sample_points.append(Vector4([x, y, z, w]))
                 return
 
     def sample(self, sample_length: float):
         self.sample_length = sample_length
         self.squared_sample_length = self.sample_length * self.sample_length
-        self.sample_points = []
-        divisions = int(round((self.end - self.start).length / self.sample_length))
-        for i in range(divisions):
-            self.sample_points.append(
-                Vector3(self.start * (1.0 - i / (divisions - 1.0)) + self.end * (i / (divisions - 1.0))))
+        if sample_length:
+            self.sample_length = sample_length
+
+        new_sample_points: List[Vector4] = []
+        previous_added_point: Vector3 = Vector3(vector3.create_from_vector4(self.sample_points[0])[0])
+        previous_looked_point: Vector3 = previous_added_point
+        new_sample_points.append(self.sample_points[0])
+        for i in range(1, len(self.sample_points)):
+            current_point: Vector3 = Vector3(vector3.create_from_vector4(self.sample_points[i])[0])
+            while Vector3(current_point - previous_added_point).length >= self.sample_length * 0.99:
+                prev_distance = (previous_looked_point - previous_added_point).length
+                current_distance = (current_point - previous_added_point).length
+                t = (self.sample_length - prev_distance) / (current_distance - prev_distance)
+                np.clip(t, 0.0, 1.0)
+                interpolated_point = (previous_added_point * (1.0 - t) + current_point * t)
+                new_sample_points.append(
+                    Vector4([interpolated_point.x, interpolated_point.y, interpolated_point.z, 1.0]))
+                previous_added_point = interpolated_point
+                previous_looked_point = previous_added_point
+            previous_looked_point = current_point
+        new_sample_points.append(self.sample_points[-1])
+        self.sample_points = new_sample_points
 
     def sample_noise(self, strength: float = 1.0):
         if not self.sample_points:
             return
         noise_strength = strength * self.sample_length
         for i in range(len(self.sample_points)):
-            # if i is not 0 and i is not len(self.sample_points) - 1:
-            self.sample_points[i] = self.sample_points[i] + Vector3(
+            self.sample_points[i] = self.sample_points[i] + Vector4(
                 [random() * noise_strength * 2.0 - noise_strength,
                  random() * noise_strength * 2.0 - noise_strength,
+                 random() * noise_strength * 2.0 - noise_strength,
                  0.0])
-
-    def resample(self, sample_length: float = None):
-        if not self.sample_points:
-            raise Exception("[%s] No samples set yet, can't resample." % LOG_SOURCE)
-
-        if sample_length:
-            self.sample_length = sample_length
-
-        new_sample_points = []
-        previous_point = None
-        for i in range(len(self.sample_points)):
-            if i == 0:
-                new_sample_points.append(self.sample_points[i])
-                previous_point = self.sample_points[i]
-            else:
-                new_point_added = False
-                while (self.sample_points[i] - new_sample_points[-1]).length >= self.sample_length * 0.99:
-                    prev_distance = (previous_point - new_sample_points[-1]).length
-                    current_distance = (self.sample_points[i] - new_sample_points[-1]).length
-                    t = (self.sample_length - prev_distance) / (current_distance - prev_distance)
-                    np.clip(t, 0.0, 1.0)
-                    new_sample_points.append(previous_point * (1.0 - t) + self.sample_points[i] * t)
-                    previous_point = new_sample_points[-1]
-                    new_point_added = True
-                if not new_point_added:
-                    previous_point = self.sample_points[i]
-        new_sample_points.append(self.sample_points[-1])
-        self.sample_points = new_sample_points
 
     def get_edge_length(self) -> float:
         if not self.sample_points:
@@ -93,7 +83,8 @@ class Edge:
         previous_point = None
         for point in self.sample_points:
             if previous_point:
-                distance_vector: Vector3 = point - previous_point
+                distance_vector: Vector3 = Vector3(vector3.create_from_vector4(point)[0]) - Vector3(
+                    vector3.create_from_vector4(previous_point)[0])
                 length += distance_vector.length
         return length
 
@@ -110,6 +101,7 @@ class EdgeHandler:
             self.edge_sample_texture_write: Texture or None = None
             self.max_distance: float = 0
             self.max_sample_points: int = 0
+            self.point_count: int = 0
         self.edges: List[Edge] = []
         self.sampled: bool = False
         self.sample_length: float = sample_length
@@ -127,12 +119,6 @@ class EdgeHandler:
             for node_two in vec_nodes_layer_two:
                 self.edges.append(Edge(node_one, node_two))
 
-        for edge in self.edges:
-            point_data = []
-            point_data.extend(edge.start.data)
-            point_data.append(1.0)
-            point_data.extend(edge.end.data)
-
         if self.use_compute:
             for node_one in vec_nodes_layer_one:
                 for node_two in vec_nodes_layer_two:
@@ -145,9 +131,7 @@ class EdgeHandler:
             for edge in self.edges:
                 point_data = []
                 point_data.extend(edge.start.data)
-                point_data.append(1.0)
                 point_data.extend(edge.end.data)
-                point_data.append(0.0)
                 initial_data.extend(point_data)
                 initial_data.extend([0] * (self.max_sample_points * 4 - len(point_data)))
 
@@ -156,7 +140,11 @@ class EdgeHandler:
             self.edge_sample_texture_read.setup(0, initial_data)
             self.edge_sample_texture_write.setup(0, initial_data)
 
-    def sample_edges(self):
+    @track_time
+    def sample_edges(self, sample_length: float = None):
+        if sample_length is not None:
+            self.sample_length = sample_length
+
         if self.use_compute:
             self.sample_compute_shader.set_textures(
                 [(self.edge_sample_texture_read, "read", 0), (self.edge_sample_texture_write, "write", 1)])
@@ -168,23 +156,28 @@ class EdgeHandler:
                 edge.sample(self.sample_length)
         self.sampled = True
 
+    @track_time
     def generate_buffer_data(self):
-        buffer_data: List[Vector3] = []
         if not self.sampled:
             raise Exception("[%s] Not sampled, can't generate data!" % LOG_SOURCE)
 
         if self.use_compute:
-            self.read_samples_from_texture()
+            return np.array(self.read_samples_from_texture(), dtype=np.float32)
+        else:
+            buffer_data: List[Vector4] = []
+            for edge in self.edges:
+                for point in edge.sample_points:
+                    buffer_data.extend(point)
+            return np.array(buffer_data, dtype=np.float32)
 
-        for edge in self.edges:
-            for point in edge.sample_points:
-                buffer_data.extend(point)
+    @track_time
+    def get_buffer_points(self) -> int:
+        if self.use_compute:
+            return self.point_count
+        else:
+            return sum([len(edge.sample_points) for edge in self.edges])
 
-        return np.array(buffer_data, dtype=np.float32)
-
-    def get_points(self):
-        return sum([len(edge.sample_points) for edge in self.edges])
-
+    @track_time
     def sample_noise(self, strength: float = 1.0):
         if self.use_compute:
             self.noise_compute_shader.set_textures(
@@ -195,31 +188,24 @@ class EdgeHandler:
 
             # switch textures, because the written textures resembles now the current edge samples
             self.edge_sample_texture_read, self.edge_sample_texture_write = self.edge_sample_texture_write, self.edge_sample_texture_read
-
-            self.read_samples_from_texture()
         else:
             for edge in self.edges:
                 edge.sample_noise(strength)
 
-    def resample(self, sample_length: float = None):
-        if sample_length is not None:
-            self.sample_length = sample_length
-        if self.use_compute:
-            self.sample_edges()
-        else:
-            for edge in self.edges:
-                edge.resample(self.sample_length)
-
-    def read_samples_from_texture(self):
+    @track_time
+    def read_samples_from_texture(self) -> List[float]:
         edge_sample_data = self.edge_sample_texture_read.read()
-        edge_sample_data = edge_sample_data.flatten()
+        edge_sample_data = edge_sample_data.reshape((len(self.edges), self.max_sample_points * 4))
+        buffer_data = []
         for i in range(len(self.edges)):
-            start_split = (i * self.max_sample_points * 4) if i is not 0 else None
-            end_split = ((i + 1) * self.max_sample_points * 4 + 1) if i is not len(self.edges) - 1 else None
-            split_data = edge_sample_data[start_split: end_split]
-            self.edges[i].set_sample_points(self.sample_length, split_data)
+            buffer_data.extend(np.trim_zeros(edge_sample_data[i], 'b'))
+            for add in range(4 - (len(buffer_data) % 4)):
+                buffer_data.append(0.0)
+        self.point_count = int(len(buffer_data) / 4)
+        return buffer_data
 
-    def get_extends(self) -> Tuple[Vector3, Vector3]:
+    @track_time
+    def get_extends(self) -> Tuple[List[float], List[float]]:
         min_extend: Vector3 = Vector3([10000.0, 10000.0, 10000.0])
         max_extend: Vector3 = Vector3([-10000.0, -10000.0, -10000.0])
         for edge in self.edges:
@@ -230,16 +216,29 @@ class EdgeHandler:
                 max_extend.x = max_extend.x if max_extend.x > sample.x else sample.x
                 max_extend.y = max_extend.y if max_extend.y > sample.y else sample.y
                 max_extend.z = max_extend.z if max_extend.z > sample.z else sample.z
-        return min_extend, max_extend
+        return [value for value in min_extend], [value for value in max_extend]
 
+    @track_time
     def get_near_far_from_view(self, view: matrix44) -> Tuple[float, float]:
         far = 10000.0
         near = -10000.0
         for edge in self.edges:
-            for sample in edge.sample_points:
-                view_pos = view * Vector4([sample.x, sample.y, sample.z, 1.0])
-                far = view_pos.z if view_pos.z < far else far
-                near = view_pos.z if near < view_pos.z < 0 else near
+            first = edge.sample_points[0]
+            first_z = (view * Vector4([first.x, first.y, first.z, 1.0])).z
+            last = edge.sample_points[-1]
+            last_z = (view * Vector4([last.x, last.y, last.z, 1.0])).z
+            if first_z < far:
+                far = first_z
+            else:
+                if near < first_z:
+                    near = first_z
+            if last_z < far:
+                far = last_z
+            else:
+                if near < last_z:
+                    near = last_z
+        if near > 0:
+            near = 0
         return far, near
 
 
@@ -260,9 +259,10 @@ class EdgeRenderer:
         self.sphere_render: RenderSet = RenderSet(sample_sphere_shader, VertexDataHandler())
         self.transparent_render: RenderSet = RenderSet(sample_transparent_shader, VertexDataHandler())
 
+    @track_time
     def render_point(self, window: Window):
         sampled_point_buffer = self.edge_handler.generate_buffer_data()
-        sampled_points = self.edge_handler.get_points()
+        sampled_points: int  = self.edge_handler.get_buffer_points()
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                             ("view", window.cam.get_view_matrix(), "mat4"),
@@ -275,9 +275,10 @@ class EdgeRenderer:
         glPointSize(10.0)
         glDrawArrays(GL_POINTS, 0, sampled_points)
 
+    @track_time
     def render_sphere(self, window: Window):
         sampled_point_buffer = self.edge_handler.generate_buffer_data()
-        sampled_points = self.edge_handler.get_points()
+        sampled_points: int = self.edge_handler.get_buffer_points()
 
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                              ("view", window.cam.get_view_matrix(), "mat4")])
@@ -288,9 +289,10 @@ class EdgeRenderer:
         render_setting_0()
         glDrawArrays(GL_POINTS, 0, sampled_points)
 
+    @track_time
     def render_transparent(self, window: Window):
         sampled_point_buffer = self.edge_handler.generate_buffer_data()
-        sampled_points = self.edge_handler.get_points()
+        sampled_points: int  = self.edge_handler.get_buffer_points()
 
         far, near = self.edge_handler.get_near_far_from_view(window.cam.get_view_matrix())
         self.transparent_render.set_uniform_data([("projection", window.cam.projection, "mat4"),

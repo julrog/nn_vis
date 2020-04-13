@@ -17,7 +17,7 @@ class VertexDataHandler:
 
         # cube vertices
         glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, data.itemsize * 3, ctypes.c_void_p(0))
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, data.itemsize * 4, ctypes.c_void_p(0))
 
     def set(self):
         glBindVertexArray(self.VAO)

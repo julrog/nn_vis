@@ -26,8 +26,7 @@ void main() {
         distance_to_next = distance(next_point, last_written_point);
 
         while (distance_to_next >= sample_length * 0.99) {
-            float prev_distance = 0;
-            float t = (sample_length - prev_distance) / (distance_to_next - prev_distance);
+            float t = sample_length / distance_to_next;
             t = clamp(t, 0.0, 1.0);
             last_written_point = (last_written_point * (1.0 - t) + next_point * t);
             imageStore(img_output, ivec2(current_write_index++, gl_WorkGroupID.x), vec4(last_written_point.xyz, 1.0));
