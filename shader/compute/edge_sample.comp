@@ -7,12 +7,10 @@ uniform float sample_length;
 
 void main() {
     int current_read_index = 0;
-    int current_write_index = 0;
+    int current_write_index = 1;
 
     vec3 last_written_point = imageLoad(img_input, ivec2(current_read_index++, gl_WorkGroupID.x)).xyz;
-
-    // always store first edge point
-    imageStore(img_output, ivec2(current_write_index++, gl_WorkGroupID.x), vec4(last_written_point.xyz, 1.0));
+    vec3 first_point = last_written_point;
 
     // initialize variables used over the next loop
     vec3 next_point = last_written_point;
@@ -36,4 +34,7 @@ void main() {
 
     // always store last edge point and mark it as last with w-value 0
     imageStore(img_output, ivec2(current_write_index++, gl_WorkGroupID.x), vec4(next_point.xyz, 0.0));
+
+    // store the first point with sum of all points as w value
+    imageStore(img_output, ivec2(0, gl_WorkGroupID.x), vec4(first_point.xyz, current_write_index));
 }

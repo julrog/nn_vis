@@ -1,14 +1,14 @@
-from OpenGL.GL import *
 from pyrr import Vector3
 
 from edge import EdgeHandler, EdgeRenderer
 from file import FileHandler
+from performance import track_time
 from window import WindowHandler
 
 WIDTH, HEIGHT = 1920, 1080
 
 window_handler = WindowHandler()
-window = window_handler.create_window("Testing", WIDTH, HEIGHT, 1)
+window = window_handler.create_window("Testing", WIDTH, HEIGHT, 0)
 window.set_position(0, 0)
 window.set_callbacks()
 window.activate()
@@ -39,18 +39,21 @@ edge_handler.sample_edges()
 
 edge_renderer = EdgeRenderer(edge_handler)
 
-FileHandler().read_statistics()
-render_loop_index: int = 0
-while window.is_active():
+
+@track_time(track_recursive=False)
+def frame():
     window_handler.update()
 
+    edge_handler.sample_noise(0.66)
     edge_handler.sample_edges()
-    #edge_handler.sample_noise(0.5)
 
     edge_renderer.render_transparent(window)
 
     window.swap()
-    render_loop_index += 1
 
+
+FileHandler().read_statistics()
+while window.is_active():
+    frame()
 FileHandler().write_statistics()
 window_handler.destroy()

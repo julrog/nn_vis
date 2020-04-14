@@ -141,6 +141,24 @@ class EdgeHandler:
             self.edge_sample_texture_write.setup(0, initial_data)
 
     @track_time
+    def resize_textures(self, new_max_samples: int):
+        edge_sample_data = self.edge_sample_texture_read.read()
+        edge_sample_data = edge_sample_data.reshape((len(self.edges), self.max_sample_points * 4))
+
+        self.max_sample_points = new_max_samples
+
+        buffer_data = []
+        for i in range(len(self.edges)):
+            edge_points: int = int(edge_sample_data[i][3])
+            buffer_data.extend(edge_sample_data[i][None:(int(edge_points * 4))])
+            buffer_data.extend([0] * (self.max_sample_points * 4 - edge_points * 4))
+
+        self.edge_sample_texture_read = Texture(self.max_sample_points, len(self.edges))
+        self.edge_sample_texture_write = Texture(self.max_sample_points, len(self.edges))
+        self.edge_sample_texture_read.setup(0, buffer_data)
+        self.edge_sample_texture_write.setup(0, buffer_data)
+
+    @track_time
     def sample_edges(self, sample_length: float = None):
         if sample_length is not None:
             self.sample_length = sample_length
@@ -197,11 +215,16 @@ class EdgeHandler:
         edge_sample_data = self.edge_sample_texture_read.read()
         edge_sample_data = edge_sample_data.reshape((len(self.edges), self.max_sample_points * 4))
         buffer_data = []
+        max_edge_samples = 0
+        self.point_count = 0
         for i in range(len(self.edges)):
-            buffer_data.extend(np.trim_zeros(edge_sample_data[i], 'b'))
-            for add in range(4 - (len(buffer_data) % 4)):
-                buffer_data.append(0.0)
-        self.point_count = int(len(buffer_data) / 4)
+            edge_points: int = int(edge_sample_data[i][3])
+            buffer_data.extend(edge_sample_data[i][None:(int(edge_points * 4))])
+            self.point_count += edge_points
+            if edge_points > max_edge_samples:
+                max_edge_samples = edge_points
+        if max_edge_samples >= (self.max_sample_points - 5) * 0.8:
+            self.resize_textures(max_edge_samples * 2)
         return buffer_data
 
     @track_time
@@ -262,7 +285,7 @@ class EdgeRenderer:
     @track_time
     def render_point(self, window: Window):
         sampled_point_buffer = self.edge_handler.generate_buffer_data()
-        sampled_points: int  = self.edge_handler.get_buffer_points()
+        sampled_points: int = self.edge_handler.get_buffer_points()
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                             ("view", window.cam.get_view_matrix(), "mat4"),
@@ -292,7 +315,7 @@ class EdgeRenderer:
     @track_time
     def render_transparent(self, window: Window):
         sampled_point_buffer = self.edge_handler.generate_buffer_data()
-        sampled_points: int  = self.edge_handler.get_buffer_points()
+        sampled_points: int = self.edge_handler.get_buffer_points()
 
         far, near = self.edge_handler.get_near_far_from_view(window.cam.get_view_matrix())
         self.transparent_render.set_uniform_data([("projection", window.cam.projection, "mat4"),

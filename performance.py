@@ -2,21 +2,27 @@ import time
 
 from file import FileHandler
 
-track_recursive = []
+running_times = []
 
 
-def track_time(func):
-    def tracked_func(*args, **kwargs):
-        global track_recursive
-        start_time = time.perf_counter()
-        track_recursive.append(start_time)
-        result = func(*args, **kwargs)
-        end_time = time.perf_counter()
-        time_diff = end_time - track_recursive.pop()
-        track_recursive = [start_time + time_diff for start_time in track_recursive]
-        stats = dict()
-        stats[func.__name__] = time_diff
-        FileHandler().append_statistics(stats)
-        return result
+def track_time(_func=None, *, track_recursive: bool = True):
+    def track_time_inner(func):
+        def tracked_func(*args, **kwargs):
+            global running_times
+            start_time = time.perf_counter()
+            running_times.append(start_time)
+            result = func(*args, **kwargs)
+            end_time = time.perf_counter()
+            time_diff = (end_time - running_times.pop()) if track_recursive else end_time - start_time
+            running_times = [start_time + time_diff for start_time in running_times]
+            stats = dict()
+            stats[func.__name__] = time_diff
+            FileHandler().append_statistics(stats)
+            return result
 
-    return tracked_func
+        return tracked_func
+
+    if _func is None:
+        return track_time_inner
+    else:
+        return track_time_inner(_func)
