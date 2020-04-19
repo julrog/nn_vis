@@ -167,7 +167,7 @@ class EdgeHandler:
             self.sample_compute_shader.set_textures(
                 [(self.edge_sample_texture_read, "read", 0), (self.edge_sample_texture_write, "write", 1)])
             self.sample_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
-            self.sample_compute_shader.use(len(self.edges))  # use dynamic workgroup sizes
+            self.sample_compute_shader.compute(len(self.edges))  # use dynamic workgroup sizes
             self.edge_sample_texture_read, self.edge_sample_texture_write = self.edge_sample_texture_write, self.edge_sample_texture_read
         else:
             for edge in self.edges:
@@ -202,7 +202,7 @@ class EdgeHandler:
                 [(self.edge_sample_texture_read, "read", 0), (self.edge_sample_texture_write, "write", 1)])
             self.noise_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
             self.noise_compute_shader.set_uniform_data([('noise_strength', strength, 'float')])
-            self.noise_compute_shader.use(len(self.edges))  # use dynamic workgroup sizes
+            self.noise_compute_shader.compute(len(self.edges))  # use dynamic workgroup sizes
 
             # switch textures, because the written textures resembles now the current edge samples
             self.edge_sample_texture_read, self.edge_sample_texture_write = self.edge_sample_texture_write, self.edge_sample_texture_read
@@ -278,9 +278,9 @@ class EdgeRenderer:
                                                                         "ball/transparent_ball.frag",
                                                                         "ball/ball_from_point.geom")
 
-        self.point_render: RenderSet = RenderSet(sample_point_shader, VertexDataHandler())
-        self.sphere_render: RenderSet = RenderSet(sample_sphere_shader, VertexDataHandler())
-        self.transparent_render: RenderSet = RenderSet(sample_transparent_shader, VertexDataHandler())
+        self.point_render: RenderSet = RenderSet(sample_point_shader, VertexDataHandler(vbos=1))
+        self.sphere_render: RenderSet = RenderSet(sample_sphere_shader, VertexDataHandler(vbos=1))
+        self.transparent_render: RenderSet = RenderSet(sample_transparent_shader, VertexDataHandler(vbos=1))
 
     @track_time
     def render_point(self, window: Window):
@@ -292,7 +292,7 @@ class EdgeRenderer:
                                             ("point_color", [1.0, 0.0, 0.0], "vec3")])
 
         self.point_render.set()
-        self.point_render.load_data(sampled_point_buffer)
+        self.point_render.load_vbo_data(sampled_point_buffer)
 
         render_setting_0()
         glPointSize(10.0)
@@ -307,7 +307,7 @@ class EdgeRenderer:
                                              ("view", window.cam.get_view_matrix(), "mat4")])
 
         self.sphere_render.set()
-        self.sphere_render.load_data(sampled_point_buffer)
+        self.sphere_render.load_vbo_data(sampled_point_buffer)
 
         render_setting_0()
         glDrawArrays(GL_POINTS, 0, sampled_points)
@@ -324,7 +324,7 @@ class EdgeRenderer:
                                                   ("nearest_point_view_z", near, "float")])
 
         self.transparent_render.set()
-        self.transparent_render.load_data(sampled_point_buffer)
+        self.transparent_render.load_vbo_data(sampled_point_buffer)
 
         render_setting_1()
         glDrawArrays(GL_POINTS, 0, sampled_points)

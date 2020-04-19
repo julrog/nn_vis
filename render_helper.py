@@ -5,18 +5,37 @@ from shader import BaseShader
 
 
 class VertexDataHandler:
-    def __init__(self):
-        self.VAO = glGenVertexArrays(1)
-        self.VBO = glGenBuffers(1)
+    def __init__(self, vbos: int = 0, ssbos: int = 0):
+        self.VAO: int = glGenVertexArrays(1)
+        self.VBOs: List[int] = []
+        if vbos == 1:
+            self.VBOs.append(glGenBuffers(vbos))
+        else:
+            if vbos > 0:
+                self.VBOs.extend(glGenBuffers(vbos))
 
-    def load_data(self, data):
+        self.SSBOs: List[int] = []
+        if ssbos == 1:
+            self.SSBOs.append(glGenBuffers(ssbos))
+        else:
+            if ssbos > 0:
+                self.SSBOs.extend(glGenBuffers(ssbos))
+
+    def load_ssbo_data(self, data, location: int = 0, buffer_id: int = 0):
         self.set()
 
-        glBindBuffer(GL_ARRAY_BUFFER, self.VBO)
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer_id)
+        glBufferData(GL_SHADER_STORAGE_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
+
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, buffer_id)
+
+    def load_vbo_data(self, data, buffer_id: int = 0):
+        self.set()
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.VBOs[buffer_id])
         glBufferData(GL_ARRAY_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
 
-        # cube vertices
-        glEnableVertexAttribArray(0)
+        glEnableVertexAttribArray(buffer_id)
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, data.itemsize * 4, ctypes.c_void_p(0))
 
     def set(self):
@@ -31,8 +50,11 @@ class RenderSet:
     def set_uniform_data(self, data: List[Tuple[str, any, any]]):
         self.shader.set_uniform_data(data)
 
-    def load_data(self, data: any):
-        self.data_handler.load_data(data)
+    def load_vbo_data(self, data: any, buffer_id: int = 0):
+        self.data_handler.load_vbo_data(data, buffer_id)
+
+    def load_ssbo_data(self, data: any, location: int = 0, buffer_id: int = 0):
+        self.data_handler.load_ssbo_data(data, location, buffer_id)
 
     def set(self):
         self.shader.use()

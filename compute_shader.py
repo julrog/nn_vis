@@ -15,8 +15,11 @@ class ComputeShader(BaseShader):
         self.shader_handle: int = compileProgram(compileShader(shader_src, GL_COMPUTE_SHADER))
         self.textures: List[Tuple[Texture, str, int]] = []
         self.uniform_cache: Dict[str, Tuple[int, any, any]] = dict()
+        self.max_workgroup_size: int = glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0)[0]
 
-    def use(self, width: int):
+    def compute(self, width: int):
+        if width > self.max_workgroup_size:
+            raise Exception("Workgroup size is too big!")
         for texture, flag, image_position in self.textures:
             texture.bind_as_image(flag, image_position)
         glUseProgram(self.shader_handle)

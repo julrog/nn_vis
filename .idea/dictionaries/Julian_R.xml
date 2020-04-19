@@ -5,6 +5,10 @@
       <w>rebalance</w>
       <w>resample</w>
       <w>resampled</w>
+      <w>sqrt</w>
+      <w>ssbo</w>
+      <w>ssbos</w>
+      <w>vbos</w>
       <w>vert</w>
     </words>
   </dictionary>
