@@ -1,3 +1,4 @@
+import math
 from random import random
 from typing import List, Tuple
 from pyrr import Vector3, matrix44, Vector4, vector3
@@ -97,8 +98,8 @@ class EdgeHandler:
                                                                                       "edge_sample.comp")
             self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_noise",
                                                                                      "edge_noise.comp")
-            self.edge_sample_texture_read: Texture or None = None
-            self.edge_sample_texture_write: Texture or None = None
+            self.ssbo_handler: VertexDataHandler or None = None
+            self.switched_sample_ssbos: bool = False
             self.max_distance: float = 0
             self.max_sample_points: int = 0
             self.point_count: int = 0
@@ -135,14 +136,16 @@ class EdgeHandler:
                 initial_data.extend(point_data)
                 initial_data.extend([0] * (self.max_sample_points * 4 - len(point_data)))
 
-            self.edge_sample_texture_read = Texture(self.max_sample_points, len(self.edges))
-            self.edge_sample_texture_write = Texture(self.max_sample_points, len(self.edges))
-            self.edge_sample_texture_read.setup(0, initial_data)
-            self.edge_sample_texture_write.setup(0, initial_data)
+            transfer_data = np.array(initial_data, dtype=np.float32)
+
+            self.ssbo_handler = VertexDataHandler(ssbos=2)
+            self.ssbo_handler.load_ssbo_data(transfer_data, location=0, buffer_id=0)
+            self.ssbo_handler.load_ssbo_data(transfer_data, location=1, buffer_id=1)
 
     @track_time
-    def resize_textures(self, new_max_samples: int):
-        edge_sample_data = self.edge_sample_texture_read.read()
+    def resize_sample_storage(self, new_max_samples: int):
+        edge_sample_data = np.array(self.read_samples_from_sample_storage(raw=True, auto_resize_enabled=False),
+                                    dtype=np.float32)
         edge_sample_data = edge_sample_data.reshape((len(self.edges), self.max_sample_points * 4))
 
         self.max_sample_points = new_max_samples
@@ -153,10 +156,10 @@ class EdgeHandler:
             buffer_data.extend(edge_sample_data[i][None:(int(edge_points * 4))])
             buffer_data.extend([0] * (self.max_sample_points * 4 - edge_points * 4))
 
-        self.edge_sample_texture_read = Texture(self.max_sample_points, len(self.edges))
-        self.edge_sample_texture_write = Texture(self.max_sample_points, len(self.edges))
-        self.edge_sample_texture_read.setup(0, buffer_data)
-        self.edge_sample_texture_write.setup(0, buffer_data)
+        transfer_data = np.array(buffer_data, dtype=np.float32)
+
+        self.ssbo_handler.load_ssbo_data(transfer_data, location=0, buffer_id=0)
+        self.ssbo_handler.load_ssbo_data(transfer_data, location=1, buffer_id=1)
 
     @track_time
     def sample_edges(self, sample_length: float = None):
@@ -164,11 +167,23 @@ class EdgeHandler:
             self.sample_length = sample_length
 
         if self.use_compute:
-            self.sample_compute_shader.set_textures(
-                [(self.edge_sample_texture_read, "read", 0), (self.edge_sample_texture_write, "write", 1)])
+            self.ssbo_handler.set()
+            self.ssbo_handler.bind_ssbo_data(0, 1 if self.switched_sample_ssbos else 0)
+            self.ssbo_handler.bind_ssbo_data(1, 0 if self.switched_sample_ssbos else 1)
             self.sample_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
-            self.sample_compute_shader.compute(len(self.edges))  # use dynamic workgroup sizes
-            self.edge_sample_texture_read, self.edge_sample_texture_write = self.edge_sample_texture_write, self.edge_sample_texture_read
+            self.sample_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
+
+            print("[%s] Sample %d edges." % (LOG_SOURCE, len(self.edges)))
+            for i in range(math.ceil(len(self.edges) / self.sample_compute_shader.max_workgroup_size)):
+                self.sample_compute_shader.set_uniform_data(
+                    [('work_group_offset', i * self.sample_compute_shader.max_workgroup_size, 'int')])
+
+                if i == math.ceil(len(self.edges) / self.sample_compute_shader.max_workgroup_size) - 1:
+                    self.sample_compute_shader.compute(len(self.edges) % self.sample_compute_shader.max_workgroup_size)
+                else:
+                    self.sample_compute_shader.compute(self.sample_compute_shader.max_workgroup_size)
+
+            self.switched_sample_ssbos = not self.switched_sample_ssbos
         else:
             for edge in self.edges:
                 edge.sample(self.sample_length)
@@ -180,7 +195,7 @@ class EdgeHandler:
             raise Exception("[%s] Not sampled, can't generate data!" % LOG_SOURCE)
 
         if self.use_compute:
-            return np.array(self.read_samples_from_texture(), dtype=np.float32)
+            return np.array(self.read_samples_from_sample_storage(), dtype=np.float32)
         else:
             buffer_data: List[Vector4] = []
             for edge in self.edges:
@@ -198,21 +213,36 @@ class EdgeHandler:
     @track_time
     def sample_noise(self, strength: float = 1.0):
         if self.use_compute:
-            self.noise_compute_shader.set_textures(
-                [(self.edge_sample_texture_read, "read", 0), (self.edge_sample_texture_write, "write", 1)])
+            self.ssbo_handler.set()
+            self.ssbo_handler.bind_ssbo_data(0, 1 if self.switched_sample_ssbos else 0)
+            self.ssbo_handler.bind_ssbo_data(1, 0 if self.switched_sample_ssbos else 1)
+
             self.noise_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
             self.noise_compute_shader.set_uniform_data([('noise_strength', strength, 'float')])
-            self.noise_compute_shader.compute(len(self.edges))  # use dynamic workgroup sizes
+            self.noise_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
 
-            # switch textures, because the written textures resembles now the current edge samples
-            self.edge_sample_texture_read, self.edge_sample_texture_write = self.edge_sample_texture_write, self.edge_sample_texture_read
+            print("[%s] Add noise to %d edges." % (LOG_SOURCE, len(self.edges)))
+            for i in range(math.ceil(len(self.edges) / self.noise_compute_shader.max_workgroup_size)):
+                self.noise_compute_shader.set_uniform_data(
+                    [('work_group_offset', i * self.noise_compute_shader.max_workgroup_size, 'int')])
+
+                if i == math.ceil(len(self.edges) / self.noise_compute_shader.max_workgroup_size) - 1:
+                    self.noise_compute_shader.compute(len(self.edges) % self.noise_compute_shader.max_workgroup_size)
+                else:
+                    self.noise_compute_shader.compute(self.noise_compute_shader.max_workgroup_size)
+
+            self.switched_sample_ssbos = not self.switched_sample_ssbos
         else:
             for edge in self.edges:
                 edge.sample_noise(strength)
 
     @track_time
-    def read_samples_from_texture(self) -> List[float]:
-        edge_sample_data = self.edge_sample_texture_read.read()
+    def read_samples_from_sample_storage(self, raw: bool = False, auto_resize_enabled: bool = True) -> List[float]:
+        edge_sample_data = np.frombuffer(self.ssbo_handler.read_ssbo_data(1 if self.switched_sample_ssbos else 0),
+                                         dtype=np.float32)
+        if raw:
+            return edge_sample_data
+
         edge_sample_data = edge_sample_data.reshape((len(self.edges), self.max_sample_points * 4))
         buffer_data = []
         max_edge_samples = 0
@@ -223,8 +253,10 @@ class EdgeHandler:
             self.point_count += edge_points
             if edge_points > max_edge_samples:
                 max_edge_samples = edge_points
-        if max_edge_samples >= (self.max_sample_points - 5) * 0.8:
-            self.resize_textures(max_edge_samples * 2)
+
+        if auto_resize_enabled and max_edge_samples >= (self.max_sample_points - 5) * 0.8:
+            self.resize_sample_storage(max_edge_samples * 2)
+
         return buffer_data
 
     @track_time
@@ -316,6 +348,7 @@ class EdgeRenderer:
     def render_transparent(self, window: Window):
         sampled_point_buffer = self.edge_handler.generate_buffer_data()
         sampled_points: int = self.edge_handler.get_buffer_points()
+        print("[%s] Rendering %d points." % (LOG_SOURCE, sampled_points))
 
         far, near = self.edge_handler.get_near_far_from_view(window.cam.get_view_matrix())
         self.transparent_render.set_uniform_data([("projection", window.cam.projection, "mat4"),

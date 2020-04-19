@@ -1,15 +1,39 @@
 #version 430
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-layout(rgba32f, binding = 0) uniform image2D img_input;
-layout(rgba32f, binding = 1) uniform image2D img_output;
+struct SamplePoint
+{
+    vec4 pos;
+};
 
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(binding = 0) restrict readonly buffer sample_input
+{
+    SamplePoint input_sample[];
+};
+layout(binding = 1) restrict writeonly buffer sample_output
+{
+    SamplePoint output_sample[];
+};
+
+uniform int work_group_offset;
+uniform int max_sample_points;
 uniform float sample_length;
 
-void main() {
-    int current_read_index = 0;
-    int current_write_index = 1;
+vec4 read(highp uint index, highp uint offset)
+{
+    return input_sample[index + offset].pos;
+}
 
-    vec3 last_written_point = imageLoad(img_input, ivec2(current_read_index++, gl_WorkGroupID.x)).xyz;
+void write(highp uint index, highp uint offset, vec4 pos)
+{
+    output_sample[index + offset].pos = pos;
+}
+
+void main() {
+    highp uint offset = (gl_WorkGroupID.x + work_group_offset) * max_sample_points;
+    highp uint current_read_index = 0;
+    highp uint current_write_index = 1;
+
+    vec3 last_written_point = read(current_read_index++, offset).xyz;
     vec3 first_point = last_written_point;
 
     // initialize variables used over the next loop
@@ -18,7 +42,7 @@ void main() {
     float distance_to_next = 0.0;
 
     do {
-        vec4 next_point_data = imageLoad(img_input, ivec2(current_read_index++, gl_WorkGroupID.x));
+        vec4 next_point_data = read(current_read_index++, offset);
         next_point = next_point_data.xyz;
         is_used = next_point_data.w;
         distance_to_next = distance(next_point, last_written_point);
@@ -27,14 +51,14 @@ void main() {
             float t = sample_length / distance_to_next;
             t = clamp(t, 0.0, 1.0);
             last_written_point = (last_written_point * (1.0 - t) + next_point * t);
-            imageStore(img_output, ivec2(current_write_index++, gl_WorkGroupID.x), vec4(last_written_point.xyz, 1.0));
+            write(current_write_index++, offset, vec4(last_written_point.xyz, 1.0));
             distance_to_next = distance(next_point, last_written_point);
         }
     } while (is_used >= 1.0);
 
     // always store last edge point and mark it as last with w-value 0
-    imageStore(img_output, ivec2(current_write_index++, gl_WorkGroupID.x), vec4(next_point.xyz, 0.0));
+    write(current_write_index++, offset, vec4(next_point.xyz, 0.0));
 
     // store the first point with sum of all points as w value
-    imageStore(img_output, ivec2(0, gl_WorkGroupID.x), vec4(first_point.xyz, current_write_index));
+    write(0, offset, vec4(first_point.xyz, int(current_write_index)));
 }

@@ -11,15 +11,15 @@ from OpenGL.GL import *
 WIDTH, HEIGHT = 1920, 1080
 
 window_handler = WindowHandler()
-window = window_handler.create_window("Testing", WIDTH, HEIGHT, 0)
+window = window_handler.create_window("Testing", WIDTH, HEIGHT, 1)
 window.set_position(0, 0)
 window.set_callbacks()
 window.activate()
 
-print(glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE))
-nodes_layer_one = 18
+print(glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE)/16)
+nodes_layer_one = 9
 nodes_layer_one_sqrt = math.ceil(math.sqrt(nodes_layer_one))
-nodes_layer_two = 18
+nodes_layer_two = 2500
 nodes_layer_two_sqrt = math.ceil(math.sqrt(nodes_layer_two))
 
 layer_one = []

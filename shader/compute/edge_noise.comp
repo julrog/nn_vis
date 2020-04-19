@@ -1,8 +1,22 @@
 #version 430
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-layout(rgba32f, binding = 0) uniform image2D img_input;
-layout(rgba32f, binding = 1) uniform image2D img_output;
 
+struct SamplePoint
+{
+    vec4 pos;
+};
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(binding = 0) readonly buffer sample_input
+{
+    SamplePoint input_sample[];
+};
+layout(binding = 1) writeonly buffer sample_output
+{
+    SamplePoint output_sample[];
+};
+
+uniform int work_group_offset;
+uniform int max_sample_points;
 uniform float sample_length;
 uniform float noise_strength;
 
@@ -16,18 +30,29 @@ highp float rand(vec2 co)
     return fract(sin(sn) * c);
 }
 
+vec4 read(highp uint index, highp uint offset)
+{
+    return input_sample[index + offset].pos;
+}
+
+void write(highp uint index, highp uint offset, vec4 pos)
+{
+    output_sample[index + offset].pos = pos;
+}
+
 void main() {
-    int current_read_index = 0;
-    int current_write_index = 0;
+    highp uint offset = (gl_WorkGroupID.x + work_group_offset) * max_sample_points;
+    highp uint current_read_index = 0;
+    highp uint current_write_index = 0;
 
     float is_used = 1.0;
     do {
-        vec4 next_point = imageLoad(img_input, ivec2(current_read_index++, gl_WorkGroupID.x));
+        vec4 next_point = read(current_read_index++, offset);
         is_used = next_point.w;
         highp float noise_x = (rand(next_point.xy) - 0.5) * 2.0 * noise_strength * sample_length;
         highp float noise_y = (rand(next_point.yz) - 0.5) * 2.0 * noise_strength * sample_length;
         highp float noise_z = (rand(next_point.zx) - 0.5) * 2.0 * noise_strength * sample_length;
         next_point = vec4(next_point.x + noise_x, next_point.y + noise_y, next_point.z + noise_z, next_point.w);
-        imageStore(img_output, ivec2(current_write_index++, gl_WorkGroupID.x), next_point);
+        write(current_write_index++, offset, next_point);
     } while (is_used >= 1.0);
 }

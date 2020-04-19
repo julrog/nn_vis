@@ -15,27 +15,42 @@ class VertexDataHandler:
                 self.VBOs.extend(glGenBuffers(vbos))
 
         self.SSBOs: List[int] = []
+        self.SSBO_size: List[int] = []
         if ssbos == 1:
             self.SSBOs.append(glGenBuffers(ssbos))
+            self.SSBO_size.append(0)
         else:
             if ssbos > 0:
                 self.SSBOs.extend(glGenBuffers(ssbos))
+                self.SSBO_size.extend([0] * len(self.SSBOs))
+        self.max_ssbo_size = glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE)
 
-    def load_ssbo_data(self, data, location: int = 0, buffer_id: int = 0):
+    def load_ssbo_data(self, data: any, location: int = 0, buffer_id: int = 0):
+        if data.nbytes > self.max_ssbo_size:
+            raise Exception("Data to big for SSBO (%d bytes, max %d bytes)." % (data.nbytes, self.max_ssbo_size))
+
         self.set()
 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer_id)
+        self.SSBO_size[buffer_id] = data.nbytes
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.SSBOs[buffer_id])
         glBufferData(GL_SHADER_STORAGE_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, buffer_id)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.SSBOs[buffer_id])
 
-    def load_vbo_data(self, data, buffer_id: int = 0):
+    def read_ssbo_data(self, buffer_id: int = 0) -> any:
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.SSBOs[buffer_id])
+        return glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, self.SSBO_size[buffer_id])
+
+    def bind_ssbo_data(self, location: int = 0, buffer_id: int = 0):
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.SSBOs[buffer_id])
+
+    def load_vbo_data(self, data: any, buffer_id: int = 0):
         self.set()
 
         glBindBuffer(GL_ARRAY_BUFFER, self.VBOs[buffer_id])
         glBufferData(GL_ARRAY_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
 
-        glEnableVertexAttribArray(buffer_id)
+        glEnableVertexAttribArray(0)
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, data.itemsize * 4, ctypes.c_void_p(0))
 
     def set(self):

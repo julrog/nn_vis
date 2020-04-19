@@ -26,6 +26,11 @@ def uniform_setter_function(uniform_setter: str):
             glUniformMatrix4fv(location, 1, GL_FALSE, data)
 
         return uniform_func
+    if uniform_setter is "int":
+        def uniform_func(location, data):
+            glUniform1i(location, data)
+
+        return uniform_func
     raise Exception("[%s] Uniform setter function for '%s' not defined." % (LOG_SOURCE, uniform_setter))
 
 
