@@ -33,8 +33,9 @@ void main() {
     highp uint current_read_index = 0;
     highp uint current_write_index = 1;
 
-    vec3 last_written_point = read(current_read_index++, offset).xyz;
-    vec3 first_point = last_written_point;
+    vec4 first_point = read(current_read_index++, offset);
+    vec3 last_written_point = first_point.xyz;
+
 
     // initialize variables used over the next loop
     vec3 next_point = last_written_point;
@@ -54,11 +55,15 @@ void main() {
             write(current_write_index++, offset, vec4(last_written_point.xyz, 1.0));
             distance_to_next = distance(next_point, last_written_point);
         }
-    } while (is_used >= 1.0);
+    } while (is_used > 0.0);
 
     // always store last edge point and mark it as last with w-value 0
-    write(current_write_index++, offset, vec4(next_point.xyz, 0.0));
+    write(current_write_index++, offset, vec4(next_point.xyz, -1.0));
 
     // store the first point with sum of all points as w value
     write(0, offset, vec4(first_point.xyz, int(current_write_index)));
+
+    while (current_write_index <= first_point.w) {
+        write(current_write_index++, offset, vec4(0.0, 0.0, 0.0, 0.0));
+    }
 }

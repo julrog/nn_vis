@@ -7,9 +7,8 @@ from OpenGL.GL import *
 
 from compute_shader import ComputeShader, ComputeShaderHandler
 from performance import track_time
-from render_helper import RenderSet, VertexDataHandler, render_setting_0, render_setting_1
+from render_helper import RenderSet, VertexDataHandler, render_setting_0, render_setting_1, SwappingBufferObject
 from shader import RenderShader, RenderShaderHandler
-from texture import Texture
 from window import Window
 
 LOG_SOURCE: str = "EDGE"
@@ -98,8 +97,8 @@ class EdgeHandler:
                                                                                       "edge_sample.comp")
             self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_noise",
                                                                                      "edge_noise.comp")
-            self.ssbo_handler: VertexDataHandler or None = None
-            self.switched_sample_ssbos: bool = False
+            self.sample_buffer: SwappingBufferObject = SwappingBufferObject(True)
+            self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.sample_buffer, 0)])
             self.max_distance: float = 0
             self.max_sample_points: int = 0
             self.point_count: int = 0
@@ -138,9 +137,9 @@ class EdgeHandler:
 
             transfer_data = np.array(initial_data, dtype=np.float32)
 
-            self.ssbo_handler = VertexDataHandler(ssbos=2)
-            self.ssbo_handler.load_ssbo_data(transfer_data, location=0, buffer_id=0)
-            self.ssbo_handler.load_ssbo_data(transfer_data, location=1, buffer_id=1)
+            self.sample_buffer.load(transfer_data)
+            self.sample_buffer.swap()
+            self.sample_buffer.load(transfer_data)
 
     @track_time
     def resize_sample_storage(self, new_max_samples: int):
@@ -158,8 +157,9 @@ class EdgeHandler:
 
         transfer_data = np.array(buffer_data, dtype=np.float32)
 
-        self.ssbo_handler.load_ssbo_data(transfer_data, location=0, buffer_id=0)
-        self.ssbo_handler.load_ssbo_data(transfer_data, location=1, buffer_id=1)
+        self.sample_buffer.load(transfer_data)
+        self.sample_buffer.swap()
+        self.sample_buffer.load(transfer_data)
 
     @track_time
     def sample_edges(self, sample_length: float = None):
@@ -168,12 +168,9 @@ class EdgeHandler:
 
         if self.use_compute:
             self.ssbo_handler.set()
-            self.ssbo_handler.bind_ssbo_data(0, 1 if self.switched_sample_ssbos else 0)
-            self.ssbo_handler.bind_ssbo_data(1, 0 if self.switched_sample_ssbos else 1)
             self.sample_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
             self.sample_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
 
-            print("[%s] Sample %d edges." % (LOG_SOURCE, len(self.edges)))
             for i in range(math.ceil(len(self.edges) / self.sample_compute_shader.max_workgroup_size)):
                 self.sample_compute_shader.set_uniform_data(
                     [('work_group_offset', i * self.sample_compute_shader.max_workgroup_size, 'int')])
@@ -183,7 +180,7 @@ class EdgeHandler:
                 else:
                     self.sample_compute_shader.compute(self.sample_compute_shader.max_workgroup_size)
 
-            self.switched_sample_ssbos = not self.switched_sample_ssbos
+            self.sample_buffer.swap()
         else:
             for edge in self.edges:
                 edge.sample(self.sample_length)
@@ -206,7 +203,7 @@ class EdgeHandler:
     @track_time
     def get_buffer_points(self) -> int:
         if self.use_compute:
-            return self.point_count
+            return int(self.sample_buffer.size / 16.0)
         else:
             return sum([len(edge.sample_points) for edge in self.edges])
 
@@ -214,14 +211,11 @@ class EdgeHandler:
     def sample_noise(self, strength: float = 1.0):
         if self.use_compute:
             self.ssbo_handler.set()
-            self.ssbo_handler.bind_ssbo_data(0, 1 if self.switched_sample_ssbos else 0)
-            self.ssbo_handler.bind_ssbo_data(1, 0 if self.switched_sample_ssbos else 1)
 
             self.noise_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
             self.noise_compute_shader.set_uniform_data([('noise_strength', strength, 'float')])
             self.noise_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
 
-            print("[%s] Add noise to %d edges." % (LOG_SOURCE, len(self.edges)))
             for i in range(math.ceil(len(self.edges) / self.noise_compute_shader.max_workgroup_size)):
                 self.noise_compute_shader.set_uniform_data(
                     [('work_group_offset', i * self.noise_compute_shader.max_workgroup_size, 'int')])
@@ -231,15 +225,32 @@ class EdgeHandler:
                 else:
                     self.noise_compute_shader.compute(self.noise_compute_shader.max_workgroup_size)
 
-            self.switched_sample_ssbos = not self.switched_sample_ssbos
+            self.sample_buffer.swap()
         else:
             for edge in self.edges:
                 edge.sample_noise(strength)
 
     @track_time
+    def check_limits(self):
+        edge_sample_data = np.frombuffer(self.sample_buffer.read(), dtype=np.float32)
+        edge_sample_data = edge_sample_data.reshape((len(self.edges), self.max_sample_points * 4))
+        max_edge_samples = 0
+        for i in range(len(self.edges)):
+            edge_points: int = int(edge_sample_data[i][3])
+            if edge_points > max_edge_samples:
+                max_edge_samples = edge_points
+            self.edges[i].sample_points = [Vector4([edge_sample_data[i][0], edge_sample_data[i][1],
+                                                    edge_sample_data[i][2], 1.0]),
+                                           Vector4([edge_sample_data[i][(edge_points - 1) * 4 + 0],
+                                                    edge_sample_data[i][(edge_points - 1) * 4 + 1],
+                                                    edge_sample_data[i][(edge_points - 1) * 4 + 2], 1.0])]
+
+        if max_edge_samples >= (self.max_sample_points - 5) * 0.8:
+            self.resize_sample_storage(max_edge_samples * 2)
+
+    @track_time
     def read_samples_from_sample_storage(self, raw: bool = False, auto_resize_enabled: bool = True) -> List[float]:
-        edge_sample_data = np.frombuffer(self.ssbo_handler.read_ssbo_data(1 if self.switched_sample_ssbos else 0),
-                                         dtype=np.float32)
+        edge_sample_data = np.frombuffer(self.sample_buffer.read(), dtype=np.float32)
         if raw:
             return edge_sample_data
 
@@ -310,13 +321,14 @@ class EdgeRenderer:
                                                                         "ball/transparent_ball.frag",
                                                                         "ball/ball_from_point.geom")
 
-        self.point_render: RenderSet = RenderSet(sample_point_shader, VertexDataHandler(vbos=1))
-        self.sphere_render: RenderSet = RenderSet(sample_sphere_shader, VertexDataHandler(vbos=1))
-        self.transparent_render: RenderSet = RenderSet(sample_transparent_shader, VertexDataHandler(vbos=1))
+        self.data_handler: VertexDataHandler = VertexDataHandler([(self.edge_handler.sample_buffer, 0)])
+
+        self.point_render: RenderSet = RenderSet(sample_point_shader, self.data_handler)
+        self.sphere_render: RenderSet = RenderSet(sample_sphere_shader, self.data_handler)
+        self.transparent_render: RenderSet = RenderSet(sample_transparent_shader, self.data_handler)
 
     @track_time
     def render_point(self, window: Window):
-        sampled_point_buffer = self.edge_handler.generate_buffer_data()
         sampled_points: int = self.edge_handler.get_buffer_points()
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
@@ -324,7 +336,6 @@ class EdgeRenderer:
                                             ("point_color", [1.0, 0.0, 0.0], "vec3")])
 
         self.point_render.set()
-        self.point_render.load_vbo_data(sampled_point_buffer)
 
         render_setting_0()
         glPointSize(10.0)
@@ -332,23 +343,19 @@ class EdgeRenderer:
 
     @track_time
     def render_sphere(self, window: Window):
-        sampled_point_buffer = self.edge_handler.generate_buffer_data()
         sampled_points: int = self.edge_handler.get_buffer_points()
 
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                              ("view", window.cam.get_view_matrix(), "mat4")])
 
         self.sphere_render.set()
-        self.sphere_render.load_vbo_data(sampled_point_buffer)
 
         render_setting_0()
         glDrawArrays(GL_POINTS, 0, sampled_points)
 
     @track_time
     def render_transparent(self, window: Window):
-        sampled_point_buffer = self.edge_handler.generate_buffer_data()
         sampled_points: int = self.edge_handler.get_buffer_points()
-        print("[%s] Rendering %d points." % (LOG_SOURCE, sampled_points))
 
         far, near = self.edge_handler.get_near_far_from_view(window.cam.get_view_matrix())
         self.transparent_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
@@ -357,7 +364,6 @@ class EdgeRenderer:
                                                   ("nearest_point_view_z", near, "float")])
 
         self.transparent_render.set()
-        self.transparent_render.load_vbo_data(sampled_point_buffer)
 
         render_setting_1()
         glDrawArrays(GL_POINTS, 0, sampled_points)

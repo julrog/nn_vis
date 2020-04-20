@@ -3,6 +3,7 @@
 layout(points) in;
 in float       vs_atom_radius[];
 in vec3        vs_normal[];
+in float       vs_discard[];
 
 layout(triangle_strip, max_vertices = 14) out;
 flat out vec3  gs_atom_position_cam;
@@ -30,20 +31,22 @@ void main()
     gs_atom_radius = vs_atom_radius[0];
     gs_normal = vs_normal[0];
 
-    draw_vertex(vec3(-1.0, 1.0, -1.0));
-    draw_vertex(vec3(1.0, 1.0, -1.0));
-    draw_vertex(vec3(-1.0, -1.0, -1.0));
-    draw_vertex(vec3(1.0, -1.0, -1.0));
-    draw_vertex(vec3(1.0, -1.0, 1.0));
-    draw_vertex(vec3(1.0, 1.0, -1.0));
-    draw_vertex(vec3(1.0, 1.0, 1.0));
-    draw_vertex(vec3(-1.0, 1.0, -1.0));
-    draw_vertex(vec3(-1.0, 1.0, 1.0));
-    draw_vertex(vec3(-1.0, -1.0, -1.0));
-    draw_vertex(vec3(-1.0, -1.0, 1.0));
-    draw_vertex(vec3(1.0, -1.0, 1.0));
-    draw_vertex(vec3(-1.0, 1.0, 1.0));
-    draw_vertex(vec3(1.0, 1.0, 1.0));
+    if (vs_discard[0] == 0.0) {
+        draw_vertex(vec3(-1.0, 1.0, -1.0));
+        draw_vertex(vec3(1.0, 1.0, -1.0));
+        draw_vertex(vec3(-1.0, -1.0, -1.0));
+        draw_vertex(vec3(1.0, -1.0, -1.0));
+        draw_vertex(vec3(1.0, -1.0, 1.0));
+        draw_vertex(vec3(1.0, 1.0, -1.0));
+        draw_vertex(vec3(1.0, 1.0, 1.0));
+        draw_vertex(vec3(-1.0, 1.0, -1.0));
+        draw_vertex(vec3(-1.0, 1.0, 1.0));
+        draw_vertex(vec3(-1.0, -1.0, -1.0));
+        draw_vertex(vec3(-1.0, -1.0, 1.0));
+        draw_vertex(vec3(1.0, -1.0, 1.0));
+        draw_vertex(vec3(-1.0, 1.0, 1.0));
+        draw_vertex(vec3(1.0, 1.0, 1.0));
+    }
 
     EndPrimitive();
 }

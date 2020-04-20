@@ -4,57 +4,81 @@ from OpenGL.GL import *
 from shader import BaseShader
 
 
+class BufferObject:
+    def __init__(self, ssbo: bool = False):
+        self.handle: int = glGenBuffers(1)
+        self.location: int = 0
+        self.ssbo: bool = ssbo
+        if self.ssbo:
+            self.size: int = 0
+            self.max_ssbo_size: int = glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE)
+
+    def load(self, data):
+        glBindVertexArray(0)
+
+        self.size = data.nbytes
+        if self.ssbo:
+            if data.nbytes > self.max_ssbo_size:
+                raise Exception("Data to big for SSBO (%d bytes, max %d bytes)." % (data.nbytes, self.max_ssbo_size))
+
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.handle)
+            glBufferData(GL_SHADER_STORAGE_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
+        else:
+            glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+            glBufferData(GL_ARRAY_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
+
+    def read(self) -> any:
+        if self.ssbo:
+            glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.handle)
+            return glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, self.size)
+
+    def bind(self, location: int, rendering: bool = False):
+        if self.ssbo:
+            if rendering:
+                glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+                glEnableVertexAttribArray(location)
+                glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+            else:
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.handle)
+        else:
+            glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+            glEnableVertexAttribArray(location)
+            glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+
+
+class SwappingBufferObject(BufferObject):
+    def __init__(self, ssbo: bool = False):
+        super().__init__(ssbo)
+        self.swap_handle: int = glGenBuffers(1)
+
+    def swap(self):
+        self.handle, self.swap_handle = self.swap_handle, self.handle
+
+    def bind(self, location: int, rendering: bool = False):
+        if self.ssbo:
+            if rendering:
+                glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+                glEnableVertexAttribArray(location)
+                glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+            else:
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.handle)
+                glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location + 1, self.swap_handle)
+        else:
+            glBindBuffer(GL_ARRAY_BUFFER, self.handle)
+            glEnableVertexAttribArray(location)
+            glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+
+
 class VertexDataHandler:
-    def __init__(self, vbos: int = 0, ssbos: int = 0):
+    def __init__(self, targeted_buffer_objects: List[Tuple[BufferObject, int]]):
         self.VAO: int = glGenVertexArrays(1)
-        self.VBOs: List[int] = []
-        if vbos == 1:
-            self.VBOs.append(glGenBuffers(vbos))
-        else:
-            if vbos > 0:
-                self.VBOs.extend(glGenBuffers(vbos))
+        self.targeted_buffer_objects: List[Tuple[BufferObject, int]] = targeted_buffer_objects
 
-        self.SSBOs: List[int] = []
-        self.SSBO_size: List[int] = []
-        if ssbos == 1:
-            self.SSBOs.append(glGenBuffers(ssbos))
-            self.SSBO_size.append(0)
-        else:
-            if ssbos > 0:
-                self.SSBOs.extend(glGenBuffers(ssbos))
-                self.SSBO_size.extend([0] * len(self.SSBOs))
-        self.max_ssbo_size = glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE)
-
-    def load_ssbo_data(self, data: any, location: int = 0, buffer_id: int = 0):
-        if data.nbytes > self.max_ssbo_size:
-            raise Exception("Data to big for SSBO (%d bytes, max %d bytes)." % (data.nbytes, self.max_ssbo_size))
-
-        self.set()
-
-        self.SSBO_size[buffer_id] = data.nbytes
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.SSBOs[buffer_id])
-        glBufferData(GL_SHADER_STORAGE_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
-
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.SSBOs[buffer_id])
-
-    def read_ssbo_data(self, buffer_id: int = 0) -> any:
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.SSBOs[buffer_id])
-        return glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, self.SSBO_size[buffer_id])
-
-    def bind_ssbo_data(self, location: int = 0, buffer_id: int = 0):
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.SSBOs[buffer_id])
-
-    def load_vbo_data(self, data: any, buffer_id: int = 0):
-        self.set()
-
-        glBindBuffer(GL_ARRAY_BUFFER, self.VBOs[buffer_id])
-        glBufferData(GL_ARRAY_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
-
-        glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, data.itemsize * 4, ctypes.c_void_p(0))
-
-    def set(self):
+    def set(self, rendering: bool = False):
+        glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
         glBindVertexArray(self.VAO)
+        for buffer, location in self.targeted_buffer_objects:
+            buffer.bind(location, rendering)
 
 
 class RenderSet:
@@ -65,15 +89,9 @@ class RenderSet:
     def set_uniform_data(self, data: List[Tuple[str, any, any]]):
         self.shader.set_uniform_data(data)
 
-    def load_vbo_data(self, data: any, buffer_id: int = 0):
-        self.data_handler.load_vbo_data(data, buffer_id)
-
-    def load_ssbo_data(self, data: any, location: int = 0, buffer_id: int = 0):
-        self.data_handler.load_ssbo_data(data, location, buffer_id)
-
     def set(self):
         self.shader.use()
-        self.data_handler.set()
+        self.data_handler.set(True)
 
 
 def render_setting_0():
