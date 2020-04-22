@@ -57,7 +57,7 @@ void main() {
         }
     } while (is_used > 0.0);
 
-    // always store last edge point and mark it as last with w-value 0
+    // always store last edge point and mark it as last with w-value -1
     write(current_write_index++, offset, vec4(next_point.xyz, -1.0));
 
     // store the first point with sum of all points as w value

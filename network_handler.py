@@ -1,11 +1,11 @@
 import math
-from random import random
 from typing import List, Tuple
-from pyrr import Vector3, matrix44, Vector4, vector3, Matrix44
+from pyrr import Matrix44
 import numpy as np
 from OpenGL.GL import *
 
 from compute_shader import ComputeShader, ComputeShaderHandler
+from network_model import NetworkModel, Edge
 from performance import track_time
 from render_helper import RenderSet, VertexDataHandler, render_setting_0, render_setting_1, SwappingBufferObject, \
     BufferObject
@@ -13,15 +13,6 @@ from shader import RenderShader, RenderShaderHandler
 from window import Window
 
 LOG_SOURCE: str = "EDGE"
-
-
-class Edge:
-    def __init__(self, start_position: Vector3, end_position: Vector3):
-        self.start: Vector4 = Vector4([start_position.x, start_position.y, start_position.z, 1.0])
-        self.end: Vector4 = Vector4([end_position.x, end_position.y, end_position.z, 0.0])
-        self.initial_data: List[float] = [start_position.x, start_position.y, start_position.z, 1.0, end_position.x,
-                                          end_position.y, end_position.z, 0.0]
-        self.sample_points: List[Vector4] = [self.start, self.end]
 
 
 class EdgeHandler:
@@ -45,27 +36,12 @@ class EdgeHandler:
         self.farthest_view_z: int = 1000000
         self.max_sample_points: int = 0
 
-    def set_data(self, node_positions_layer_one: List[float], node_positions_layer_two: List[float]):
-        def group_wise(it):
-            it = iter(it)
-            while True:
-                yield next(it), next(it), next(it)
-
+    def set_data(self, network: NetworkModel):
         # generate edges
-        vec_nodes_layer_one: List[Vector3] = [Vector3([x, y, z]) for x, y, z in group_wise(node_positions_layer_one)]
-        vec_nodes_layer_two: List[Vector3] = [Vector3([x, y, z]) for x, y, z in group_wise(node_positions_layer_two)]
-        self.edges = []
-        for node_one in vec_nodes_layer_one:
-            for node_two in vec_nodes_layer_two:
-                self.edges.append(Edge(node_one, node_two))
+        self.edges = network.generate_edges()
 
         #  estimate a suitable sample size for buffer objects
-        max_distance = 0
-        for node_one in vec_nodes_layer_one:
-            for node_two in vec_nodes_layer_two:
-                test_distance = (node_one - node_two).length
-                if test_distance > max_distance:
-                    max_distance = test_distance
+        max_distance = network.generate_max_distance()
         self.max_sample_points = int((max_distance * 2.0) / self.sample_length)
 
         # generate and load initial data for the buffer
@@ -188,7 +164,7 @@ class EdgeHandler:
 
     @track_time
     def get_near_far_from_view(self) -> Tuple[float, float]:
-        return -0.49, -2.5  # self.nearest_view_z / 1000.0, self.farthest_view_z / 1000.0
+        return self.nearest_view_z / 1000.0, self.farthest_view_z / 1000.0
 
     @track_time
     def get_buffer_points(self) -> int:
@@ -200,13 +176,13 @@ class EdgeRenderer:
         self.edge_handler = edge_handler
 
         shader_handler = RenderShaderHandler()
-        sample_point_shader: RenderShader = shader_handler.create("base", "base.vert", "base.frag")
-        sample_sphere_shader: RenderShader = shader_handler.create("ball", "ball/ball_from_point.vert",
-                                                                   "ball/ball_from_point.frag",
-                                                                   "ball/ball_from_point.geom")
-        sample_transparent_shader: RenderShader = shader_handler.create("trans", "ball/ball_from_point.vert",
-                                                                        "ball/transparent_ball.frag",
-                                                                        "ball/ball_from_point.geom")
+        sample_point_shader: RenderShader = shader_handler.create("base", "sample/point.vert", "sample/point.frag")
+        sample_sphere_shader: RenderShader = shader_handler.create("sample", "sample/ball_from_point.vert",
+                                                                   "sample/ball_from_point.frag",
+                                                                   "sample/ball_from_point.geom")
+        sample_transparent_shader: RenderShader = shader_handler.create("trans", "sample/ball_from_point.vert",
+                                                                        "sample/transparent_ball.frag",
+                                                                        "sample/ball_from_point.geom")
 
         self.data_handler: VertexDataHandler = VertexDataHandler([(self.edge_handler.sample_buffer, 0)])
 
