@@ -28,7 +28,6 @@ class ComputeShader(BaseShader):
             uniform_setter(uniform_location, uniform_data)
 
         glDispatchCompute(width, 1, 1)
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
         glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
 

@@ -17,7 +17,7 @@ window.set_callbacks()
 window.activate()
 
 print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
-nodes_layer_one = 100
+nodes_layer_one = 1000
 nodes_layer_one_sqrt = math.ceil(math.sqrt(nodes_layer_one))
 nodes_layer_two = 100
 nodes_layer_two_sqrt = math.ceil(math.sqrt(nodes_layer_two))
@@ -35,13 +35,14 @@ for i in range(nodes_layer_two):
     layer_two.append(1.0)
 
 sample_length = (Vector3([-1.0, 0.0, 0.0]) - Vector3([1.0, 0.0, 0.0])).length / 20.0
-edge_handler = EdgeHandler(sample_length, True)
+edge_handler = EdgeHandler(sample_length)
 edge_handler.set_data(layer_one, layer_two)
 edge_handler.sample_edges()
 
 edge_renderer = EdgeRenderer(edge_handler)
 
 frame_count: int = 0
+edge_handler.check_limits(window.cam.get_view_matrix())
 
 
 @track_time(track_recursive=False)
@@ -49,15 +50,12 @@ def frame():
     global frame_count
     window_handler.update()
 
-    edge_handler.sample_noise(0.02)
+    edge_handler.sample_noise(0.5)
     edge_handler.sample_edges()
     if frame_count % 10 == 0:
-        edge_handler.check_limits()
         print("Rendering %d points from %d edges." % (edge_handler.get_buffer_points(), len(edge_handler.edges)))
 
-    edge_renderer.render_transparent(window)
-
-    window.swap()
+    edge_renderer.render_point(window, swap=True)
     frame_count += 1
 
 
