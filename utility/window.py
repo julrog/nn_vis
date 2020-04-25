@@ -1,11 +1,10 @@
 from typing import Dict, Tuple
 import glfw
-import pyrr
 from OpenGL.GL import *
 from pyrr import Vector3
 
-from camera import Camera
-from singleton import Singleton
+from utility.camera import Camera
+from utility.singleton import Singleton
 
 
 class Window:
@@ -101,7 +100,7 @@ class WindowHandler(metaclass=Singleton):
             raise Exception("glfw can not be initialized!")
 
     def create_window(self, title: str, width: float, height: float, monitor: int = None):
-        settings = dict()
+        settings: Dict[str, any] = dict()
         settings["title"] = title
         settings["width"] = width
         settings["height"] = height

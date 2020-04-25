@@ -4,9 +4,10 @@ from typing import Dict, Tuple, List
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 
-from shader import BaseShader
-from singleton import Singleton
-from texture import Texture
+from definitions import BASE_PATH
+from opengl_helper.shader import BaseShader
+from utility.singleton import Singleton
+from opengl_helper.texture import Texture
 
 
 class ComputeShader(BaseShader):
@@ -33,7 +34,7 @@ class ComputeShader(BaseShader):
 
 class ComputeShaderHandler(metaclass=Singleton):
     def __init__(self):
-        self.shader_dir: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'shader/compute')
+        self.shader_dir: str = os.path.join(BASE_PATH, 'shader_src/compute')
         self.shader_list: Dict[str, ComputeShader] = dict()
 
     def create(self, shader_name: str, shader_file_path: str) -> ComputeShader:

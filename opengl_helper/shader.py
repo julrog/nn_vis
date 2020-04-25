@@ -4,8 +4,9 @@ from typing import List, Tuple, Dict
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 
-from singleton import Singleton
-from texture import Texture
+from definitions import BASE_PATH
+from utility.singleton import Singleton
+from opengl_helper.texture import Texture
 
 LOG_SOURCE: str = "SHADER"
 
@@ -52,7 +53,7 @@ class BaseShader:
                 self.uniform_cache[uniform_name] = (
                     uniform_location, uniform_data, uniform_setter_function(uniform_setter))
             else:
-                print(["[%s] Uniform variable '%s' not used in shader." % (LOG_SOURCE, uniform_name)])
+                print(["[%s] Uniform variable '%s' not used in shader_src." % (LOG_SOURCE, uniform_name)])
 
     def set_textures(self, textures: List[Tuple[Texture, str, int]]):
         self.textures: List[Tuple[Texture, str, int]] = textures
@@ -83,7 +84,7 @@ class RenderShader(BaseShader):
 
 class RenderShaderHandler(metaclass=Singleton):
     def __init__(self):
-        self.shader_dir: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'shader')
+        self.shader_dir: str = os.path.join(BASE_PATH, 'shader_src')
         self.shader_list: Dict[str, RenderShader] = dict()
 
     def create(self, shader_name: str, vertex_file_path: str = None, fragment_file_path: str = None,

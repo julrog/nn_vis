@@ -1,6 +1,6 @@
 import time
 
-from file import FileHandler
+from utility.file import FileHandler
 
 running_times = []
 

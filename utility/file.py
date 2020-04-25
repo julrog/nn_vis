@@ -4,12 +4,13 @@ from functools import reduce
 from typing import Dict
 from datetime import datetime, timezone
 
-from singleton import Singleton
+from definitions import BASE_PATH
+from utility.singleton import Singleton
 
 
 class FileHandler(metaclass=Singleton):
     def __init__(self):
-        self.storage_path: str = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'storage')
+        self.storage_path: str = os.path.join(BASE_PATH, 'storage')
         self.stats_cache: Dict[str, Dict[str, any]] = dict()
         self.day_key: str = datetime.utcfromtimestamp(
             datetime.timestamp(datetime.now().replace(tzinfo=timezone.utc).astimezone())).strftime(

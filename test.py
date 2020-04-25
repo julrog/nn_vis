@@ -1,12 +1,11 @@
-import math
-
 from pyrr import Vector3
 
-from network_handler import EdgeHandler, EdgeRenderer
-from file import FileHandler
-from network_model import NetworkModel
-from performance import track_time
-from window import WindowHandler
+from processing import EdgeProcessor
+from rendering import EdgeRenderer
+from utility.file import FileHandler
+from models import NetworkModel
+from utility.performance import track_time
+from utility.window import WindowHandler
 from OpenGL.GL import *
 
 WIDTH, HEIGHT = 1920, 1080
@@ -21,7 +20,7 @@ print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(
 
 network = NetworkModel([9, 9, 9], (Vector3([-1, -1, -11]), Vector3([1, 1, -2])))
 sample_length = (network.bounding_range.z * 2.0) / 100.0
-edge_handler = EdgeHandler(sample_length)
+edge_handler = EdgeProcessor(sample_length)
 edge_handler.set_data(network)
 edge_handler.sample_edges()
 
