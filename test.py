@@ -1,7 +1,9 @@
+import numpy as np
 from pyrr import Vector3
 
-from processing import EdgeProcessor
-from rendering import EdgeRenderer
+from processing.edge_processing import EdgeProcessor
+from processing.grid_processing import GridProcessor
+from rendering import EdgeRenderer, GridRenderer
 from utility.file import FileHandler
 from models import NetworkModel
 from utility.performance import track_time
@@ -18,13 +20,22 @@ window.activate()
 
 print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
-network = NetworkModel([9, 9, 9], (Vector3([-1, -1, -11]), Vector3([1, 1, -2])))
-sample_length = (network.bounding_range.z * 2.0) / 100.0
+network = NetworkModel([9, 4, 9], (Vector3([-2, -2, -11]), Vector3([2, 2, -2])))
+
+sample_length = (network.bounding_range.z * 2.0) / 50.0
+grid_cell_size = sample_length / 4.0
+sample_radius = sample_length
+
 edge_handler = EdgeProcessor(sample_length)
 edge_handler.set_data(network)
 edge_handler.sample_edges()
-
 edge_renderer = EdgeRenderer(edge_handler)
+
+grid = GridProcessor(Vector3([grid_cell_size, grid_cell_size, grid_cell_size]),
+                     (Vector3([-3, -3, -13]), Vector3([3, 3, 0])),
+                     edge_handler, 20.0, sample_radius)
+grid.calculate_density()
+grid_renderer = GridRenderer(grid)
 
 frame_count: int = 0
 edge_handler.check_limits(window.cam.get_view_matrix())
@@ -35,14 +46,17 @@ def frame():
     global frame_count
     window_handler.update()
 
-    #edge_handler.sample_noise(0.66)
-    #edge_handler.sample_edges()
+    edge_handler.sample_noise(0.5)
+    edge_handler.sample_edges()
+    grid.calculate_density()
     edge_handler.check_limits(window.cam.get_view_matrix())
 
     if frame_count % 10 == 0:
         print("Rendering %d points from %d edges." % (edge_handler.get_buffer_points(), len(edge_handler.edges)))
 
-    edge_renderer.render_transparent(window, swap=True)
+    # edge_renderer.render_sphere(window, clear=True, swap=False)
+    grid_renderer.render_cube(window, clear=True, swap=True)
+
     frame_count += 1
 
 

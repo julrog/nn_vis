@@ -32,6 +32,11 @@ def uniform_setter_function(uniform_setter: str):
             glUniform1i(location, data)
 
         return uniform_func
+    if uniform_setter is "ivec3":
+        def uniform_func(location, data):
+            glUniform3iv(location, 1, data)
+
+        return uniform_func
     raise Exception("[%s] Uniform setter function for '%s' not defined." % (LOG_SOURCE, uniform_setter))
 
 

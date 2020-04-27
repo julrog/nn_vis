@@ -1,0 +1,93 @@
+#version 430
+
+struct SamplePoint
+{
+    vec4 pos;
+};
+
+struct DensityGrid
+{
+    int density;
+    int pad1;
+    int pad2;
+    int pad3;
+};
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(binding = 0) readonly buffer sample_input
+{
+    SamplePoint input_sample[];
+};
+
+layout(binding = 2) coherent buffer density_grid
+{
+    DensityGrid grid[];
+};
+
+uniform int work_group_offset;
+uniform int max_sample_points;
+uniform float density_strength;
+uniform float sample_radius;
+
+uniform ivec3 grid_cell_count;
+uniform vec3 grid_cell_size;
+uniform vec3 grid_bounding_min;
+
+
+vec4 read(highp uint index, highp uint offset)
+{
+    return input_sample[index + offset].pos;
+}
+
+ivec3 gridIndex(vec3 position)
+{
+    return ivec3(int(round((position.x - grid_bounding_min.x)/grid_cell_size.x)),
+    int(round((position.y - grid_bounding_min.y)/grid_cell_size.y)),
+    int(round((position.z - grid_bounding_min.z)/grid_cell_size.z)));
+}
+
+vec3 gridPosition(ivec3 gridIndex)
+{
+    return vec3((float(gridIndex.x) * grid_cell_size.x + grid_bounding_min.x),
+    (float(gridIndex.y) * grid_cell_size.y + grid_bounding_min.y),
+    (float(gridIndex.z) * grid_cell_size.z + grid_bounding_min.z));
+}
+
+void main() {
+    highp uint offset = (gl_WorkGroupID.x + work_group_offset) * max_sample_points;
+    highp uint current_read_index = 0;
+    ivec3 convolution_range = ivec3(ceil(sample_radius/grid_cell_size.x) + 1, ceil(sample_radius/grid_cell_size.y) + 1, ceil(sample_radius/grid_cell_size.z) + 1);
+
+    vec4 pointA = read(current_read_index++, offset);
+    vec4 pointB = vec4(0.0);
+
+    do {
+        pointB = read(current_read_index++, offset);
+        highp float disMin = length(pointA.xyz - pointB.xyz);
+        vec4 midPoint = (pointA + pointB)/2.0;
+        ivec3 midIndex = gridIndex(midPoint.xyz);
+        for (int ix = -convolution_range.x; ix <= convolution_range.x; ix++)
+        {
+            for (int iy = -convolution_range.y; iy <= convolution_range.y; iy++)
+            {
+                for (int iz = -convolution_range.z; iz <= convolution_range.z; iz++)
+                {
+                    ivec3 grid_index = ivec3(midIndex.x + ix, midIndex.y + iy, midIndex.z + iz);
+                    if (grid_index.x >= 0 && grid_index.y >= 0 && grid_index.z >= 0 && grid_index.x < grid_cell_count.x && grid_index.y < grid_cell_count.y && grid_index.z < grid_cell_count.z)
+                    {
+                        vec3 grid_position = gridPosition(grid_index);
+                        float disA = length(pointA.xyz - grid_position);
+                        float disB = length(pointB.xyz - grid_position);
+                        if (disA + disB < sample_radius * 2.0)
+                        {
+                            highp int index = (grid_index.x + grid_index.y * grid_cell_count.x + grid_index.z * grid_cell_count.y * grid_cell_count.x);
+                            highp float value = (sample_radius * 2.0 - (disA + disB))/(sample_radius * 2.0 - disMin);
+                            atomicAdd(grid[index].density, int(value * density_strength));
+                        }
+                    }
+                }
+            }
+        }
+        pointA = pointB;
+    } while (pointB.w >= 1.0);
+}

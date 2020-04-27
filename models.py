@@ -26,16 +26,24 @@ class NetworkModel:
         for layer, nodes in enumerate(self.layer):
             nodes_sqrt = math.ceil(math.sqrt(nodes))
             current_node_positions: List[Vector3] = []
-            for i in range(nodes):
+            if nodes <= 1:
                 position: Vector3 = Vector3(
-                    [(((i % nodes_sqrt) / (
-                            nodes_sqrt - 1.0)) * 2.0 - 1.0) * self.bounding_range.x + self.bounding_mid.x,
-                     ((math.floor(
-                         i / nodes_sqrt) / (
-                               nodes_sqrt - 1.0)) * 2.0 - 1.0) * self.bounding_range.y + self.bounding_mid.y,
+                    [self.bounding_mid.x,
+                     self.bounding_mid.y,
                      self.bounding_volume[0].z * (1 - layer / (len(self.layer) - 1)) + self.bounding_volume[
                          1].z * layer / (len(self.layer) - 1)])
                 current_node_positions.append(position)
+            else:
+                for i in range(nodes):
+                    position: Vector3 = Vector3(
+                        [(((i % nodes_sqrt) / (
+                                nodes_sqrt - 1.0)) * 2.0 - 1.0) * self.bounding_range.x + self.bounding_mid.x,
+                         ((math.floor(
+                             i / nodes_sqrt) / (
+                                   nodes_sqrt - 1.0)) * 2.0 - 1.0) * self.bounding_range.y + self.bounding_mid.y,
+                         self.bounding_volume[0].z * (1 - layer / (len(self.layer) - 1)) + self.bounding_volume[
+                             1].z * layer / (len(self.layer) - 1)])
+                    current_node_positions.append(position)
             self.node_positions.append(current_node_positions)
 
     def generate_edges(self) -> List[Edge]:
@@ -47,11 +55,11 @@ class NetworkModel:
         return edges
 
     def generate_max_distance(self) -> float:
-        max_distance = 0.0
+        max_distance: float = 0.0
         for i in range(len(self.layer) - 1):
             for node_one in self.node_positions[i]:
                 for node_two in self.node_positions[i + 1]:
-                    distance = (node_one - node_two).length
+                    distance: float = (node_one - node_two).length
                     if max_distance < distance:
                         max_distance = distance
         return max_distance

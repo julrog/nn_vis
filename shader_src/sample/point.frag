@@ -1,11 +1,12 @@
 #version 440
 
-out vec4 fColor;
+flat in float vs_discard;
 
-uniform vec3 point_color;
+out vec4 fColor;
 
 void main()
 {
-     vec3 color = vec3(gl_FragCoord.x/1280.0, gl_FragCoord.y/900.0, 0.0);
-	 fColor =  vec4( color.xyz * 0.5 + point_color.xyz * 0.5, 1.0 );
+    if (vs_discard == 1.0) discard;
+    vec3 color = vec3(1.0, gl_FragCoord.x/1920.0, gl_FragCoord.y/1080.0);
+    fColor =  vec4(color, 1.0);
 }

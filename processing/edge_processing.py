@@ -9,7 +9,7 @@ from models import NetworkModel, Edge
 from utility.performance import track_time
 from opengl_helper.render_utility import VertexDataHandler
 
-LOG_SOURCE: str = "PROCESSING"
+LOG_SOURCE: str = "EDGE_PROCESSING"
 
 
 class EdgeProcessor:
@@ -17,11 +17,11 @@ class EdgeProcessor:
         self.sample_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_sampler",
                                                                                   "edge_sample.comp")
         self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_noise",
-                                                                                 "edge_noise.comp")
+                                                                                 "sample_noise.comp")
         self.limit_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_limits",
                                                                                  "edge_limits.comp")
-        self.sample_buffer: SwappingBufferObject = SwappingBufferObject(True)
-        self.limits_buffer: BufferObject = BufferObject(True)
+        self.sample_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True)
+        self.limits_buffer: BufferObject = BufferObject(ssbo=True)
         self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.sample_buffer, 0), (self.limits_buffer, 2)])
 
         self.edges: List[Edge] = []
@@ -38,8 +38,8 @@ class EdgeProcessor:
         self.edges = network.generate_edges()
 
         #  estimate a suitable sample size for buffer objects
-        max_distance = network.generate_max_distance()
-        self.max_sample_points = int((max_distance * 2.0) / self.sample_length)
+        max_distance: float = network.generate_max_distance()
+        self.max_sample_points = int((max_distance * 2.0) / self.sample_length) + 2
 
         # generate and load initial data for the buffer
         initial_data: List[float] = []
@@ -53,6 +53,7 @@ class EdgeProcessor:
 
     @track_time
     def resize_sample_storage(self, new_max_samples: int):
+        print("[%s] Resize buffer." % LOG_SOURCE)
         edge_sample_data = np.array(self.read_samples_from_sample_storage(raw=True, auto_resize_enabled=False),
                                     dtype=np.float32)
         edge_sample_data = edge_sample_data.reshape((len(self.edges), self.max_sample_points * 4))
@@ -70,6 +71,7 @@ class EdgeProcessor:
         self.sample_buffer.load(transfer_data)
         self.sample_buffer.swap()
         self.sample_buffer.load(transfer_data)
+        self.sample_buffer.swap()
 
     @track_time
     def sample_edges(self, sample_length: float = None):
@@ -156,7 +158,7 @@ class EdgeProcessor:
         self.nearest_view_z = limits[1]
         self.farthest_view_z = limits[2]
         max_edge_samples = limits[3]
-        if max_edge_samples >= (self.max_sample_points - 5) * 0.8:
+        if max_edge_samples >= (self.max_sample_points - 1) * 0.8:
             self.resize_sample_storage(int(max_edge_samples * 2))
 
     @track_time
