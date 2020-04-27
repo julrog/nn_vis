@@ -30,6 +30,11 @@ class RenderSet:
         self.data_handler.set(True)
 
 
+def clear_screen(clear_color: List[float]):
+    glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3])
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+
 def render_setting_0(clear: bool = True):
     if clear:
         glClearColor(0.0, 0.0, 0.0, 1.0)

@@ -1,6 +1,7 @@
 import numpy as np
 from pyrr import Vector3
 
+from opengl_helper.render_utility import clear_screen
 from processing.edge_processing import EdgeProcessor
 from processing.grid_processing import GridProcessor
 from rendering import EdgeRenderer, GridRenderer
@@ -48,15 +49,17 @@ def frame():
 
     edge_handler.sample_noise(0.5)
     edge_handler.sample_edges()
-    grid.calculate_density()
     edge_handler.check_limits(window.cam.get_view_matrix())
+
+    grid.calculate_density()
+
+    clear_screen([1.0, 1.0, 1.0, 1.0])
+    grid_renderer.render_cube(window, clear=False, swap=False)
+    edge_renderer.render_transparent(window, clear=False, swap=False)
+    window.swap()
 
     if frame_count % 10 == 0:
         print("Rendering %d points from %d edges." % (edge_handler.get_buffer_points(), len(edge_handler.edges)))
-
-    # edge_renderer.render_sphere(window, clear=True, swap=False)
-    grid_renderer.render_cube(window, clear=True, swap=True)
-
     frame_count += 1
 
 
