@@ -1,0 +1,36 @@
+#version 440
+
+struct GridPosition
+{
+    vec4 pos;
+};
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) restrict writeonly buffer grid_position_buffer
+{
+    GridPosition grid_position[];
+};
+
+uniform int work_group_offset;
+uniform ivec3 grid_cell_count;
+uniform vec3 grid_cell_size;
+uniform vec3 grid_bounding_min;
+
+ivec3 getGridIndex(int index)
+{
+    int x = index % grid_cell_count.x;
+    int y = ((index - x) / grid_cell_count.x) % grid_cell_count.y;
+    int z = (index - x - y * grid_cell_count.x) / (grid_cell_count.x * grid_cell_count.y);
+    return ivec3(x, y, z);
+}
+
+void main() {
+    int index = int(gl_WorkGroupID.x) + work_group_offset;
+    ivec3 grid_index = getGridIndex(index);
+
+    float pos_x = float(grid_index.x) * grid_cell_size.x + grid_bounding_min.x;
+    float pos_y = float(grid_index.y) * grid_cell_size.y + grid_bounding_min.y;
+    float pos_z = float(grid_index.z) * grid_cell_size.z + grid_bounding_min.z;
+    grid_position[index].pos = vec4(pos_x, pos_y, pos_z, 1.0);
+}

@@ -7,10 +7,10 @@ struct SamplePoint
 
 struct SampleLimits
 {
-    int samples;
-    int nearest_z;
-    int farthest_z;
-    int max_samples;
+    float samples;
+    float nearest_z;
+    float farthest_z;
+    float max_samples;
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -18,27 +18,18 @@ layout(std430, binding = 0) restrict readonly buffer sample_input
 {
     SamplePoint input_sample[];
 };
-layout(std430, binding = 1) restrict writeonly buffer sample_output
+layout(std430, binding = 2) restrict writeonly buffer sample_limits
 {
-    SamplePoint output_sample[];
-};
-layout(std430, binding = 2) coherent buffer sample_limits
-{
-    SampleLimits limits[1];
+    SampleLimits limits[];
 };
 
-uniform mat4 view;
+//uniform mat4 view;
 uniform int work_group_offset;
 uniform int max_sample_points;
 
 vec4 read(highp uint index, highp uint offset)
 {
     return input_sample[index + offset].pos;
-}
-
-void write(highp uint index, highp uint offset, vec4 pos)
-{
-    output_sample[index + offset].pos = pos;
 }
 
 void main() {
@@ -52,7 +43,46 @@ void main() {
     vec4 first_point = read(0, offset);
     vec4 last_point = read(int(first_point.w) - 1, offset);
 
-    float is_used = 1.0;
+    int index = int(gl_WorkGroupID.x) + work_group_offset;
+    limits[index].samples = first_point.w;
+
+    /*vec4 view_sample = view * vec4(first_point.xyz, 1.0);
+    float scaled_view_z = view_sample.z * 1000.0;
+    int next_view_z = int(scaled_view_z);
+
+    // compare with cached value first
+    if (last_nearest_z < next_view_z) {
+        // update cached value and eventually set new nearest
+        last_nearest_z = atomicMax(limits[0].nearest_z, next_view_z);
+        if (last_nearest_z < next_view_z) last_nearest_z = next_view_z;
+    }
+
+    // compare with cached value first
+    if (last_farthest_z > next_view_z) {
+        // update cached value and eventually set new nearest
+        last_farthest_z = atomicMin(limits[0].farthest_z, next_view_z);
+        if (last_farthest_z > next_view_z) last_farthest_z = next_view_z;
+    }
+
+    view_sample = view * vec4(last_point.xyz, 1.0);
+    scaled_view_z = view_sample.z * 1000.0;
+    next_view_z = int(scaled_view_z);
+
+    // compare with cached value first
+    if (last_nearest_z < next_view_z) {
+        // update cached value and eventually set new nearest
+        last_nearest_z = atomicMax(limits[0].nearest_z, next_view_z);
+        if (last_nearest_z < next_view_z) last_nearest_z = next_view_z;
+    }
+
+    // compare with cached value first
+    if (last_farthest_z > next_view_z) {
+        // update cached value and eventually set new nearest
+        last_farthest_z = atomicMin(limits[0].farthest_z, next_view_z);
+        if (last_farthest_z > next_view_z) last_farthest_z = next_view_z;
+    }
+
+    /*float is_used = 1.0;
     do {
         vec4 next_point = read(current_read_index++, offset);
         vec4 view_sample = view * vec4(next_point.xyz, 1.0);
@@ -73,8 +103,8 @@ void main() {
             last_farthest_z = atomicMin(limits[0].farthest_z, next_view_z);
             if (last_farthest_z > next_view_z) last_farthest_z = next_view_z;
         }
-    } while (is_used >= 1.0);
+    } while (is_used >= 1.0);*/
 
-    atomicMax(limits[0].max_samples, int(first_point.w));
-    atomicAdd(limits[0].samples, int(first_point.w));
+    /*atomicMax(limits[0].max_samples, int(first_point.w));
+    atomicAdd(limits[0].samples, int(first_point.w));*/
 }

@@ -42,12 +42,15 @@ class Camera:
         self.rotation_speed: float = rotation_speed
 
         self.projection: Matrix44 = pyrr.matrix44.create_perspective_projection_matrix(45, width / height, 0.1, 100)
+        self.view: Matrix44 = self.generate_view_matrix()
 
     def update(self):
         self.update_camera_vectors()
+        self.generate_view_matrix()
 
-    def get_view_matrix(self) -> Matrix44:
-        return look_at(self.camera_pos, self.camera_pos + self.camera_front, self.camera_up)
+    def generate_view_matrix(self) -> Matrix44:
+        self.view = look_at(self.camera_pos, self.camera_pos + self.camera_front, self.camera_up)
+        return self.view
 
     def process_mouse_movement(self, x_offset: float, y_offset: float, constrain_pitch: bool = True):
         self.yaw += x_offset * self.rotation_speed

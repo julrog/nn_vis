@@ -1,6 +1,52 @@
 import math
 from typing import List, Tuple
-from pyrr import Vector3, Vector4
+from pyrr import Vector3, Vector4, Matrix44, vector4, matrix44
+
+from utility.performance import track_time
+
+
+class Grid:
+    def __init__(self, grid_cell_size: Vector3, bounding_volume: Tuple[Vector3, Vector3]):
+        self.grid_cell_size: Vector3 = grid_cell_size
+
+        self.bounding_volume: Tuple[Vector3, Vector3] = bounding_volume
+        if self.bounding_volume[0].x > self.bounding_volume[1].x:
+            self.bounding_volume[0].x, self.bounding_volume[1].x = bounding_volume[1].x, bounding_volume[0].x
+        if self.bounding_volume[0].y > self.bounding_volume[1].y:
+            self.bounding_volume[0].y, self.bounding_volume[1].y = bounding_volume[1].y, bounding_volume[0].y
+        if self.bounding_volume[0].z > self.bounding_volume[1].z:
+            self.bounding_volume[0].z, self.bounding_volume[1].z = bounding_volume[1].z, bounding_volume[0].z
+
+        self.grid_cell_count: List[int] = [
+            int((self.bounding_volume[1].x - self.bounding_volume[0].x) / self.grid_cell_size.x) + 2,
+            int((self.bounding_volume[1].y - self.bounding_volume[0].y) / self.grid_cell_size.y) + 2,
+            int((self.bounding_volume[1].z - self.bounding_volume[0].z) / self.grid_cell_size.z) + 2]
+        self.grid_cell_count_overall: int = self.grid_cell_count[0] * self.grid_cell_count[1] * self.grid_cell_count[2]
+
+        self.extends: List[Vector4] = [vector4.create_from_vector3(self.bounding_volume[0], 1.0),
+                                       vector4.create_from_vector3(self.bounding_volume[1], 1.0)]
+        self.extends.extend([
+            Vector4([self.bounding_volume[1].x, self.bounding_volume[1].y, self.bounding_volume[0].z, 1.0]),
+            Vector4([self.bounding_volume[1].x, self.bounding_volume[0].y, self.bounding_volume[0].z, 1.0]),
+            Vector4([self.bounding_volume[0].x, self.bounding_volume[1].y, self.bounding_volume[0].z, 1.0]),
+            Vector4([self.bounding_volume[1].x, self.bounding_volume[1].y, self.bounding_volume[1].z, 1.0]),
+            Vector4([self.bounding_volume[1].x, self.bounding_volume[0].y, self.bounding_volume[1].z, 1.0]),
+            Vector4([self.bounding_volume[0].x, self.bounding_volume[1].y, self.bounding_volume[1].z, 1.0])
+        ])
+
+    @track_time
+    def get_near_far_from_view(self, view: Matrix44) -> Tuple[float, float]:
+        nearest_view_z: float = -1000000
+        farthest_view_z: float = 1000000
+
+        for pos in self.extends:
+            view_position = Vector4(matrix44.apply_to_vector(view, pos))
+            if view_position.z > nearest_view_z:
+                nearest_view_z = view_position.z
+            if view_position.z < farthest_view_z:
+                farthest_view_z = view_position.z
+
+        return nearest_view_z, farthest_view_z
 
 
 class Edge:

@@ -1,8 +1,8 @@
-import math
-from typing import List, Tuple
+from typing import List
 from pyrr import Matrix44
 import numpy as np
 
+from definitions import pairwise
 from opengl_helper.buffer import SwappingBufferObject, BufferObject
 from opengl_helper.compute_shader import ComputeShader, ComputeShaderHandler
 from models import NetworkModel, Edge
@@ -51,6 +51,8 @@ class EdgeProcessor:
         self.sample_buffer.swap()
         self.sample_buffer.load(transfer_data)
 
+        self.limits_buffer.load(np.zeros(len(self.edges) * 4, dtype=np.float32))
+
     @track_time
     def resize_sample_storage(self, new_max_samples: int):
         print("[%s] Resize buffer." % LOG_SOURCE)
@@ -81,15 +83,7 @@ class EdgeProcessor:
         self.ssbo_handler.set()
         self.sample_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
         self.sample_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
-
-        for i in range(math.ceil(len(self.edges) / self.sample_compute_shader.max_workgroup_size)):
-            self.sample_compute_shader.set_uniform_data(
-                [('work_group_offset', i * self.sample_compute_shader.max_workgroup_size, 'int')])
-
-            if i == math.ceil(len(self.edges) / self.sample_compute_shader.max_workgroup_size) - 1:
-                self.sample_compute_shader.compute(len(self.edges) % self.sample_compute_shader.max_workgroup_size)
-            else:
-                self.sample_compute_shader.compute(self.sample_compute_shader.max_workgroup_size)
+        self.sample_compute_shader.compute(len(self.edges))
 
         self.sample_buffer.swap()
         self.sampled = True
@@ -101,15 +95,7 @@ class EdgeProcessor:
         self.noise_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
         self.noise_compute_shader.set_uniform_data([('noise_strength', strength, 'float')])
         self.noise_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
-
-        for i in range(math.ceil(len(self.edges) / self.noise_compute_shader.max_workgroup_size)):
-            self.noise_compute_shader.set_uniform_data(
-                [('work_group_offset', i * self.noise_compute_shader.max_workgroup_size, 'int')])
-
-            if i == math.ceil(len(self.edges) / self.noise_compute_shader.max_workgroup_size) - 1:
-                self.noise_compute_shader.compute(len(self.edges) % self.noise_compute_shader.max_workgroup_size)
-            else:
-                self.noise_compute_shader.compute(self.noise_compute_shader.max_workgroup_size)
+        self.noise_compute_shader.compute(len(self.edges))
 
         self.sample_buffer.swap()
 
@@ -137,33 +123,23 @@ class EdgeProcessor:
 
     @track_time
     def check_limits(self, view: Matrix44):
-        self.limits_buffer.load(np.array([0, -1000000, 1000000, 0], dtype=int))
-
         self.ssbo_handler.set()
 
-        self.limit_compute_shader.set_uniform_data([('view', view, 'mat4')])
+        # self.limit_compute_shader.set_uniform_data([('view', view, 'mat4')])
         self.limit_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
+        self.limit_compute_shader.compute(len(self.edges))
 
-        for i in range(math.ceil(len(self.edges) / self.limit_compute_shader.max_workgroup_size)):
-            self.limit_compute_shader.set_uniform_data(
-                [('work_group_offset', i * self.limit_compute_shader.max_workgroup_size, 'int')])
+        limits: List[int] = np.frombuffer(self.limits_buffer.read(), dtype=np.float32)
 
-            if i == math.ceil(len(self.edges) / self.limit_compute_shader.max_workgroup_size) - 1:
-                self.limit_compute_shader.compute(len(self.edges) % self.limit_compute_shader.max_workgroup_size)
-            else:
-                self.limit_compute_shader.compute(self.limit_compute_shader.max_workgroup_size)
+        self.point_count = 0
+        max_edge_samples: float = 0
+        for samples, _, _, _ in pairwise(limits):
+            self.point_count += samples
+            if samples > max_edge_samples:
+                max_edge_samples = samples
 
-        limits: List[int] = np.frombuffer(self.limits_buffer.read(), dtype=int)
-        self.point_count = limits[0]
-        self.nearest_view_z = limits[1]
-        self.farthest_view_z = limits[2]
-        max_edge_samples = limits[3]
         if max_edge_samples >= (self.max_sample_points - 1) * 0.8:
             self.resize_sample_storage(int(max_edge_samples * 2))
-
-    @track_time
-    def get_near_far_from_view(self) -> Tuple[float, float]:
-        return self.nearest_view_z / 1000.0, self.farthest_view_z / 1000.0
 
     @track_time
     def get_buffer_points(self) -> int:

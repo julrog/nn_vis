@@ -1,3 +1,4 @@
+import math
 import os
 from typing import Dict, Tuple, List
 
@@ -19,16 +20,22 @@ class ComputeShader(BaseShader):
         self.max_workgroup_size: int = glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0)[0]
 
     def compute(self, width: int):
-        if width > self.max_workgroup_size:
-            raise Exception("Workgroup size is too big!")
-        for texture, flag, image_position in self.textures:
-            texture.bind_as_image(flag, image_position)
-        glUseProgram(self.shader_handle)
+        glMemoryBarrier(GL_ALL_BARRIER_BITS)
+        for i in range(math.ceil(width / self.max_workgroup_size)):
+            self.set_uniform_data(
+                [('work_group_offset', i * self.max_workgroup_size, 'int')])
 
-        for uniform_location, uniform_data, uniform_setter in self.uniform_cache.values():
-            uniform_setter(uniform_location, uniform_data)
+            for texture, flag, image_position in self.textures:
+                texture.bind_as_image(flag, image_position)
+            glUseProgram(self.shader_handle)
 
-        glDispatchCompute(width, 1, 1)
+            for uniform_location, uniform_data, uniform_setter in self.uniform_cache.values():
+                uniform_setter(uniform_location, uniform_data)
+
+            if i == math.ceil(width / self.max_workgroup_size) - 1:
+                glDispatchCompute(width % self.max_workgroup_size, 1, 1)
+            else:
+                glDispatchCompute(self.max_workgroup_size, 1, 1)
         glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
 

@@ -1,6 +1,7 @@
 import numpy as np
 from OpenGL.GL import *
 
+from models import Grid
 from opengl_helper.buffer import BufferObject
 from opengl_helper.render_utility import VertexDataHandler, RenderSet, render_setting_0, render_setting_1
 from opengl_helper.shader import RenderShaderHandler, RenderShader
@@ -11,8 +12,9 @@ from utility.window import Window
 
 
 class EdgeRenderer:
-    def __init__(self, edge_handler: EdgeProcessor):
+    def __init__(self, edge_handler: EdgeProcessor, grid: Grid):
         self.edge_handler = edge_handler
+        self.grid = grid
 
         shader_handler = RenderShaderHandler()
         sample_point_shader: RenderShader = shader_handler.create("base", "sample/point.vert", "sample/point.frag")
@@ -34,7 +36,7 @@ class EdgeRenderer:
         sampled_points: int = self.edge_handler.get_buffer_points()
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                            ("view", window.cam.get_view_matrix(), "mat4")])
+                                            ("view", window.cam.view, "mat4")])
 
         self.point_render.set()
 
@@ -49,7 +51,7 @@ class EdgeRenderer:
         sampled_points: int = self.edge_handler.get_buffer_points()
 
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                             ("view", window.cam.get_view_matrix(), "mat4")])
+                                             ("view", window.cam.view, "mat4")])
 
         self.sphere_render.set()
 
@@ -62,9 +64,9 @@ class EdgeRenderer:
     def render_transparent(self, window: Window, clear: bool = True, swap: bool = False):
         sampled_points: int = self.edge_handler.get_buffer_points()
 
-        near, far = self.edge_handler.get_near_far_from_view()
+        near, far = self.grid.get_near_far_from_view(window.cam.view)
         self.transparent_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                                  ("view", window.cam.get_view_matrix(), "mat4"),
+                                                  ("view", window.cam.view, "mat4"),
                                                   ("farthest_point_view_z", far, "float"),
                                                   ("nearest_point_view_z", near, "float")])
 
@@ -86,40 +88,18 @@ class GridRenderer:
                                                           "grid/cube.frag",
                                                           "grid/cube.geom")
 
-        self.grid_position_buffer: BufferObject = BufferObject()
         self.data_handler: VertexDataHandler = VertexDataHandler(
-            [(self.grid_position_buffer, 0), (self.grid_processor.grid_density_buffer, 1)])
+            [(self.grid_processor.grid_position_buffer, 0), (self.grid_processor.grid_density_buffer, 1)])
 
         self.point_render: RenderSet = RenderSet(point_shader, self.data_handler)
         self.cube_render: RenderSet = RenderSet(cube_shader, self.data_handler)
 
-        self.set_grid_position_buffer_data()
-
-    @track_time
-    def set_grid_position_buffer_data(self):
-        position_data = []
-        print(self.grid_processor.grid_cell_count)
-        for iz in range(self.grid_processor.grid_cell_count[2]):
-            for iy in range(self.grid_processor.grid_cell_count[1]):
-                for ix in range(self.grid_processor.grid_cell_count[0]):
-                    position_data.append(
-                        ix * self.grid_processor.grid_cell_size.x + self.grid_processor.bounding_volume[0].x)
-                    position_data.append(
-                        iy * self.grid_processor.grid_cell_size.y + self.grid_processor.bounding_volume[0].y)
-                    position_data.append(
-                        iz * self.grid_processor.grid_cell_size.z + self.grid_processor.bounding_volume[0].z)
-                    position_data.append(1.0)
-
-        transfer_data = np.array(position_data, dtype=np.float32)
-
-        self.grid_position_buffer.load(transfer_data)
-
     @track_time
     def render_point(self, window: Window, clear: bool = True, swap: bool = False):
-        grid_count: int = self.grid_processor.get_grid_count()
+        grid_count: int = self.grid_processor.grid.grid_cell_count_overall
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                            ("view", window.cam.get_view_matrix(), "mat4")])
+                                            ("view", window.cam.view, "mat4")])
 
         self.point_render.set()
 
@@ -131,10 +111,10 @@ class GridRenderer:
 
     @track_time
     def render_cube(self, window: Window, clear: bool = True, swap: bool = False):
-        grid_count: int = self.grid_processor.get_grid_count()
+        grid_count: int = self.grid_processor.grid.grid_cell_count_overall
 
         self.cube_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                           ("view", window.cam.get_view_matrix(), "mat4")])
+                                           ("view", window.cam.view, "mat4")])
 
         self.cube_render.set()
 
