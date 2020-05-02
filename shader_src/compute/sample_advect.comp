@@ -1,0 +1,62 @@
+#version 430
+
+struct SamplePoint
+{
+    vec4 pos;
+};
+
+struct GradientGrid
+{
+    vec3 normalized_gradient;
+    float strength;
+};
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(binding = 0) restrict readonly buffer sample_input
+{
+    SamplePoint input_sample[];
+};
+layout(binding = 1) restrict writeonly buffer sample_output
+{
+    SamplePoint output_sample[];
+};
+layout(binding = 2) restrict readonly buffer gradient_grid
+{
+    GradientGrid gradient[];
+};
+
+uniform int work_group_offset;
+uniform int max_sample_points;
+
+uniform float advect_strength;
+
+uniform ivec3 grid_cell_count;
+uniform vec3 grid_cell_size;
+uniform vec3 grid_bounding_min;
+
+vec4 read(highp uint index)
+{
+    return input_sample[index].pos;
+}
+
+void write(highp uint index, vec4 pos)
+{
+    output_sample[index].pos = pos;
+}
+
+ivec3 gridIndex(vec3 position)
+{
+    return ivec3(int(round((position.x - grid_bounding_min.x)/grid_cell_size.x)),
+    int(round((position.y - grid_bounding_min.y)/grid_cell_size.y)),
+    int(round((position.z - grid_bounding_min.z)/grid_cell_size.z)));
+}
+
+void main() {
+    highp uint index = gl_WorkGroupID.x + work_group_offset;
+    vec4 sample_data = read(index);
+    vec3 sample_pos = sample_data.xyz;
+    ivec3 grid_index = gridIndex(sample_pos);
+    if (sample_data.w == 1.0) {
+        sample_pos = sample_pos + gradient[grid_index.x + grid_index.y * grid_cell_count.x + grid_index.z * grid_cell_count.x * grid_cell_count.y].normalized_gradient * advect_strength;
+    }
+}

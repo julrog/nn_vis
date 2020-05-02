@@ -23,6 +23,8 @@ class Window:
 
         self.last_mouse_pos: Tuple[int, int] = (int(self.width / 2), int(self.height / 2))
         self.mouse_set: bool = False
+        self.freeze: bool = True
+        self.gradient: bool = True
 
     def set_position(self, x: float, y: float):
         glfw.set_window_pos(self.window_handle, x, y)
@@ -68,6 +70,11 @@ class Window:
                 self.cam.move(Vector3([1, 0, 0]))
             elif key == glfw.KEY_D and action == glfw.RELEASE:
                 self.cam.stop(Vector3([1, 0, 0]))
+
+            if key == glfw.KEY_F and action == glfw.RELEASE:
+                self.freeze = not self.freeze
+            if key == glfw.KEY_G and action == glfw.RELEASE:
+                self.gradient = not self.gradient
 
         glfw.set_window_size_callback(self.window_handle, resize_clb)
         glfw.set_cursor_pos_callback(self.window_handle, mouse_look_clb)

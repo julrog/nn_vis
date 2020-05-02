@@ -23,14 +23,14 @@ window.activate()
 
 print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
-network = NetworkModel([9, 4, 9], (Vector3([-1, -1, -11]), Vector3([1, 1, -2])))
+network = NetworkModel([25, 25], (Vector3([-3, -3, -8]), Vector3([3, 3, -2])))
 
-sample_length = (network.bounding_range.z * 2.0) / 50.0
-grid_cell_size = sample_length / 1.0
+sample_length = (network.bounding_range.z * 2.0) / 100.0
+grid_cell_size = sample_length / 2.0
 sample_radius = sample_length * 2.0
 
 grid = Grid(Vector3([grid_cell_size, grid_cell_size, grid_cell_size]),
-            (Vector3([-3, -3, -13]), Vector3([3, 3, 0])))
+            (Vector3([-3, -3, -8]), Vector3([3, 3, -2])))
 
 edge_handler = EdgeProcessor(sample_length)
 edge_handler.set_data(network)
@@ -53,21 +53,26 @@ def frame():
     global frame_count
     window_handler.update()
 
-    edge_handler.sample_noise(0.5)
-    edge_handler.sample_edges()
     edge_handler.check_limits(window.cam.view)
+    if not window.freeze:
+        edge_handler.sample_noise(0.5)
+        edge_handler.sample_edges()
 
-    grid_processor.clear_buffer()
-    grid_processor.calculate_density()
-    grid_processor.calculate_gradient()
+        if window.gradient:
+            grid_processor.clear_buffer()
+            grid_processor.calculate_density()
+            grid_processor.calculate_gradient()
 
     clear_screen([1.0, 1.0, 1.0, 1.0])
-    grid_renderer.render_cube(window, clear=False, swap=False)
-    edge_renderer.render_transparent(window, clear=False, swap=True)
+    if window.gradient:
+        grid_renderer.render_cube(window, clear=False, swap=False)
+    edge_renderer.render_transparent(window, clear=False, swap=False)
 
     if frame_count % 10 == 0:
         print("Rendering %d points from %d edges." % (edge_handler.get_buffer_points(), len(edge_handler.edges)))
     frame_count += 1
+
+    window.swap()
 
 
 while window.is_active():

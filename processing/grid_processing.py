@@ -24,6 +24,8 @@ class GridProcessor:
                                                                                    "sample_density_map.comp")
         self.gradient_compute_shader: ComputeShader = ComputeShaderHandler().create("grid_gradient",
                                                                                     "grid_gradient.comp")
+        self.advect_compute_shader: ComputeShader = ComputeShaderHandler().create("sample_advect",
+                                                                                  "sample_advect.comp")
 
         self.grid_position_buffer: BufferObject = BufferObject(ssbo=True)
         self.grid_density_buffer: BufferObject = BufferObject(ssbo=True)
@@ -34,9 +36,12 @@ class GridProcessor:
             [(self.edge_processor.sample_buffer, 0), (self.grid_density_buffer, 2)])
         self.gradient_ssbo_handler: VertexDataHandler = VertexDataHandler(
             [(self.grid_density_buffer, 0), (self.grid_gradient_buffer, 1)])
+        self.advect_ssbo_handler: VertexDataHandler = VertexDataHandler(
+            [(self.edge_processor.sample_buffer, 0), (self.grid_gradient_buffer, 2)])
 
         self.density_strength: float = density_strength
         self.sample_radius: float = sample_radius_scale
+        self.advect_strength: float = 0.1
 
         self.empty_buffer_data = np.zeros(4 * self.grid.grid_cell_count_overall, dtype=np.int32)
         self.empty_float_buffer_data = np.zeros(4 * self.grid.grid_cell_count_overall, dtype=np.float32)
@@ -54,25 +59,25 @@ class GridProcessor:
     def calculate_position(self):
         self.position_ssbo_handler.set()
 
-        self.position_compute_shader.set_uniform_data([('grid_cell_size', self.grid.grid_cell_size, 'vec3')])
-        self.position_compute_shader.set_uniform_data([('grid_bounding_min', self.grid.bounding_volume[0], 'vec3')])
-        self.position_compute_shader.set_uniform_data([('grid_cell_count', self.grid.grid_cell_count, 'ivec3')])
+        self.position_compute_shader.set_uniform_data([
+            ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
+            ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
+            ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
+        ])
         self.position_compute_shader.compute(self.grid.grid_cell_count_overall)
 
     @track_time
     def calculate_density(self):
         self.density_ssbo_handler.set()
 
-        self.density_compute_shader.set_uniform_data(
-            [('max_sample_points', self.edge_processor.max_sample_points, 'int')])
-        self.density_compute_shader.set_uniform_data([('density_strength', self.density_strength, 'float')])
-        self.density_compute_shader.set_uniform_data([('sample_radius', self.sample_radius, 'float')])
-        self.density_compute_shader.set_uniform_data(
-            [('grid_cell_size', self.grid.grid_cell_size, 'vec3')])
-        self.density_compute_shader.set_uniform_data(
-            [('grid_bounding_min', self.grid.bounding_volume[0], 'vec3')])
-        self.density_compute_shader.set_uniform_data(
-            [('grid_cell_count', self.grid.grid_cell_count, 'ivec3')])
+        self.density_compute_shader.set_uniform_data([
+            ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
+            ('density_strength', self.density_strength, 'float'),
+            ('sample_radius', self.sample_radius, 'float'),
+            ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
+            ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
+            ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
+        ])
 
         self.density_compute_shader.compute(len(self.edge_processor.edges))
 
@@ -80,7 +85,22 @@ class GridProcessor:
     def calculate_gradient(self):
         self.gradient_ssbo_handler.set()
 
-        self.gradient_compute_shader.set_uniform_data(
-            [('grid_cell_count', self.grid.grid_cell_count, 'ivec3')])
+        self.gradient_compute_shader.set_uniform_data([('grid_cell_count', self.grid.grid_cell_count, 'ivec3')])
 
         self.gradient_compute_shader.compute(self.grid.grid_cell_count_overall)
+
+    @track_time
+    def sample_advect(self):
+        self.advect_ssbo_handler.set()
+
+        self.advect_compute_shader.set_uniform_data([
+            ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
+            ('advect_strength', self.density_strength, 'float'),
+            ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
+            ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
+            ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
+        ])
+
+        self.advect_compute_shader.compute(self.grid.grid_cell_count_overall)
+
+        self.edge_processor.sample_buffer.swap()

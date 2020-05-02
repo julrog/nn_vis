@@ -81,8 +81,10 @@ class EdgeProcessor:
             self.sample_length = sample_length
 
         self.ssbo_handler.set()
-        self.sample_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
-        self.sample_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
+        self.sample_compute_shader.set_uniform_data([
+            ('max_sample_points', self.max_sample_points, 'int'),
+            ('sample_length', self.sample_length, 'float')
+        ])
         self.sample_compute_shader.compute(len(self.edges))
 
         self.sample_buffer.swap()
@@ -92,9 +94,11 @@ class EdgeProcessor:
     def sample_noise(self, strength: float = 1.0):
         self.ssbo_handler.set()
 
-        self.noise_compute_shader.set_uniform_data([('sample_length', self.sample_length, 'float')])
-        self.noise_compute_shader.set_uniform_data([('noise_strength', strength, 'float')])
-        self.noise_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
+        self.noise_compute_shader.set_uniform_data([
+            ('max_sample_points', self.max_sample_points, 'int'),
+            ('sample_length', self.sample_length, 'float'),
+            ('noise_strength', strength, 'float')
+        ])
         self.noise_compute_shader.compute(len(self.edges))
 
         self.sample_buffer.swap()

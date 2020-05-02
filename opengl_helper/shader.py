@@ -53,12 +53,15 @@ class BaseShader:
                 if not program_is_set:
                     glUseProgram(self.shader_handle)
                     program_is_set = True
-            uniform_location = glGetUniformLocation(self.shader_handle, uniform_name)
-            if uniform_location != -1:
-                self.uniform_cache[uniform_name] = (
-                    uniform_location, uniform_data, uniform_setter_function(uniform_setter))
+                uniform_location = glGetUniformLocation(self.shader_handle, uniform_name)
+                if uniform_location != -1:
+                    self.uniform_cache[uniform_name] = (
+                        uniform_location, uniform_data, uniform_setter_function(uniform_setter))
+                else:
+                    print(["[%s] Uniform variable '%s' not used in shader_src." % (LOG_SOURCE, uniform_name)])
             else:
-                print(["[%s] Uniform variable '%s' not used in shader_src." % (LOG_SOURCE, uniform_name)])
+                uniform_location, _, setter = self.uniform_cache[uniform_name]
+                self.uniform_cache[uniform_name] = (uniform_location, uniform_data, setter)
 
     def set_textures(self, textures: List[Tuple[Texture, str, int]]):
         self.textures: List[Tuple[Texture, str, int]] = textures
