@@ -9,7 +9,7 @@ out float vs_discard;
 
 void main()
 {
-    if (vDensity.x == 0.0) {
+    if (vDensity.x <= 1.0) {
         vs_discard = 1.0;
     } else {
         vs_discard = 0.0;

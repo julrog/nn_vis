@@ -1,6 +1,6 @@
 import numpy as np
 
-from models import Grid
+from models.grid import Grid
 from opengl_helper.buffer import BufferObject
 from opengl_helper.compute_shader import ComputeShader, ComputeShaderHandler
 from opengl_helper.render_utility import VertexDataHandler

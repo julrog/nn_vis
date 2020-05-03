@@ -3,9 +3,10 @@ from pyrr import Matrix44
 import numpy as np
 
 from definitions import pairwise
+from models.edge import Edge
+from models.network import NetworkModel
 from opengl_helper.buffer import SwappingBufferObject, BufferObject
 from opengl_helper.compute_shader import ComputeShader, ComputeShaderHandler
-from models import NetworkModel, Edge
 from utility.performance import track_time
 from opengl_helper.render_utility import VertexDataHandler
 

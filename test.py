@@ -1,12 +1,15 @@
 import numpy as np
 from pyrr import Vector3
 
+from models.grid import Grid
+from models.network import NetworkModel
 from opengl_helper.render_utility import clear_screen
 from processing.edge_processing import EdgeProcessor
 from processing.grid_processing import GridProcessor
-from rendering import EdgeRenderer, GridRenderer
+from rendering.edge_rendering import EdgeRenderer
+
+from rendering.grid_rendering import GridRenderer
 from utility.file import FileHandler
-from models import NetworkModel, Grid
 from utility.performance import track_time
 from utility.window import WindowHandler
 from OpenGL.GL import *
