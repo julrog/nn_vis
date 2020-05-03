@@ -19,6 +19,8 @@ class EdgeProcessor:
                                                                                   "edge_sample.comp")
         self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_noise",
                                                                                  "sample_noise.comp")
+        self.smooth_compute_shader: ComputeShader = ComputeShaderHandler().create("sample_smooth",
+                                                                                  "sample_smooth.comp")
         self.limit_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_limits",
                                                                                  "edge_limits.comp")
         self.sample_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True)
@@ -101,6 +103,14 @@ class EdgeProcessor:
             ('noise_strength', strength, 'float')
         ])
         self.noise_compute_shader.compute(len(self.edges))
+
+        self.sample_buffer.swap()
+
+    @track_time
+    def sample_smooth(self):
+        self.ssbo_handler.set()
+
+        self.smooth_compute_shader.compute(self.get_buffer_points())
 
         self.sample_buffer.swap()
 

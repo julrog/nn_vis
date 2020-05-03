@@ -1,6 +1,7 @@
-import numpy as np
+import threading
 from pyrr import Vector3
 
+from gui.window import create_setting_window
 from models.grid import Grid
 from models.network import NetworkModel
 from opengl_helper.render_utility import clear_screen
@@ -14,7 +15,15 @@ from utility.performance import track_time
 from utility.window import WindowHandler
 from OpenGL.GL import *
 
-WIDTH, HEIGHT = 1920, 1080
+
+def gui_thread(name: str):
+    create_setting_window()
+
+
+gui_thread: threading.Thread = threading.Thread(target=gui_thread, args=(1,))
+gui_thread.start()
+
+WIDTH, HEIGHT = 1920, 1170
 
 FileHandler().read_statistics()
 
@@ -26,7 +35,7 @@ window.activate()
 
 print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
-network = NetworkModel([25, 9, 25], (Vector3([-1, -1, -7]), Vector3([1, 1, -3])))
+network = NetworkModel([9, 4, 9], (Vector3([-1, -1, -7]), Vector3([1, 1, -3])))
 
 sample_length = (network.bounding_range.z * 2.0) / 50.0
 grid_cell_size = sample_length / 3.0
@@ -38,10 +47,11 @@ grid = Grid(Vector3([grid_cell_size, grid_cell_size, grid_cell_size]),
 edge_handler = EdgeProcessor(sample_length)
 edge_handler.set_data(network)
 edge_handler.sample_edges()
+edge_handler.sample_smooth()
 edge_handler.check_limits(window.cam.view)
 edge_renderer = EdgeRenderer(edge_handler, grid)
 
-grid_processor = GridProcessor(grid, edge_handler, 10.0, sample_radius, 0.05)
+grid_processor = GridProcessor(grid, edge_handler, 10.0, sample_radius, 0.01)
 grid_processor.calculate_position()
 grid_processor.calculate_density()
 grid_processor.calculate_gradient()
@@ -66,11 +76,15 @@ def frame():
 
         # edge_handler.sample_noise(0.5)
         edge_handler.sample_edges()
+        edge_handler.sample_smooth()
 
     clear_screen([1.0, 1.0, 1.0, 1.0])
-    if window.gradient:
+    if window.gradient and window.render_method % 2 == 0:
         grid_renderer.render_cube(window, clear=False, swap=False)
-    edge_renderer.render_transparent(window, clear=False, swap=False)
+    if window.gradient and (window.render_method / 2) % 2 == 0:
+        edge_renderer.render_transparent(window, clear=False, swap=False)
+    else:
+        edge_renderer.render_sphere(window, clear=False, swap=False)
     window.swap()
 
     if frame_count % 10 == 0:
