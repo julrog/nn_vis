@@ -41,9 +41,9 @@ vec4 read(highp uint index, highp uint offset)
 
 ivec3 gridIndex(vec3 position)
 {
-    return ivec3(int(round((position.x - grid_bounding_min.x)/grid_cell_size.x)),
-    int(round((position.y - grid_bounding_min.y)/grid_cell_size.y)),
-    int(round((position.z - grid_bounding_min.z)/grid_cell_size.z)));
+    return ivec3(int(floor((position.x - grid_bounding_min.x)/grid_cell_size.x)),
+    int(floor((position.y - grid_bounding_min.y)/grid_cell_size.y)),
+    int(floor((position.z - grid_bounding_min.z)/grid_cell_size.z)));
 }
 
 vec3 gridPosition(ivec3 gridIndex)
@@ -66,11 +66,11 @@ void main() {
         highp float disMin = length(pointA.xyz - pointB.xyz);
         vec4 midPoint = (pointA + pointB)/2.0;
         ivec3 midIndex = gridIndex(midPoint.xyz);
-        for (int ix = -convolution_range.x; ix <= convolution_range.x; ix++)
+        for (int ix = -convolution_range.x; ix <= convolution_range.x + 1; ix++)
         {
-            for (int iy = -convolution_range.y; iy <= convolution_range.y; iy++)
+            for (int iy = -convolution_range.y; iy <= convolution_range.y + 1; iy++)
             {
-                for (int iz = -convolution_range.z; iz <= convolution_range.z; iz++)
+                for (int iz = -convolution_range.z; iz <= convolution_range.z + 1; iz++)
                 {
                     ivec3 grid_index = ivec3(midIndex.x + ix, midIndex.y + iy, midIndex.z + iz);
                     if (grid_index.x >= 0 && grid_index.y >= 0 && grid_index.z >= 0 && grid_index.x < grid_cell_count.x && grid_index.y < grid_cell_count.y && grid_index.z < grid_cell_count.z)

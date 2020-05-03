@@ -54,8 +54,11 @@ void main() {
 
     float current_density = read(index);
     float gradient_x = readGridIndex(ivec3(grid_index.x + 1, grid_index.y, grid_index.z)) - current_density;
+    gradient_x -= readGridIndex(ivec3(grid_index.x - 1, grid_index.y, grid_index.z)) - current_density;
     float gradient_y = readGridIndex(ivec3(grid_index.x, grid_index.y + 1, grid_index.z)) - current_density;
+    gradient_y -= readGridIndex(ivec3(grid_index.x, grid_index.y - 1, grid_index.z)) - current_density;
     float gradient_z = readGridIndex(ivec3(grid_index.x, grid_index.y, grid_index.z + 1)) - current_density;
+    gradient_z -= readGridIndex(ivec3(grid_index.x, grid_index.y, grid_index.z - 1)) - current_density;
     vec3 calc_gradient = vec3(gradient_x, gradient_y, gradient_z);
     float strength = length(calc_gradient);
 

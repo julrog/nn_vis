@@ -12,7 +12,7 @@ LOG_SOURCE: str = "GRID_PROCESSING"
 
 class GridProcessor:
     def __init__(self, grid: Grid, edge_processor: EdgeProcessor, density_strength: float = 100.0,
-                 sample_radius_scale: float = 2.0):
+                 sample_radius_scale: float = 2.0, advect_strength: float = 0.01):
         self.edge_processor: EdgeProcessor = edge_processor
         self.grid: Grid = grid
 
@@ -41,7 +41,7 @@ class GridProcessor:
 
         self.density_strength: float = density_strength
         self.sample_radius: float = sample_radius_scale
-        self.advect_strength: float = 0.1
+        self.advect_strength: float = advect_strength
 
         self.empty_buffer_data = np.zeros(4 * self.grid.grid_cell_count_overall, dtype=np.int32)
         self.empty_float_buffer_data = np.zeros(4 * self.grid.grid_cell_count_overall, dtype=np.float32)
@@ -94,13 +94,13 @@ class GridProcessor:
         self.advect_ssbo_handler.set()
 
         self.advect_compute_shader.set_uniform_data([
-            ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
-            ('advect_strength', self.density_strength, 'float'),
+            ('advect_strength', self.advect_strength, 'float'),
             ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
             ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
             ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
         ])
 
-        self.advect_compute_shader.compute(self.grid.grid_cell_count_overall)
+        # print(self.edge_processor.get_buffer_points())
+        self.advect_compute_shader.compute(self.edge_processor.get_buffer_points())
 
         self.edge_processor.sample_buffer.swap()

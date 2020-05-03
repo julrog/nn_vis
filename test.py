@@ -26,14 +26,14 @@ window.activate()
 
 print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
-network = NetworkModel([25, 25], (Vector3([-3, -3, -8]), Vector3([3, 3, -2])))
+network = NetworkModel([25, 9, 25], (Vector3([-1, -1, -7]), Vector3([1, 1, -3])))
 
-sample_length = (network.bounding_range.z * 2.0) / 100.0
-grid_cell_size = sample_length / 2.0
+sample_length = (network.bounding_range.z * 2.0) / 50.0
+grid_cell_size = sample_length / 3.0
 sample_radius = sample_length * 2.0
 
 grid = Grid(Vector3([grid_cell_size, grid_cell_size, grid_cell_size]),
-            (Vector3([-3, -3, -8]), Vector3([3, 3, -2])))
+            (Vector3([-2, -2, -8]), Vector3([2, 2, -2])))
 
 edge_handler = EdgeProcessor(sample_length)
 edge_handler.set_data(network)
@@ -41,7 +41,7 @@ edge_handler.sample_edges()
 edge_handler.check_limits(window.cam.view)
 edge_renderer = EdgeRenderer(edge_handler, grid)
 
-grid_processor = GridProcessor(grid, edge_handler, 20.0, sample_radius)
+grid_processor = GridProcessor(grid, edge_handler, 10.0, sample_radius, 0.05)
 grid_processor.calculate_position()
 grid_processor.calculate_density()
 grid_processor.calculate_gradient()
@@ -58,24 +58,24 @@ def frame():
 
     edge_handler.check_limits(window.cam.view)
     if not window.freeze:
-        edge_handler.sample_noise(0.5)
-        edge_handler.sample_edges()
-
         if window.gradient:
             grid_processor.clear_buffer()
             grid_processor.calculate_density()
             grid_processor.calculate_gradient()
+            grid_processor.sample_advect()
+
+        # edge_handler.sample_noise(0.5)
+        edge_handler.sample_edges()
 
     clear_screen([1.0, 1.0, 1.0, 1.0])
     if window.gradient:
         grid_renderer.render_cube(window, clear=False, swap=False)
     edge_renderer.render_transparent(window, clear=False, swap=False)
+    window.swap()
 
     if frame_count % 10 == 0:
         print("Rendering %d points from %d edges." % (edge_handler.get_buffer_points(), len(edge_handler.edges)))
     frame_count += 1
-
-    window.swap()
 
 
 while window.is_active():
