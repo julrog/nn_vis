@@ -42,5 +42,6 @@ class Grid:
                 nearest_view_z = view_position.z
             if view_position.z < farthest_view_z:
                 farthest_view_z = view_position.z
-
+        if nearest_view_z > 0:
+            nearest_view_z = 0
         return nearest_view_z, farthest_view_z
