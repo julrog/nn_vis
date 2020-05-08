@@ -45,7 +45,10 @@ class NetworkModel:
         for i in range(len(self.layer) - 1):
             for node_one in self.node_positions[i]:
                 for node_two in self.node_positions[i + 1]:
-                    edges.append(Edge(node_one, node_two))
+                    if i % 2 == 0:
+                        edges.append(Edge(node_one, node_two))
+                    else:
+                        edges.append(Edge(node_two, node_one))
         return edges
 
     def generate_edges_special(self) -> List[Edge]:

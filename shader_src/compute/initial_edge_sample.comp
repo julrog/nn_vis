@@ -33,40 +33,24 @@ void main() {
     highp uint current_read_index = 0;
     highp uint current_write_index = 1;
 
-    vec4 first_point = read(current_read_index++, offset);
-    vec3 before_last_written_point = first_point.xyz;
+    vec4 first_point = read(0, offset);
+    vec4 last_point = read(1, offset);
     vec3 last_written_point = first_point.xyz;
-    vec4 last_point = read(int(first_point.w), offset);
 
+    float edge_length = distance(first_point.xyz, last_point.xyz);
+    float samples = float(ceil(edge_length/sample_length));
+    float sample_distance = edge_length/samples;
 
     // initialize variables used over the next loop
-    vec3 next_point = last_written_point;
-    float is_used = 1.0;
-    float distance_to_next = 0.0;
+    vec3 next_point = last_point.xyz;
+    float distance_to_next = distance(next_point, last_written_point);
 
-    do {
-        vec4 next_point_data = read(current_read_index++, offset);
-        next_point = next_point_data.xyz;
-        is_used = next_point_data.w;
-        distance_to_next = distance(next_point, last_written_point);
-
-        while (distance_to_next >= sample_length * 0.99) {
-            float t = sample_length / distance_to_next;
-            t = clamp(t, 0.0, 1.0);
-            before_last_written_point = last_written_point;
-            last_written_point = (last_written_point * (1.0 - t) + next_point * t);
-            write(current_write_index++, offset, vec4(last_written_point.xyz, 1.0));
-            distance_to_next = distance(next_point, last_written_point);
-        }
-    } while (is_used > 0.0);
-
-    float distance_to_last = distance(last_written_point, last_point.xyz);
-    if (distance_to_last < 0.3 * sample_length) {
-        current_write_index--;
-    } else if (distance_to_last < 0.7 * sample_length) {
-        current_write_index--;
-        last_written_point = (before_last_written_point + last_point.xyz)/2.0;
+    while (distance_to_next >= sample_distance * 0.99) {
+        float t = sample_distance / distance_to_next;
+        t = clamp(t, 0.0, 1.0);
+        last_written_point = (last_written_point * (1.0 - t) + next_point * t);
         write(current_write_index++, offset, vec4(last_written_point.xyz, 1.0));
+        distance_to_next = distance(next_point, last_written_point);
     }
 
     // always store last edge point and mark it as last with w-value -1

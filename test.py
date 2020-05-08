@@ -35,7 +35,7 @@ window.activate()
 
 print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
-network = NetworkModel([9, 4, 9], (Vector3([-1, -1, -7]), Vector3([1, 1, -3])))
+network = NetworkModel([9, 5, 10], (Vector3([-1, -1, -7]), Vector3([1, 1, -3])))
 
 sample_length = (network.bounding_range.z * 2.0) / 50.0
 grid_cell_size = sample_length / 3.0
@@ -46,8 +46,7 @@ grid = Grid(Vector3([grid_cell_size, grid_cell_size, grid_cell_size]),
 
 edge_handler = EdgeProcessor(sample_length)
 edge_handler.set_data(network)
-edge_handler.sample_edges()
-edge_handler.sample_smooth()
+edge_handler.init_sample_edge()
 edge_handler.check_limits(window.cam.view)
 edge_renderer = EdgeRenderer(edge_handler, grid)
 
@@ -76,7 +75,7 @@ def frame():
 
         # edge_handler.sample_noise(0.5)
         edge_handler.sample_edges()
-        edge_handler.sample_smooth()
+        # edge_handler.sample_smooth()
 
     clear_screen([1.0, 1.0, 1.0, 1.0])
     if window.gradient and window.render_method % 2 == 0:
