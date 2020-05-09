@@ -13,7 +13,7 @@ class EdgeRenderer:
         self.edge_handler = edge_handler
         self.grid = grid
 
-        shader_handler = RenderShaderHandler()
+        shader_handler: RenderShaderHandler = RenderShaderHandler()
         sample_point_shader: RenderShader = shader_handler.create("base", "sample/point.vert", "sample/point.frag")
         sample_sphere_shader: RenderShader = shader_handler.create("sample", "sample/ball_from_point.vert",
                                                                    "sample/ball_from_point.frag",
@@ -73,3 +73,6 @@ class EdgeRenderer:
         glDrawArrays(GL_POINTS, 0, sampled_points)
         if swap:
             window.swap()
+
+    def delete(self):
+        self.data_handler.delete()

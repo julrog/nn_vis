@@ -97,6 +97,8 @@ class RenderShaderHandler(metaclass=Singleton):
 
     def create(self, shader_name: str, vertex_file_path: str = None, fragment_file_path: str = None,
                geometry_file_path: str = None) -> RenderShader:
+        if shader_name in self.shader_list.keys():
+            return self.shader_list[shader_name]
         vertex_src: str = open(os.path.join(self.shader_dir, vertex_file_path), 'r').read()
         fragment_src: str = open(os.path.join(self.shader_dir, fragment_file_path), 'r').read()
         geometry_src: str or None = None

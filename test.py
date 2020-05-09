@@ -1,97 +1,76 @@
 import threading
-from pyrr import Vector3
+import time
 
-from gui.window import create_setting_window
-from models.grid import Grid
-from models.network import NetworkModel
-from opengl_helper.render_utility import clear_screen
-from processing.edge_processing import EdgeProcessor
-from processing.grid_processing import GridProcessor
-from rendering.edge_rendering import EdgeRenderer
-
-from rendering.grid_rendering import GridRenderer
+from gui.window import OptionGui
+from processing.network_processing import NetworkProcessor
 from utility.file import FileHandler
 from utility.performance import track_time
 from utility.window import WindowHandler
 from OpenGL.GL import *
 
-
-def gui_thread(name: str):
-    create_setting_window()
-
-
-gui_thread: threading.Thread = threading.Thread(target=gui_thread, args=(1,))
-gui_thread.start()
-
-WIDTH, HEIGHT = 1920, 1170
-
-FileHandler().read_statistics()
-
-window_handler = WindowHandler()
-window = window_handler.create_window("Testing", WIDTH, HEIGHT, 1)
-window.set_position(0, 0)
-window.set_callbacks()
-window.activate()
-
-print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
-
-network = NetworkModel([9, 5, 10], (Vector3([-1, -1, -7]), Vector3([1, 1, -3])))
-
-sample_length = (network.bounding_range.z * 2.0) / 50.0
-grid_cell_size = sample_length / 3.0
-sample_radius = sample_length * 2.0
-
-grid = Grid(Vector3([grid_cell_size, grid_cell_size, grid_cell_size]),
-            (Vector3([-2, -2, -8]), Vector3([2, 2, -2])))
-
-edge_handler = EdgeProcessor(sample_length)
-edge_handler.set_data(network)
-edge_handler.init_sample_edge()
-edge_handler.check_limits(window.cam.view)
-edge_renderer = EdgeRenderer(edge_handler, grid)
-
-grid_processor = GridProcessor(grid, edge_handler, 10.0, sample_radius, 0.01)
-grid_processor.calculate_position()
-grid_processor.calculate_density()
-grid_processor.calculate_gradient()
-
-grid_renderer = GridRenderer(grid_processor)
-
-frame_count: int = 0
+global options
+options = OptionGui()
 
 
-@track_time(track_recursive=False)
-def frame():
-    global frame_count
-    window_handler.update()
+def compute_render(name: str):
+    global options
 
-    edge_handler.check_limits(window.cam.view)
-    if not window.freeze:
-        if window.gradient:
-            grid_processor.clear_buffer()
-            grid_processor.calculate_density()
-            grid_processor.calculate_gradient()
-            grid_processor.sample_advect()
+    width, height = 1920, 1170
 
-        # edge_handler.sample_noise(0.5)
-        edge_handler.sample_edges()
-        # edge_handler.sample_smooth()
+    FileHandler().read_statistics()
 
-    clear_screen([1.0, 1.0, 1.0, 1.0])
-    if window.gradient and window.render_method % 2 == 0:
-        grid_renderer.render_cube(window, clear=False, swap=False)
-    if window.gradient and (window.render_method / 2) % 2 == 0:
-        edge_renderer.render_transparent(window, clear=False, swap=False)
-    else:
-        edge_renderer.render_sphere(window, clear=False, swap=False)
-    window.swap()
+    window_handler = WindowHandler()
+    window = window_handler.create_window("Testing", width, height, 1)
+    window.set_position(0, 0)
+    window.set_callbacks()
+    window.activate()
 
-    if frame_count % 10 == 0:
-        print("Rendering %d points from %d edges." % (edge_handler.get_buffer_points(), len(edge_handler.edges)))
-    frame_count += 1
+    print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
+
+    network_processor = None
+
+    frame_count: int = 0
+
+    @track_time(track_recursive=False)
+    def frame(current_frame: int):
+        window_handler.update()
+
+        if network_processor is not None:
+            network_processor.render(window, options.settings["render_edge"], options.settings["render_grid"])
+
+        if "sample_count" in options.settings:
+            options.settings["sample_count"].set(network_processor.edge_handler.get_buffer_points())
+        if "edge_count" in options.settings:
+            options.settings["edge_count"].set(len(network_processor.edge_handler.edges))
+        if "cell_count" in options.settings:
+            options.settings["cell_count"].set(network_processor.grid_processor.grid.grid_cell_count_overall)
+
+        window.swap()
+
+    while options is None or (len(options.settings["current_layer_data"]) is 0 and not options.settings["Closed"]):
+        window_handler.update()
+        time.sleep(5)
+
+    if not options.settings["Closed"]:
+        print(options.settings["current_layer_data"])
+        print("Start building network: " + str(options.settings["current_layer_data"]))
+        network_processor = NetworkProcessor(options.settings["current_layer_data"])
+
+        while window.is_active() and not options.settings["Closed"]:
+            if network_processor.layer_data is not options.settings["current_layer_data"]:
+                network_processor.delete()
+                print("Rebuilding network: " + str(options.settings["current_layer_data"]))
+                network_processor = NetworkProcessor(options.settings["current_layer_data"])
+            frame(frame_count)
+            frame_count += 1
+
+        network_processor.delete()
+
+    FileHandler().write_statistics()
+    window_handler.destroy()
 
 
-while window.is_active():
-    frame()
-FileHandler().write_statistics()
-window_handler.destroy()
+compute_render_thread: threading.Thread = threading.Thread(target=compute_render, args=(1,))
+compute_render_thread.start()
+
+options.start()

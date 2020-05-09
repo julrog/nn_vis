@@ -45,6 +45,8 @@ class ComputeShaderHandler(metaclass=Singleton):
         self.shader_list: Dict[str, ComputeShader] = dict()
 
     def create(self, shader_name: str, shader_file_path: str) -> ComputeShader:
+        if shader_name in self.shader_list.keys():
+            return self.shader_list[shader_name]
         shader_src = open(os.path.join(self.shader_dir, shader_file_path), 'r').read()
         self.shader_list[shader_name] = ComputeShader(shader_src)
         return self.shader_list[shader_name]

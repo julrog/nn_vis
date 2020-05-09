@@ -46,6 +46,9 @@ class BufferObject:
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.handle)
         glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_RGBA32F, GL_RGBA, GL_FLOAT, None)
 
+    def delete(self):
+        glDeleteBuffers(1, [self.handle])
+
 
 class SwappingBufferObject(BufferObject):
     def __init__(self, ssbo: bool = False):
@@ -68,3 +71,7 @@ class SwappingBufferObject(BufferObject):
             glBindBuffer(GL_ARRAY_BUFFER, self.handle)
             glEnableVertexAttribArray(location)
             glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+
+    def delete(self):
+        glDeleteBuffers(1, [self.handle])
+        glDeleteBuffers(1, [self.swap_handle])

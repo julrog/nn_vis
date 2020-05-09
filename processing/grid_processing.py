@@ -100,7 +100,16 @@ class GridProcessor:
             ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
         ])
 
-        # print(self.edge_processor.get_buffer_points())
         self.advect_compute_shader.compute(self.edge_processor.get_buffer_points())
 
         self.edge_processor.sample_buffer.swap()
+
+    def delete(self):
+        self.grid_position_buffer.delete()
+        self.grid_density_buffer.delete()
+        self.grid_gradient_buffer.delete()
+
+        self.position_ssbo_handler.delete()
+        self.density_ssbo_handler.delete()
+        self.gradient_ssbo_handler.delete()
+        self.advect_ssbo_handler.delete()

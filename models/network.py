@@ -7,11 +7,22 @@ from models.edge import Edge
 
 
 class NetworkModel:
-    def __init__(self, layer: List[int], bounding_volume: Tuple[Vector3, Vector3]):
+    def __init__(self, layer: List[int], node_size: float, layer_distance: float):
         self.layer: List[int] = layer
+        self.node_size: float = node_size
+        self.layer_distance: float = layer_distance
+
+        self.max_layer_width: float = 1.0
+        for node_count in layer:
+            sqrt_node_count = math.ceil(math.sqrt(node_count))
+            if self.max_layer_width < sqrt_node_count * node_size:
+                self.max_layer_width = sqrt_node_count * node_size
+
         self.node_positions: List[List[Vector3]] = []
 
-        self.bounding_volume: Tuple[Vector3, Vector3] = bounding_volume
+        self.bounding_volume: Tuple[Vector3, Vector3] = (
+            Vector3([-self.max_layer_width, -self.max_layer_width, -len(self.layer) * self.layer_distance / 2.0]),
+            Vector3([self.max_layer_width, self.max_layer_width, len(self.layer) * self.layer_distance / 2.0]))
         self.bounding_mid: Vector3 = (self.bounding_volume[1] + self.bounding_volume[0]) / 2.0
         self.bounding_range: Vector3 = (self.bounding_volume[1] - self.bounding_volume[0]) / 2.0
         self.bounding_range = Vector3(
@@ -29,12 +40,12 @@ class NetworkModel:
                 current_node_positions.append(position)
             else:
                 for i in range(nodes):
+                    layer_extend_scale: float = (self.bounding_range.x * 2.0)
+                    pos_x: float = (i % nodes_sqrt) - (nodes_sqrt - 1.0) / 2.0
+                    pos_y: float = (math.floor(i / nodes_sqrt)) - (nodes_sqrt - 1.0) / 2.0
                     position: Vector3 = Vector3(
-                        [(((i % nodes_sqrt) / (
-                                nodes_sqrt - 1.0)) * 2.0 - 1.0) * self.bounding_range.x + self.bounding_mid.x,
-                         ((math.floor(
-                             i / nodes_sqrt) / (
-                                   nodes_sqrt - 1.0)) * 2.0 - 1.0) * self.bounding_range.y + self.bounding_mid.y,
+                        [pos_x * self.node_size + self.bounding_mid.x,
+                         pos_y * self.node_size + self.bounding_mid.y,
                          self.bounding_volume[0].z * (1 - layer / (len(self.layer) - 1)) + self.bounding_volume[
                              1].z * layer / (len(self.layer) - 1)])
                     current_node_positions.append(position)

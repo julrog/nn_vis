@@ -45,7 +45,7 @@ class Texture:
         return data
 
     def delete(self):
-        glDeleteTextures(1, self.ogl_handle)
+        glDeleteTextures(1, [self.ogl_handle])
 
 
 class Singleton(type):

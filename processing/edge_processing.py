@@ -16,7 +16,7 @@ LOG_SOURCE: str = "EDGE_PROCESSING"
 class EdgeProcessor:
     def __init__(self, sample_length: float):
         self.init_compute_shader: ComputeShader = ComputeShaderHandler().create("init_edge_sampler",
-                                                                                  "initial_edge_sample.comp")
+                                                                                "initial_edge_sample.comp")
         self.sample_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_sampler",
                                                                                   "edge_sample.comp")
         self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_noise",
@@ -176,3 +176,8 @@ class EdgeProcessor:
     @track_time
     def get_buffer_points(self) -> int:
         return int(self.sample_buffer.size / 16.0)
+
+    def delete(self):
+        self.sample_buffer.delete()
+        self.limits_buffer.delete()
+        self.ssbo_handler.delete()

@@ -50,3 +50,6 @@ class GridRenderer:
         glDrawArrays(GL_POINTS, 0, grid_count)
         if swap:
             window.swap()
+
+    def delete(self):
+        self.data_handler.delete()

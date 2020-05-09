@@ -29,7 +29,7 @@ def look_at(position: Vector3, target: Vector3, world_up: Vector3) -> Matrix44:
 
 class Camera:
     def __init__(self, width: float, height: float, move_speed: float = 0.1, rotation_speed: float = 0.25):
-        self.camera_pos: Vector3 = Vector3([-5.0, 0.0, -5.0])
+        self.camera_pos: Vector3 = Vector3([-5.0, 0.0, 0.0])
         self.camera_front: Vector3 = Vector3([1.0, 0.0, 0.0])
         self.camera_up: Vector3 = Vector3([0.0, 1.0, 0.0])
         self.camera_right: Vector3 = Vector3([0.0, 0.0, 1.0])

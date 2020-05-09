@@ -7,14 +7,17 @@ from opengl_helper.shader import BaseShader
 
 class VertexDataHandler:
     def __init__(self, targeted_buffer_objects: List[Tuple[BufferObject, int]]):
-        self.VAO: int = glGenVertexArrays(1)
+        self.handle: int = glGenVertexArrays(1)
         self.targeted_buffer_objects: List[Tuple[BufferObject, int]] = targeted_buffer_objects
 
     def set(self, rendering: bool = False):
         glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
-        glBindVertexArray(self.VAO)
+        glBindVertexArray(self.handle)
         for buffer, location in self.targeted_buffer_objects:
             buffer.bind(location, rendering)
+
+    def delete(self):
+        glDeleteVertexArrays(1, [self.handle])
 
 
 class RenderSet:

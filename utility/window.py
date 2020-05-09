@@ -148,8 +148,10 @@ class Window:
 
     def toggle_mouse_capture(self):
         if self.mouse_captured:
+            self.mouse_set = False
             glfw.set_input_mode(self.window_handle, glfw.CURSOR, glfw.CURSOR_NORMAL)
         else:
+            self.mouse_set = False
             glfw.set_input_mode(self.window_handle, glfw.CURSOR, glfw.CURSOR_DISABLED)
         self.mouse_captured = not self.mouse_captured
 
