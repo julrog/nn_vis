@@ -32,10 +32,11 @@ def compute_render(name: str):
     frame_count: int = 0
 
     @track_time(track_recursive=False)
-    def frame(current_frame: int):
+    def frame():
         window_handler.update()
 
         if network_processor is not None:
+            network_processor.process(window, options.settings["action_state"])
             network_processor.render(window, options.settings["render_edge"], options.settings["render_grid"])
 
         if "sample_count" in options.settings:
@@ -60,8 +61,11 @@ def compute_render(name: str):
             if network_processor.layer_data is not options.settings["current_layer_data"]:
                 network_processor.delete()
                 print("Rebuilding network: " + str(options.settings["current_layer_data"]))
-                network_processor = NetworkProcessor(options.settings["current_layer_data"])
-            frame(frame_count)
+                network_processor = NetworkProcessor(options.settings["current_layer_data"],
+                                                     layer_distance=options.settings["layer_distance"],
+                                                     node_size=options.settings["node_size"],
+                                                     sampling_rate=options.settings["sampling_rate"])
+            frame()
             frame_count += 1
 
         network_processor.delete()

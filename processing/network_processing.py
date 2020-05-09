@@ -41,19 +41,30 @@ class NetworkProcessor:
 
         self.grid_renderer = GridRenderer(self.grid_processor)
 
-    def render(self, window: Window, edge_render_mode: int, grid_render_mode: int):
+    def process(self, window: Window, action_mode: int):
         self.edge_handler.check_limits(window.cam.view)
-        if not window.freeze:
-            if window.gradient:
+        if action_mode is not 0:
+            if action_mode == 1:
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_density()
                 self.grid_processor.calculate_gradient()
+                if self.grid_processor.advect_strength < 0:
+                    self.grid_processor.advect_strength = -self.grid_processor.advect_strength
                 self.grid_processor.sample_advect()
+            elif action_mode == 2:
+                self.grid_processor.clear_buffer()
+                self.grid_processor.calculate_density()
+                self.grid_processor.calculate_gradient()
+                if self.grid_processor.advect_strength > 0:
+                    self.grid_processor.advect_strength = -self.grid_processor.advect_strength
+                self.grid_processor.sample_advect()
+            elif action_mode == 3:
+                self.edge_handler.sample_noise(0.5)
 
-            # edge_handler.sample_noise(0.5)
             self.edge_handler.sample_edges()
-            # edge_handler.sample_smooth()
+            self.edge_handler.sample_smooth()
 
+    def render(self, window: Window, edge_render_mode: int, grid_render_mode: int):
         clear_screen([1.0, 1.0, 1.0, 1.0])
         if window.gradient and grid_render_mode == 1:
             self.grid_renderer.render_cube(window, clear=False, swap=False)
