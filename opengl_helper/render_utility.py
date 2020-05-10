@@ -1,7 +1,7 @@
 from typing import List, Tuple
 from OpenGL.GL import *
 
-from opengl_helper.buffer import BufferObject
+from opengl_helper.buffer import BufferObject, OverflowingBufferObject
 from opengl_helper.shader import BaseShader
 
 
@@ -20,6 +20,44 @@ class VertexDataHandler:
         glDeleteVertexArrays(1, [self.handle])
 
 
+class OverflowingVertexDataHandler:
+    def __init__(self, targeted_buffer_objects: List[Tuple[BufferObject, int]],
+                 targeted_overflowing_buffer_objects: List[Tuple[OverflowingBufferObject, int]]):
+        self.handle: int = glGenVertexArrays(1)
+        self.targeted_buffer_objects: List[Tuple[BufferObject, int]] = targeted_buffer_objects
+        self.targeted_overflowing_buffer_objects: List[
+            Tuple[OverflowingBufferObject, int]] = targeted_overflowing_buffer_objects
+
+    def set(self, buffer_id: int, rendering: bool = False):
+        glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
+        glBindVertexArray(self.handle)
+        for buffer, location in self.targeted_buffer_objects:
+            buffer.bind(location, rendering)
+        for buffer, location in self.targeted_overflowing_buffer_objects:
+            buffer.bind_single(buffer_id, location, rendering)
+
+    def set_range(self, buffer_id: int, count: int):
+        glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
+        glBindVertexArray(self.handle)
+        for buffer, location in self.targeted_buffer_objects:
+            buffer.bind(location)
+        for buffer, location in self.targeted_overflowing_buffer_objects:
+            for i in range(count):
+                if buffer_id + i >= 0 and (buffer_id + i) < len(buffer.handle):
+                    buffer.bind_single((buffer_id + i) % len(buffer.handle), location + i)
+
+    def set_consecutive(self):
+        glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
+        glBindVertexArray(self.handle)
+        for buffer, location in self.targeted_buffer_objects:
+            buffer.bind(location)
+        for buffer, location in self.targeted_overflowing_buffer_objects:
+            buffer.bind_consecutive(location)
+
+    def delete(self):
+        glDeleteVertexArrays(1, [self.handle])
+
+
 class RenderSet:
     def __init__(self, shader: BaseShader, data_handler: VertexDataHandler):
         self.shader: BaseShader = shader
@@ -31,6 +69,19 @@ class RenderSet:
     def set(self):
         self.shader.use()
         self.data_handler.set(True)
+
+
+class OverflowingRenderSet:
+    def __init__(self, shader: BaseShader, data_handler: OverflowingVertexDataHandler):
+        self.shader: BaseShader = shader
+        self.data_handler: OverflowingVertexDataHandler = data_handler
+
+    def set_uniform_data(self, data: List[Tuple[str, any, any]]):
+        self.shader.set_uniform_data(data)
+
+    def set(self, buffer_index: int = 0):
+        self.shader.use()
+        self.data_handler.set(buffer_index, True)
 
 
 def clear_screen(clear_color: List[float]):

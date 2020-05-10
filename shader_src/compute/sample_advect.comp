@@ -26,6 +26,9 @@ layout(binding = 2) restrict readonly buffer gradient_grid
 };
 
 uniform int work_group_offset;
+uniform int slice_count;
+uniform int current_buffer;
+
 uniform float advect_strength;
 
 uniform ivec3 grid_cell_count;
@@ -53,38 +56,41 @@ void main() {
     highp uint index = gl_WorkGroupID.x + work_group_offset;
 
     vec4 sample_data = read(index);
-    if(sample_data.w == 1.0) {
+    if (sample_data.w == 1.0) {
         ivec3 grid_index = gridIndex(sample_data.xyz);
-        vec3 gradient_direction = vec3(0.0, 0.0, 0.0);
-        highp float overall_strength = 0.0;
-
-        float first_inter_x = clamp((sample_data.x - grid_bounding_min.x)/grid_cell_size.x - float(grid_index.x), 0.0, 1.0);
-        float first_inter_y = clamp((sample_data.y - grid_bounding_min.y)/grid_cell_size.y - float(grid_index.y), 0.0, 1.0);
-        float first_inter_z = clamp((sample_data.z - grid_bounding_min.z)/grid_cell_size.z - float(grid_index.z), 0.0, 1.0);
-        float[2] inter_x = {1.0 - first_inter_x, first_inter_x};
-        float[2] inter_y = {1.0 - first_inter_y, first_inter_y};
-        float[2] inter_z = {1.0 - first_inter_z, first_inter_z};
-
-        for (int ix = 0; ix <= 1; ix++)
+        if (grid_index.z >= current_buffer * slice_count && grid_index.z < (current_buffer + 1) * slice_count)
         {
-            for (int iy = 0; iy <= 1; iy++)
+            vec3 gradient_direction = vec3(0.0, 0.0, 0.0);
+            highp float overall_strength = 0.0;
+
+            float first_inter_x = clamp((sample_data.x - grid_bounding_min.x)/grid_cell_size.x - float(grid_index.x), 0.0, 1.0);
+            float first_inter_y = clamp((sample_data.y - grid_bounding_min.y)/grid_cell_size.y - float(grid_index.y), 0.0, 1.0);
+            float first_inter_z = clamp((sample_data.z - grid_bounding_min.z)/grid_cell_size.z - float(grid_index.z), 0.0, 1.0);
+            float[2] inter_x = { 1.0 - first_inter_x, first_inter_x };
+            float[2] inter_y = { 1.0 - first_inter_y, first_inter_y };
+            float[2] inter_z = { 1.0 - first_inter_z, first_inter_z };
+
+            for (int ix = 0; ix <= 1; ix++)
             {
-                for (int iz = 0; iz <= 1; iz++)
+                for (int iy = 0; iy <= 1; iy++)
                 {
-                    int gradient_index = grid_index.x + ix + (grid_index.y + iy) * grid_cell_count.x + (grid_index.z + iz) * grid_cell_count.x * grid_cell_count.y;
-                    GradientGrid current_grid = gradient[gradient_index];
-                    if(current_grid.strength > 0.0) {
-                        gradient_direction += current_grid.normalized_gradient * current_grid.strength * inter_x[ix] * inter_y[iy] * inter_z[iz];
+                    for (int iz = 0; iz <= 1; iz++)
+                    {
+                        int gradient_index = grid_index.x + ix + (grid_index.y + iy) * grid_cell_count.x + (grid_index.z - current_buffer * slice_count + iz) * grid_cell_count.x * grid_cell_count.y;
+                        GradientGrid current_grid = gradient[gradient_index];
+                        if (current_grid.strength > 0.0) {
+                            gradient_direction += current_grid.normalized_gradient * current_grid.strength * inter_x[ix] * inter_y[iy] * inter_z[iz];
+                        }
+                        overall_strength += current_grid.strength;
                     }
-                    overall_strength += current_grid.strength;
                 }
             }
+            gradient_direction = normalize(gradient_direction);
+            if (overall_strength >= 1.0) {
+                sample_data = vec4(sample_data.x + gradient_direction.x * advect_strength, sample_data.y + gradient_direction.y * advect_strength, sample_data.z + gradient_direction.z * advect_strength, sample_data.w);
+            }
+            write(index, sample_data);
         }
-        gradient_direction = normalize(gradient_direction);
-        if(overall_strength >= 1.0) {
-            sample_data = vec4(sample_data.x + gradient_direction.x * advect_strength, sample_data.y + gradient_direction.y * advect_strength, sample_data.z + gradient_direction.z * advect_strength, sample_data.w);
-        }
-        write(index, sample_data);
     } else {
         write(index, sample_data);
     }

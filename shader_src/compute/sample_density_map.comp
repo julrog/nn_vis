@@ -19,13 +19,27 @@ layout(binding = 0) restrict readonly buffer sample_input
     SamplePoint input_sample[];
 };
 
-layout(binding = 2) coherent buffer density_grid
+layout(binding = 2) coherent buffer prev_density_grid
+{
+    DensityGrid prev_grid[];
+};
+
+layout(binding = 3) coherent buffer density_grid
 {
     DensityGrid grid[];
 };
 
+layout(binding = 4) coherent buffer next_density_grid
+{
+    DensityGrid next_grid[];
+};
+
 uniform int work_group_offset;
+uniform int slice_size;
+uniform int slice_count;
+uniform int current_buffer;
 uniform int max_sample_points;
+
 uniform float density_strength;
 uniform float sample_radius;
 
@@ -66,23 +80,40 @@ void main() {
         highp float disMin = length(pointA.xyz - pointB.xyz);
         vec4 midPoint = (pointA + pointB)/2.0;
         ivec3 midIndex = gridIndex(midPoint.xyz);
-        for (int ix = -convolution_range.x; ix <= convolution_range.x + 1; ix++)
-        {
-            for (int iy = -convolution_range.y; iy <= convolution_range.y + 1; iy++)
+        if (midIndex.z >= current_buffer * slice_count && midIndex.z <= (current_buffer + 1) * (slice_count + 1)) {
+            for (int ix = -convolution_range.x; ix <= convolution_range.x + 1; ix++)
             {
-                for (int iz = -convolution_range.z; iz <= convolution_range.z + 1; iz++)
+                for (int iy = -convolution_range.y; iy <= convolution_range.y + 1; iy++)
                 {
-                    ivec3 grid_index = ivec3(midIndex.x + ix, midIndex.y + iy, midIndex.z + iz);
-                    if (grid_index.x >= 0 && grid_index.y >= 0 && grid_index.z >= 0 && grid_index.x < grid_cell_count.x && grid_index.y < grid_cell_count.y && grid_index.z < grid_cell_count.z)
+                    for (int iz = -convolution_range.z; iz <= convolution_range.z + 1; iz++)
                     {
-                        vec3 grid_position = gridPosition(grid_index);
-                        float disA = length(pointA.xyz - grid_position);
-                        float disB = length(pointB.xyz - grid_position);
-                        if (disA + disB < sample_radius * 2.0)
+                        ivec3 grid_index = ivec3(midIndex.x + ix, midIndex.y + iy, midIndex.z + iz);
+                        if (grid_index.x >= 0 && grid_index.y >= 0 && grid_index.z >= 0 && grid_index.x < grid_cell_count.x && grid_index.y < grid_cell_count.y && grid_index.z < grid_cell_count.z)
                         {
-                            highp int index = (grid_index.x + grid_index.y * grid_cell_count.x + grid_index.z * grid_cell_count.y * grid_cell_count.x);
-                            highp float value = (sample_radius * 2.0 - (disA + disB))/(sample_radius * 2.0 - disMin);
-                            atomicAdd(grid[index].density, int(value * density_strength));
+                            vec3 grid_position = gridPosition(grid_index);
+                            float disA = length(pointA.xyz - grid_position);
+                            float disB = length(pointB.xyz - grid_position);
+                            if (disA + disB < sample_radius * 2.0)
+                            {
+                                highp int index = (grid_index.x + grid_index.y * grid_cell_count.x + grid_index.z * grid_cell_count.y * grid_cell_count.x);
+                                highp int relative_index = index - current_buffer * slice_count * slice_size;
+                                highp float value = (sample_radius * 2.0 - (disA + disB))/(sample_radius * 2.0 - disMin);
+                                if (relative_index < 0)
+                                {
+                                    atomicAdd(prev_grid[relative_index + slice_count * slice_size].density, int(value * density_strength));
+                                } else {
+                                    if (relative_index > slice_count * slice_size)
+                                    {
+                                        atomicAdd(prev_grid[relative_index + slice_count * slice_size].density, int(value * density_strength));
+                                        if (relative_index < (slice_count + 1) * slice_size)
+                                        {
+                                            atomicAdd(grid[relative_index].density, int(value * density_strength));
+                                        }
+                                    } else {
+                                        atomicAdd(grid[relative_index].density, int(value * density_strength));
+                                    }
+                                }
+                            }
                         }
                     }
                 }

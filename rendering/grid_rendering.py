@@ -1,5 +1,6 @@
 from OpenGL.GL import *
-from opengl_helper.render_utility import RenderSet, VertexDataHandler, render_setting_0
+from opengl_helper.render_utility import RenderSet, VertexDataHandler, render_setting_0, OverflowingVertexDataHandler, \
+    OverflowingRenderSet
 from opengl_helper.shader import RenderShaderHandler, RenderShader
 from processing.grid_processing import GridProcessor
 from utility.performance import track_time
@@ -16,38 +17,43 @@ class GridRenderer:
                                                           "grid/cube.frag",
                                                           "grid/cube.geom")
 
-        self.data_handler: VertexDataHandler = VertexDataHandler(
-            [(self.grid_processor.grid_position_buffer, 0), (self.grid_processor.grid_density_buffer, 1)])
+        self.data_handler: OverflowingVertexDataHandler = OverflowingVertexDataHandler(
+            [], [(self.grid_processor.grid_position_buffer, 0), (self.grid_processor.grid_density_buffer, 1)])
 
-        self.point_render: RenderSet = RenderSet(point_shader, self.data_handler)
-        self.cube_render: RenderSet = RenderSet(cube_shader, self.data_handler)
+        self.point_render: OverflowingRenderSet = OverflowingRenderSet(point_shader, self.data_handler)
+        self.cube_render: OverflowingRenderSet = OverflowingRenderSet(cube_shader, self.data_handler)
 
     @track_time
     def render_point(self, window: Window, clear: bool = True, swap: bool = False):
-        grid_count: int = self.grid_processor.grid.grid_cell_count_overall
-
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                             ("view", window.cam.view, "mat4")])
 
-        self.point_render.set()
+        for i in range(len(self.grid_processor.grid_position_buffer.handle)):
+            grid_count: int = int(
+                self.grid_processor.grid_position_buffer.size[i] / 16 - self.grid_processor.grid_slice_size)
 
-        render_setting_0(clear)
-        glPointSize(10.0)
-        glDrawArrays(GL_POINTS, 0, grid_count)
+            self.point_render.set()
+
+            render_setting_0(clear)
+            glPointSize(10.0)
+            glDrawArrays(GL_POINTS, 0, grid_count)
         if swap:
             window.swap()
 
     @track_time
     def render_cube(self, window: Window, clear: bool = True, swap: bool = False):
-        grid_count: int = self.grid_processor.grid.grid_cell_count_overall
-
         self.cube_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                            ("view", window.cam.view, "mat4")])
 
-        self.cube_render.set()
+        for i in range(len(self.grid_processor.grid_position_buffer.handle)):
+            grid_count: int = int(
+                self.grid_processor.grid_position_buffer.size[i] / 16 - self.grid_processor.grid_slice_size)
 
-        render_setting_0(clear)
-        glDrawArrays(GL_POINTS, 0, grid_count)
+            self.cube_render.set(i)
+
+            render_setting_0(clear)
+
+            glDrawArrays(GL_POINTS, 0, grid_count)
         if swap:
             window.swap()
 

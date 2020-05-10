@@ -19,7 +19,7 @@ class ComputeShader(BaseShader):
         self.uniform_cache: Dict[str, Tuple[int, any, any]] = dict()
         self.max_workgroup_size: int = glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0)[0]
 
-    def compute(self, width: int):
+    def compute(self, width: int, barrier: bool = True):
         glMemoryBarrier(GL_ALL_BARRIER_BITS)
         for i in range(math.ceil(width / self.max_workgroup_size)):
             self.set_uniform_data(
@@ -36,6 +36,10 @@ class ComputeShader(BaseShader):
                 glDispatchCompute(width % self.max_workgroup_size, 1, 1)
             else:
                 glDispatchCompute(self.max_workgroup_size, 1, 1)
+        if barrier:
+            self.barrier()
+
+    def barrier(self):
         glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
 
