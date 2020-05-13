@@ -1,0 +1,50 @@
+#version 430
+
+struct Node
+{
+    vec4 pos;
+};
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(binding = 0) restrict readonly buffer node_input
+{
+    Node input_node[];
+};
+layout(binding = 1) restrict writeonly buffer node_output
+{
+    Node output_node[];
+};
+
+uniform int work_group_offset;
+uniform float sample_length;
+uniform float noise_strength;
+
+highp float rand(vec2 co)
+{
+    highp float a = 12.9898;
+    highp float b = 78.233;
+    highp float c = 43758.5453;
+    highp float dt= dot(co.xy, vec2(a, b));
+    highp float sn= mod(dt, 3.14);
+    return fract(sin(sn) * c);
+}
+
+vec4 read(highp uint index)
+{
+    return input_node[index].pos;
+}
+
+void write(highp uint index, vec4 pos)
+{
+    output_node[index].pos = pos;
+}
+
+void main() {
+    highp uint index = gl_WorkGroupID.x + work_group_offset;
+
+    vec4 node = read(index);
+    highp float noise_x = (rand(node.xy) - 0.5) * 2.0 * noise_strength * sample_length;
+    highp float noise_y = (rand(node.yx) - 0.5) * 2.0 * noise_strength * sample_length;
+    node = vec4(node.x + noise_x, node.y + noise_y, node.z, node.w);
+    write(index, node);
+}

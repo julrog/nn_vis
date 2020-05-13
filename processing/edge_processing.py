@@ -16,15 +16,15 @@ LOG_SOURCE: str = "EDGE_PROCESSING"
 class EdgeProcessor:
     def __init__(self, sample_length: float):
         self.init_compute_shader: ComputeShader = ComputeShaderHandler().create("init_edge_sampler",
-                                                                                "initial_edge_sample.comp")
+                                                                                "edge/initial_edge_sample.comp")
         self.sample_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_sampler",
-                                                                                  "edge_sample.comp")
+                                                                                  "edge/edge_sample.comp")
         self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_noise",
-                                                                                 "sample_noise.comp")
+                                                                                 "edge/sample_noise.comp")
         self.smooth_compute_shader: ComputeShader = ComputeShaderHandler().create("sample_smooth",
-                                                                                  "sample_smooth.comp")
+                                                                                  "edge/sample_smooth.comp")
         self.limit_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_limits",
-                                                                                 "edge_limits.comp")
+                                                                                 "edge/edge_limits.comp")
         self.sample_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True)
         self.limits_buffer: BufferObject = BufferObject(ssbo=True)
         self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.sample_buffer, 0), (self.limits_buffer, 2)])
@@ -111,13 +111,14 @@ class EdgeProcessor:
         self.sampled = True
 
     @track_time
-    def sample_noise(self, strength: float = 1.0):
+    def sample_noise(self, strength: float = 1.0, move_start_end: int = 0):
         self.ssbo_handler.set()
 
         self.noise_compute_shader.set_uniform_data([
             ('max_sample_points', self.max_sample_points, 'int'),
             ('sample_length', self.sample_length, 'float'),
-            ('noise_strength', strength, 'float')
+            ('noise_strength', strength, 'float'),
+            ('move_start_end', move_start_end, 'int')
         ])
         self.noise_compute_shader.compute(len(self.edges))
 

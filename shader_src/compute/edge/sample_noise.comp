@@ -19,6 +19,7 @@ uniform int work_group_offset;
 uniform int max_sample_points;
 uniform float sample_length;
 uniform float noise_strength;
+uniform int move_start_end;
 
 highp float rand(vec2 co)
 {
@@ -45,14 +46,23 @@ void main() {
     highp uint current_read_index = 0;
     highp uint current_write_index = 0;
 
+    if (move_start_end == 0) {
+        vec4 next_point = read(current_read_index++, offset);
+        write(current_write_index++, offset, next_point);
+    }
+
     float is_used = 1.0;
-    do {
+    while (is_used >= 1.0)
+    {
         vec4 next_point = read(current_read_index++, offset);
         is_used = next_point.w;
-        highp float noise_x = (rand(next_point.xy) - 0.5) * 2.0 * noise_strength * sample_length;
-        highp float noise_y = (rand(next_point.yz) - 0.5) * 2.0 * noise_strength * sample_length;
-        highp float noise_z = (rand(next_point.zx) - 0.5) * 2.0 * noise_strength * sample_length - 0.0001;
-        next_point = vec4(next_point.x + noise_x, next_point.y + noise_y, next_point.z + noise_z, next_point.w);
+        if (is_used >= 1.0 || move_start_end > 0)
+        {
+            highp float noise_x = (rand(next_point.xy) - 0.5) * 2.0 * noise_strength * sample_length;
+            highp float noise_y = (rand(next_point.yz) - 0.5) * 2.0 * noise_strength * sample_length;
+            highp float noise_z = (rand(next_point.zx) - 0.5) * 2.0 * noise_strength * sample_length - 0.0001;
+            next_point = vec4(next_point.x + noise_x, next_point.y + noise_y, next_point.z + noise_z, next_point.w);
+        }
         write(current_write_index++, offset, next_point);
-    } while (is_used >= 1.0);
+    };
 }

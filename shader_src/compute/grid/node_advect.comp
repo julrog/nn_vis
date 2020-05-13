@@ -1,0 +1,97 @@
+#version 430
+
+struct Node
+{
+    vec4 pos;
+};
+
+struct GradientGrid
+{
+    vec3 normalized_gradient;
+    float strength;
+};
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(binding = 0) restrict readonly buffer node_input
+{
+    Node input_node[];
+};
+layout(binding = 1) writeonly buffer node_output
+{
+    Node output_node[];
+};
+layout(binding = 2) restrict readonly buffer gradient_grid
+{
+    GradientGrid gradient[];
+};
+
+uniform int work_group_offset;
+uniform int slice_count;
+uniform int current_buffer;
+
+uniform float advect_strength;
+
+uniform ivec3 grid_cell_count;
+uniform vec3 grid_cell_size;
+uniform vec3 grid_bounding_min;
+
+ivec3 gridIndex(vec3 position)
+{
+    return ivec3(int(floor((position.x - grid_bounding_min.x)/grid_cell_size.x)),
+    int(floor((position.y - grid_bounding_min.y)/grid_cell_size.y)),
+    int(floor((position.z - grid_bounding_min.z)/grid_cell_size.z)));
+}
+
+vec4 read(highp uint index)
+{
+    return input_node[index].pos;
+}
+
+void write(highp uint index, vec4 pos)
+{
+    output_node[index].pos = pos;
+}
+
+void main() {
+    highp uint index = gl_WorkGroupID.x + work_group_offset;
+
+    vec4 node_data = read(index);
+    if (node_data.w == 1.0) {
+        ivec3 grid_index = gridIndex(node_data.xyz);
+        if (grid_index.z >= current_buffer * slice_count && grid_index.z < (current_buffer + 1) * slice_count)
+        {
+            vec3 gradient_direction = vec3(0.0, 0.0, 0.0);
+            highp float overall_strength = 0.0;
+
+            float first_inter_x = clamp((node_data.x - grid_bounding_min.x)/grid_cell_size.x - float(grid_index.x), 0.0, 1.0);
+            float first_inter_y = clamp((node_data.y - grid_bounding_min.y)/grid_cell_size.y - float(grid_index.y), 0.0, 1.0);
+            float first_inter_z = clamp((node_data.z - grid_bounding_min.z)/grid_cell_size.z - float(grid_index.z), 0.0, 1.0);
+            float[2] inter_x = { 1.0 - first_inter_x, first_inter_x };
+            float[2] inter_y = { 1.0 - first_inter_y, first_inter_y };
+            float[2] inter_z = { 1.0 - first_inter_z, first_inter_z };
+
+            for (int ix = 0; ix <= 1; ix++)
+            {
+                for (int iy = 0; iy <= 1; iy++)
+                {
+                    for (int iz = 0; iz <= 1; iz++)
+                    {
+                        int gradient_index = grid_index.x + ix + (grid_index.y + iy) * grid_cell_count.x + (grid_index.z - current_buffer * slice_count + iz) * grid_cell_count.x * grid_cell_count.y;
+                        GradientGrid current_grid = gradient[gradient_index];
+                        if (current_grid.strength > 0.0) {
+                            gradient_direction += current_grid.normalized_gradient * current_grid.strength * inter_x[ix] * inter_y[iy] * inter_z[iz];
+                        }
+                        overall_strength += current_grid.strength;
+                    }
+                }
+            }
+            gradient_direction = normalize(gradient_direction);
+            if (overall_strength >= 1.0) {
+                node_data = vec4(node_data.x + gradient_direction.x * advect_strength, node_data.y + gradient_direction.y * advect_strength, node_data.z, node_data.w);
+            }
+            write(index, node_data);
+        }
+    } else {
+        write(index, node_data);
+    }
+}

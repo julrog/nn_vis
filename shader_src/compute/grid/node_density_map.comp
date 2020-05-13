@@ -1,0 +1,116 @@
+#version 430
+
+struct Node
+{
+    vec4 pos;
+};
+
+struct DensityGrid
+{
+    int density;
+    int pad1;
+    int pad2;
+    int pad3;
+};
+
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(binding = 0) restrict readonly buffer node_input
+{
+    Node input_node[];
+};
+
+layout(binding = 2) coherent buffer prev_density_grid
+{
+    DensityGrid prev_grid[];
+};
+
+layout(binding = 3) coherent buffer density_grid
+{
+    DensityGrid grid[];
+};
+
+layout(binding = 4) coherent buffer next_density_grid
+{
+    DensityGrid next_grid[];
+};
+
+uniform int work_group_offset;
+uniform int slice_size;
+uniform int slice_count;
+uniform int current_buffer;
+uniform int max_sample_points;
+
+uniform float density_strength;
+uniform float node_radius;
+
+uniform ivec3 grid_cell_count;
+uniform vec3 grid_cell_size;
+uniform vec3 grid_bounding_min;
+
+
+vec4 read(highp uint index)
+{
+    return input_node[index].pos;
+}
+
+ivec3 gridIndex(vec3 position)
+{
+    return ivec3(int(floor((position.x - grid_bounding_min.x)/grid_cell_size.x)),
+    int(floor((position.y - grid_bounding_min.y)/grid_cell_size.y)),
+    int(floor((position.z - grid_bounding_min.z)/grid_cell_size.z)));
+}
+
+vec3 gridPosition(ivec3 gridIndex)
+{
+    return vec3((float(gridIndex.x) * grid_cell_size.x + grid_bounding_min.x),
+    (float(gridIndex.y) * grid_cell_size.y + grid_bounding_min.y),
+    (float(gridIndex.z) * grid_cell_size.z + grid_bounding_min.z));
+}
+
+void main() {
+    highp uint index = gl_WorkGroupID.x + work_group_offset;
+
+    ivec3 convolution_range = ivec3(ceil(node_radius/grid_cell_size.x) + 1, ceil(node_radius/grid_cell_size.y) + 1, ceil(node_radius/grid_cell_size.z) + 1);
+    vec4 node_data = read(index);
+
+    highp float disMin = node_radius;
+    ivec3 nodeGridIndex = gridIndex(node_data.xyz);
+    if (nodeGridIndex.z >= current_buffer * slice_count && nodeGridIndex.z <= (current_buffer + 1) * (slice_count + 1)) {
+        for (int ix = -convolution_range.x; ix <= convolution_range.x + 1; ix++)
+        {
+            for (int iy = -convolution_range.y; iy <= convolution_range.y + 1; iy++)
+            {
+                for (int iz = -convolution_range.z; iz <= convolution_range.z + 1; iz++)
+                {
+                    ivec3 grid_index = ivec3(nodeGridIndex.x + ix, nodeGridIndex.y + iy, nodeGridIndex.z + iz);
+                    if (grid_index.x >= 0 && grid_index.y >= 0 && grid_index.z >= 0 && grid_index.x < grid_cell_count.x && grid_index.y < grid_cell_count.y && grid_index.z < grid_cell_count.z)
+                    {
+                        vec3 grid_position = gridPosition(grid_index);
+                        float dis = length(node_data.xyz - grid_position);
+                        if (dis < node_radius)
+                        {
+                            highp int index = (grid_index.x + grid_index.y * grid_cell_count.x + grid_index.z * grid_cell_count.y * grid_cell_count.x);
+                            highp int relative_index = index - current_buffer * slice_count * slice_size;
+                            highp float value = (node_radius - dis)/(node_radius);
+                            if (relative_index < 0)
+                            {
+                                atomicAdd(prev_grid[relative_index + slice_count * slice_size].density, int(value * density_strength));
+                            } else {
+                                if (relative_index > slice_count * slice_size)
+                                {
+                                    atomicAdd(prev_grid[relative_index + slice_count * slice_size].density, int(value * density_strength));
+                                    if (relative_index < (slice_count + 1) * slice_size)
+                                    {
+                                        atomicAdd(grid[relative_index].density, int(value * density_strength));
+                                    }
+                                } else {
+                                    atomicAdd(grid[relative_index].density, int(value * density_strength));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

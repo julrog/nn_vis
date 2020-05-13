@@ -3,14 +3,14 @@ from OpenGL.GL import *
 from models.grid import Grid
 from opengl_helper.render_utility import VertexDataHandler, RenderSet, render_setting_0, render_setting_1
 from opengl_helper.shader import RenderShaderHandler, RenderShader
-from processing.edge_processing import EdgeProcessor
+from processing.node_processing import NodeProcessor
 from utility.performance import track_time
 from utility.window import Window
 
 
-class EdgeRenderer:
-    def __init__(self, edge_processor: EdgeProcessor, grid: Grid):
-        self.edge_processor = edge_processor
+class NodeRenderer:
+    def __init__(self, node_processor: NodeProcessor, grid: Grid):
+        self.node_processor = node_processor
         self.grid = grid
 
         shader_handler: RenderShaderHandler = RenderShaderHandler()
@@ -22,7 +22,7 @@ class EdgeRenderer:
                                                                         "sample/transparent_ball.frag",
                                                                         "sample/ball_from_point.geom")
 
-        self.data_handler: VertexDataHandler = VertexDataHandler([(self.edge_processor.sample_buffer, 0)])
+        self.data_handler: VertexDataHandler = VertexDataHandler([(self.node_processor.node_buffer, 0)])
 
         self.point_render: RenderSet = RenderSet(sample_point_shader, self.data_handler)
         self.sphere_render: RenderSet = RenderSet(sample_sphere_shader, self.data_handler)
@@ -30,7 +30,7 @@ class EdgeRenderer:
 
     @track_time
     def render_point(self, window: Window, clear: bool = True, swap: bool = False):
-        sampled_points: int = self.edge_processor.get_buffer_points()
+        node_count: int = len(self.node_processor.nodes)
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                             ("view", window.cam.view, "mat4")])
@@ -39,13 +39,13 @@ class EdgeRenderer:
 
         render_setting_0(clear)
         glPointSize(10.0)
-        glDrawArrays(GL_POINTS, 0, sampled_points)
+        glDrawArrays(GL_POINTS, 0, node_count)
         if swap:
             window.swap()
 
     @track_time
     def render_sphere(self, window: Window, clear: bool = True, swap: bool = False):
-        sampled_points: int = self.edge_processor.get_buffer_points()
+        node_count: int = len(self.node_processor.nodes)
 
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                              ("view", window.cam.view, "mat4")])
@@ -53,13 +53,13 @@ class EdgeRenderer:
         self.sphere_render.set()
 
         render_setting_0(clear)
-        glDrawArrays(GL_POINTS, 0, sampled_points)
+        glDrawArrays(GL_POINTS, 0, node_count)
         if swap:
             window.swap()
 
     @track_time
     def render_transparent(self, window: Window, clear: bool = True, swap: bool = False):
-        sampled_points: int = self.edge_processor.get_buffer_points()
+        node_count: int = len(self.node_processor.nodes)
 
         near, far = self.grid.get_near_far_from_view(window.cam.view)
         self.transparent_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
@@ -70,7 +70,7 @@ class EdgeRenderer:
         self.transparent_render.set()
 
         render_setting_1(clear)
-        glDrawArrays(GL_POINTS, 0, sampled_points)
+        glDrawArrays(GL_POINTS, 0, node_count)
         if swap:
             window.swap()
 

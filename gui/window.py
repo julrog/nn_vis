@@ -98,28 +98,28 @@ class RadioButtons:
                  column: int = 0):
         self.names: List[str] = names
         self.variable: IntVar = shared_variable
+        self.command = command
         self.buttons: List[Button] = []
-
         for i, name in enumerate(self.names):
             def generate_press_function(current_index: int):
                 def press_function():
-                    self.press(current_index, command)
+                    self.press(current_index)
 
                 return press_function
 
-            new_button: Button = Button(root, text=name, width=10, command=generate_press_function(i))
+            new_button: Button = Button(root, text=name, width=15, command=generate_press_function(i))
             new_button.grid(row=row + i, column=column)
             self.buttons.append(new_button)
-        self.press(0, command)
+        self.press(0)
 
-    def press(self, button_id: int, command):
+    def press(self, button_id: int):
         self.set(button_id)
         for i, button in enumerate(self.buttons):
             if i is not button_id:
                 button.config(relief=RAISED)
             else:
                 button.config(relief=SUNKEN)
-        command("action", "state", self.variable.get())
+        self.command("action", "state", self.variable.get())
 
     def set(self, value: any):
         self.variable.set(int(value))
@@ -198,11 +198,17 @@ class OptionGui:
         self.action_frame: LabelFrame = LabelFrame(self.gui_root, text="Settings", width=60,
                                                    padx=5, pady=5)
         self.action_frame.grid(row=0, column=2, rowspan=2, padx=5, pady=5)
-        self.generate_button: Button = Button(self.action_frame, text="Generate", width=10, command=self.generate)
+        self.generate_button: Button = Button(self.action_frame, text="Generate Network", width=15,
+                                              command=self.generate)
         self.generate_button.grid(row=0, column=0)
+        self.sample_button: Button = Button(self.action_frame, text="Sample Edges", width=15,
+                                            command=lambda: self.change_setting("trigger_network", "sample", 1, True))
+        self.sample_button.grid(row=1, column=0)
         self.action_state: IntVar = IntVar(0)
-        self.action_buttons: RadioButtons = RadioButtons(self.action_frame, ["Freeze", "Advect", "Diverge", "Random"],
-                                                         self.action_state, command=self.change_setting, row=1,
+        self.action_buttons: RadioButtons = RadioButtons(self.action_frame,
+                                                         ["Stop Everything", "Node Advect", "Node Diverge",
+                                                          "Node Noise", "Edge Advect", "Edge Diverge", "Edge Noise"],
+                                                         self.action_state, command=self.change_setting, row=2,
                                                          column=0)
 
         self.setting_frame: LabelFrame = LabelFrame(self.gui_root, text="Settings", width=60,
@@ -253,6 +259,7 @@ class OptionGui:
         self.layer_label.grid(row=0, column=0)
 
     def generate(self):
+        self.action_buttons.press(0)
         layer_data: List[int] = []
         for ls in self.layer_settings:
             layer_data.append(ls.get_neurons())
@@ -262,5 +269,7 @@ class OptionGui:
         self.settings["sampling_rate"] = self.sampling_rate.get()
         print("Generated network: " + str(layer_data))
 
-    def change_setting(self, setting_type: str, sub_type: str, value: int):
+    def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):
+        if stop_action:
+            self.action_buttons.press(0)
         self.settings[setting_type + "_" + sub_type] = value

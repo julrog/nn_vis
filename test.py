@@ -35,14 +35,18 @@ def compute_render(name: str):
     def frame():
         window_handler.update()
 
+        if "trigger_network_sample" in options.settings and options.settings["trigger_network_sample"] > 0:
+            network_processor.reset_edges()
+            options.settings["trigger_network_sample"] = 0
+
         if network_processor is not None:
             network_processor.process(window, options.settings["action_state"])
             network_processor.render(window, options.settings["render_edge"], options.settings["render_grid"])
 
         if "sample_count" in options.settings:
-            options.settings["sample_count"].set(network_processor.edge_handler.get_buffer_points())
+            options.settings["sample_count"].set(network_processor.edge_processor.get_buffer_points())
         if "edge_count" in options.settings:
-            options.settings["edge_count"].set(len(network_processor.edge_handler.edges))
+            options.settings["edge_count"].set(len(network_processor.edge_processor.edges))
         if "cell_count" in options.settings:
             options.settings["cell_count"].set(network_processor.grid_processor.grid.grid_cell_count_overall)
 

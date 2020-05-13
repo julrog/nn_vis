@@ -7,8 +7,10 @@ from models.network import NetworkModel
 from opengl_helper.render_utility import clear_screen
 from processing.edge_processing import EdgeProcessor
 from processing.grid_processing import GridProcessor
+from processing.node_processing import NodeProcessor
 from rendering.edge_rendering import EdgeRenderer
 from rendering.grid_rendering import GridRenderer
+from rendering.node_rendering import NodeRenderer
 from utility.window import Window
 
 LOG_SOURCE: str = "NETWORK_PROCESSING"
@@ -29,40 +31,74 @@ class NetworkProcessor:
         self.grid = Grid(Vector3([self.grid_cell_size, self.grid_cell_size, self.grid_cell_size]),
                          self.network.bounding_volume)
 
-        self.edge_handler = EdgeProcessor(self.sample_length)
-        self.edge_handler.set_data(self.network)
-        self.edge_handler.init_sample_edge()
-        self.edge_renderer = EdgeRenderer(self.edge_handler, self.grid)
+        self.node_processor = NodeProcessor()
+        self.node_processor.set_data(self.network)
+        self.node_renderer = NodeRenderer(self.node_processor, self.grid)
 
-        self.grid_processor = GridProcessor(self.grid, self.edge_handler, 10.0, self.sample_radius, 0.01)
+        self.edge_processor = EdgeProcessor(self.sample_length)
+        self.edge_processor.set_data(self.network)
+        self.edge_processor.init_sample_edge()
+        self.edge_renderer = EdgeRenderer(self.edge_processor, self.grid)
+
+        self.grid_processor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 10.0,
+                                            self.sample_radius, 0.01)
         self.grid_processor.calculate_position()
-        self.grid_processor.calculate_density()
+        self.grid_processor.calculate_edge_density()
         self.grid_processor.calculate_gradient()
 
         self.grid_renderer = GridRenderer(self.grid_processor)
 
+    def reset_edges(self):
+        self.edge_processor.delete()
+        self.edge_renderer.delete()
+
+        self.node_processor.read_nodes_from_buffer()
+        self.network.set_nodes(self.node_processor.nodes)
+        self.edge_processor = EdgeProcessor(self.sample_length)
+        self.edge_processor.set_data(self.network)
+        self.edge_processor.init_sample_edge()
+        self.edge_renderer = EdgeRenderer(self.edge_processor, self.grid)
+
+        self.grid_processor.set_edge_processor(self.edge_processor)
+
     def process(self, window: Window, action_mode: int):
-        self.edge_handler.check_limits(window.cam.view)
+        self.edge_processor.check_limits(window.cam.view)
         if action_mode is not 0:
             if action_mode == 1:
                 self.grid_processor.clear_buffer()
-                self.grid_processor.calculate_density()
+                self.grid_processor.calculate_node_density()
+                self.grid_processor.calculate_gradient()
+                if self.grid_processor.advect_strength < 0:
+                    self.grid_processor.advect_strength = -self.grid_processor.advect_strength
+                self.grid_processor.node_advect()
+            elif action_mode == 2:
+                self.grid_processor.clear_buffer()
+                self.grid_processor.calculate_node_density()
+                self.grid_processor.calculate_gradient()
+                if self.grid_processor.advect_strength > 0:
+                    self.grid_processor.advect_strength = -self.grid_processor.advect_strength
+                self.grid_processor.node_advect()
+            elif action_mode == 3:
+                self.node_processor.node_noise(self.sample_length, 0.5)
+            if action_mode == 4:
+                self.grid_processor.clear_buffer()
+                self.grid_processor.calculate_edge_density()
                 self.grid_processor.calculate_gradient()
                 if self.grid_processor.advect_strength < 0:
                     self.grid_processor.advect_strength = -self.grid_processor.advect_strength
                 self.grid_processor.sample_advect()
-            elif action_mode == 2:
+            elif action_mode == 5:
                 self.grid_processor.clear_buffer()
-                self.grid_processor.calculate_density()
+                self.grid_processor.calculate_edge_density()
                 self.grid_processor.calculate_gradient()
                 if self.grid_processor.advect_strength > 0:
                     self.grid_processor.advect_strength = -self.grid_processor.advect_strength
                 self.grid_processor.sample_advect()
-            elif action_mode == 3:
-                self.edge_handler.sample_noise(0.5)
+            elif action_mode == 6:
+                self.edge_processor.sample_noise(0.5)
 
-            self.edge_handler.sample_edges()
-            self.edge_handler.sample_smooth()
+            self.edge_processor.sample_edges()
+            self.edge_processor.sample_smooth()
 
     def render(self, window: Window, edge_render_mode: int, grid_render_mode: int):
         clear_screen([1.0, 1.0, 1.0, 1.0])
@@ -72,9 +108,12 @@ class NetworkProcessor:
             self.edge_renderer.render_transparent(window, clear=False, swap=False)
         elif edge_render_mode == 1:
             self.edge_renderer.render_sphere(window, clear=False, swap=False)
+        self.node_renderer.render_transparent(window, clear=False, swap=False)
 
     def delete(self):
-        self.edge_handler.delete()
+        self.node_processor.delete()
+        self.node_renderer.delete()
+        self.edge_processor.delete()
         self.edge_renderer.delete()
         self.grid_processor.delete()
         self.grid_renderer.delete()
