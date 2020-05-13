@@ -100,15 +100,24 @@ class NetworkProcessor:
             self.edge_processor.sample_edges()
             self.edge_processor.sample_smooth()
 
-    def render(self, window: Window, edge_render_mode: int, grid_render_mode: int):
+    def render(self, window: Window, edge_render_mode: int, grid_render_mode: int, node_render_mode: int):
         clear_screen([1.0, 1.0, 1.0, 1.0])
         if window.gradient and grid_render_mode == 1:
             self.grid_renderer.render_cube(window, clear=False, swap=False)
-        if edge_render_mode == 2:
+        elif window.gradient and grid_render_mode == 2:
+            self.grid_renderer.render_point(window, clear=False, swap=False)
+        if edge_render_mode == 3:
+            self.edge_renderer.render_point(window, clear=False, swap=False)
+        elif edge_render_mode == 2:
             self.edge_renderer.render_transparent(window, clear=False, swap=False)
         elif edge_render_mode == 1:
             self.edge_renderer.render_sphere(window, clear=False, swap=False)
-        self.node_renderer.render_transparent(window, clear=False, swap=False)
+        if node_render_mode == 3:
+            self.node_renderer.render_point(window, clear=False, swap=False)
+        elif node_render_mode == 2:
+            self.node_renderer.render_transparent(window, clear=False, swap=False)
+        elif node_render_mode == 1:
+            self.node_renderer.render_sphere(window, clear=False, swap=False)
 
     def delete(self):
         self.node_processor.delete()

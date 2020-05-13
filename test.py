@@ -41,7 +41,8 @@ def compute_render(name: str):
 
         if network_processor is not None:
             network_processor.process(window, options.settings["action_state"])
-            network_processor.render(window, options.settings["render_edge"], options.settings["render_grid"])
+            network_processor.render(window, options.settings["render_Edge"], options.settings["render_Grid"],
+                                     options.settings["render_Node"])
 
         if "sample_count" in options.settings:
             options.settings["sample_count"].set(network_processor.edge_processor.get_buffer_points())

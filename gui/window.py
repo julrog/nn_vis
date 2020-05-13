@@ -128,6 +128,30 @@ class RadioButtons:
         return int(self.variable.get())
 
 
+class RenderSettings:
+    def __init__(self, root: LabelFrame, name: str, change_setting_func, render_options: List[str],
+                 default_value: int = 0, row: int = 0, column: int = 0):
+        self.name: str = name
+        self.render_frame: LabelFrame = LabelFrame(root, text=self.name, width=60,
+                                                   padx=5, pady=5)
+        self.render_mode: IntVar = IntVar(value=default_value)
+        self.render_radio_buttons: List[Radiobutton] = []
+
+        def create_radio_func(value: int):
+            def command():
+                change_setting_func("render", self.name, value)
+
+            return command
+
+        for i, option in enumerate(render_options):
+            self.render_radio_buttons.append(
+                Radiobutton(self.render_frame, text=option, variable=self.render_mode, value=i,
+                            command=create_radio_func(i)))
+            self.render_radio_buttons[i].grid(row=i, column=0)
+        self.render_frame.grid(row=row, column=column, padx=5, pady=5)
+        change_setting_func("render", self.name, default_value)
+
+
 class OptionGui:
     def __init__(self):
         self.test: bool = False
@@ -162,38 +186,12 @@ class OptionGui:
                                                    padx=5, pady=5)
         self.render_frame.grid(row=1, column=1, rowspan=2, padx=5, pady=5)
 
-        self.grid_render_frame: LabelFrame = LabelFrame(self.render_frame, text="Grid", width=60,
-                                                        padx=5, pady=5)
-        self.grid_render_mode = IntVar(value=1)
-        self.settings["render_grid"] = 1
-        self.rb_grid_render_cube: Radiobutton = Radiobutton(self.grid_render_frame, text="Cube",
-                                                            variable=self.grid_render_mode, value=1,
-                                                            command=lambda: self.change_setting("render", "grid", 1))
-        self.rb_grid_render_none: Radiobutton = Radiobutton(self.grid_render_frame, text="None",
-                                                            variable=self.grid_render_mode, value=0,
-                                                            command=lambda: self.change_setting("render", "grid", 0))
-        self.grid_render_frame.grid(row=1, column=0, padx=5, pady=5)
-        self.rb_grid_render_cube.grid(row=0, column=0)
-        self.rb_grid_render_none.grid(row=1, column=0)
-
-        self.edge_render_frame: LabelFrame = LabelFrame(self.render_frame, text="Edge", width=60,
-                                                        padx=5, pady=5)
-        self.edge_render_mode = IntVar(value=2)
-        self.settings["render_edge"] = 2
-        self.rb_edge_render_transparent: Radiobutton = Radiobutton(self.edge_render_frame, text="Transparent",
-                                                                   variable=self.edge_render_mode, value=2,
-                                                                   command=lambda: self.change_setting("render", "edge",
-                                                                                                       2))
-        self.rb_edge_render_sphere: Radiobutton = Radiobutton(self.edge_render_frame, text="Sphere",
-                                                              variable=self.edge_render_mode, value=1,
-                                                              command=lambda: self.change_setting("render", "edge", 1))
-        self.rb_edge_render_none: Radiobutton = Radiobutton(self.edge_render_frame, text="None",
-                                                            variable=self.edge_render_mode, value=0,
-                                                            command=lambda: self.change_setting("render", "edge", 0))
-        self.edge_render_frame.grid(row=2, column=0, padx=5, pady=5)
-        self.rb_edge_render_transparent.grid(row=0, column=0)
-        self.rb_edge_render_sphere.grid(row=1, column=0)
-        self.rb_edge_render_none.grid(row=2, column=0)
+        self.grid_render_settings: RenderSettings = RenderSettings(self.render_frame, "Grid", self.change_setting,
+                                                                   ["None", "Cube", "Point"], 0, 0, 0)
+        self.edge_render_settings: RenderSettings = RenderSettings(self.render_frame, "Edge", self.change_setting,
+                                                                   ["None", "Sphere", "Transparent", "Point"], 2, 1, 0)
+        self.node_render_settings: RenderSettings = RenderSettings(self.render_frame, "Node", self.change_setting,
+                                                                   ["None", "Sphere", "Transparent", "Point"], 2, 2, 0)
 
         self.action_frame: LabelFrame = LabelFrame(self.gui_root, text="Settings", width=60,
                                                    padx=5, pady=5)
@@ -270,6 +268,7 @@ class OptionGui:
         print("Generated network: " + str(layer_data))
 
     def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):
+        # print("Type: %s_%s value %i" % (setting_type, sub_type, value))
         if stop_action:
             self.action_buttons.press(0)
         self.settings[setting_type + "_" + sub_type] = value
