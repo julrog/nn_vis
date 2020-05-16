@@ -189,7 +189,8 @@ class OptionGui:
         self.grid_render_settings: RenderSettings = RenderSettings(self.render_frame, "Grid", self.change_setting,
                                                                    ["None", "Cube", "Point"], 0, 0, 0)
         self.edge_render_settings: RenderSettings = RenderSettings(self.render_frame, "Edge", self.change_setting,
-                                                                   ["None", "Sphere", "Transparent", "Point"], 2, 1, 0)
+                                                                   ["None", "Sphere", "Transparent", "Point", "Line"],
+                                                                   2, 1, 0)
         self.node_render_settings: RenderSettings = RenderSettings(self.render_frame, "Node", self.change_setting,
                                                                    ["None", "Sphere", "Transparent", "Point"], 2, 2, 0)
 

@@ -24,9 +24,9 @@ vec3 sphereIntersection(bool back)
     vec3 ray_direction = normalize(gs_hit_position_cam);
 
     float a = dot(ray_direction, -gs_atom_position_cam);
-    float b = a * a - length(gs_atom_position_cam) * length(gs_atom_position_cam) + gs_atom_radius * gs_atom_radius;
+    float b = a * a - (dot(gs_atom_position_cam, gs_atom_position_cam) - gs_atom_radius * gs_atom_radius);
 
-    if (b < 0) discard;// no intercections
+    if (b < 0) discard;// no intersections
 
     float d = -a;
     if (back) d -= sqrt(b); // + for backside
