@@ -12,10 +12,11 @@ class GridRenderer:
         self.grid_processor = grid_processor
 
         shader_handler = RenderShaderHandler()
-        point_shader: RenderShader = shader_handler.create("grid_base", "grid/point.vert", "grid/point.frag")
-        cube_shader: RenderShader = shader_handler.create("grid_cube", "grid/cube.vert",
-                                                          "grid/cube.frag",
-                                                          "grid/cube.geom")
+        point_shader: RenderShader = shader_handler.create("grid_point", "grid/grid.vert",
+                                                           "basic/discard_screen_color.frag")
+        cube_shader: RenderShader = shader_handler.create("grid_cube", "grid/grid_impostor.vert",
+                                                          "basic/screen_color.frag",
+                                                          "grid/point_to_cube_impostor.geom")
 
         self.data_handler: OverflowingVertexDataHandler = OverflowingVertexDataHandler(
             [], [(self.grid_processor.grid_position_buffer, 0), (self.grid_processor.grid_density_buffer, 1)])
@@ -26,7 +27,9 @@ class GridRenderer:
     @track_time
     def render_point(self, window: Window, clear: bool = True, swap: bool = False):
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                            ("view", window.cam.view, "mat4")])
+                                            ("view", window.cam.view, "mat4"),
+                                            ("screen_width", 1920.0, "float"),
+                                            ("screen_height", 1080.0, "float")])
 
         for i in range(len(self.grid_processor.grid_position_buffer.handle)):
             grid_count: int = int(
@@ -43,7 +46,9 @@ class GridRenderer:
     @track_time
     def render_cube(self, window: Window, clear: bool = True, swap: bool = False):
         self.cube_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                           ("view", window.cam.view, "mat4")])
+                                           ("view", window.cam.view, "mat4"),
+                                            ("screen_width", 1920.0, "float"),
+                                            ("screen_height", 1080.0, "float")])
 
         for i in range(len(self.grid_processor.grid_position_buffer.handle)):
             grid_count: int = int(

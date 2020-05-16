@@ -64,11 +64,13 @@ class RenderSet:
         self.data_handler: VertexDataHandler = data_handler
 
     def set_uniform_data(self, data: List[Tuple[str, any, any]]):
-        self.shader.set_uniform_data(data)
+        if self.shader is not None:
+            self.shader.set_uniform_data(data)
 
     def set(self):
-        self.shader.use()
-        self.data_handler.set(True)
+        if self.shader is not None:
+            self.shader.use()
+            self.data_handler.set(True)
 
 
 class OverflowingRenderSet:

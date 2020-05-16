@@ -106,12 +106,14 @@ class NetworkProcessor:
             self.grid_renderer.render_cube(window, clear=False, swap=False)
         elif window.gradient and grid_render_mode == 2:
             self.grid_renderer.render_point(window, clear=False, swap=False)
-        if edge_render_mode == 4:
+        if edge_render_mode == 5:
+            self.edge_renderer.render_point(window, clear=False, swap=False)
+        elif edge_render_mode == 4:
             self.edge_renderer.render_line(window, clear=False, swap=False)
         elif edge_render_mode == 3:
-            self.edge_renderer.render_point(window, clear=False, swap=False)
+            self.edge_renderer.render_ellipsoid_transparent(window, clear=False, swap=False)
         elif edge_render_mode == 2:
-            self.edge_renderer.render_transparent(window, clear=False, swap=False)
+            self.edge_renderer.render_transparent_sphere(window, clear=False, swap=False)
         elif edge_render_mode == 1:
             self.edge_renderer.render_sphere(window, clear=False, swap=False)
         if node_render_mode == 3:
