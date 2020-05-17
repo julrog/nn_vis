@@ -41,12 +41,13 @@ uniform int current_buffer;
 uniform int max_sample_points;
 
 uniform float density_strength;
-uniform float node_radius;
+uniform float bandwidth;
 
 uniform ivec3 grid_cell_count;
 uniform vec3 grid_cell_size;
 uniform vec3 grid_bounding_min;
 
+const float cell_scale = 1.36602540378;
 
 vec4 read(highp uint index)
 {
@@ -67,13 +68,33 @@ vec3 gridPosition(ivec3 gridIndex)
     (float(gridIndex.z) * grid_cell_size.z + grid_bounding_min.z));
 }
 
+highp float density_estimation(vec3 position, float length, vec3 center)
+{
+    highp float value = 0.0;
+    vec3 direction = normalize(center - position);
+    float start_distance = length(center - position + direction * length);
+    float end_distance = length(center - position - direction * length);
+    if (start_distance < bandwidth || end_distance < bandwidth)
+    {
+        float cross_center = dot(center - (position + direction * length), center - (position - direction * length));
+        if (start_distance > bandwidth) start_distance = bandwidth;
+        if (end_distance > bandwidth) end_distance = bandwidth;
+        start_distance = start_distance / bandwidth;
+        end_distance = end_distance / bandwidth;
+        if (cross_center < 0) start_distance = -start_distance;
+
+        value = abs((end_distance - end_distance * end_distance * end_distance/3.0)
+        - (start_distance - start_distance * start_distance * start_distance/3.0));
+    }
+    return value;
+}
+
 void main() {
     highp uint index = gl_WorkGroupID.x + work_group_offset;
 
-    ivec3 convolution_range = ivec3(ceil(node_radius/grid_cell_size.x) + 1, ceil(node_radius/grid_cell_size.y) + 1, ceil(node_radius/grid_cell_size.z) + 1);
+    ivec3 convolution_range = ivec3(ceil(bandwidth/grid_cell_size.x) + 1, ceil(bandwidth/grid_cell_size.y) + 1, ceil(bandwidth/grid_cell_size.z) + 1);
     vec4 node_data = read(index);
 
-    highp float disMin = node_radius;
     ivec3 nodeGridIndex = gridIndex(node_data.xyz);
     if (nodeGridIndex.z >= current_buffer * slice_count && nodeGridIndex.z <= (current_buffer + 1) * (slice_count + 1)) {
         for (int ix = -convolution_range.x; ix <= convolution_range.x + 1; ix++)
@@ -86,12 +107,11 @@ void main() {
                     if (grid_index.x >= 0 && grid_index.y >= 0 && grid_index.z >= 0 && grid_index.x < grid_cell_count.x && grid_index.y < grid_cell_count.y && grid_index.z < grid_cell_count.z)
                     {
                         vec3 grid_position = gridPosition(grid_index);
-                        float dis = length(node_data.xyz - grid_position);
-                        if (dis < node_radius)
+                        highp float value = density_estimation(grid_position, grid_cell_size.x * cell_scale, node_data.xyz);
+                        if (value * density_strength >= 1.0)
                         {
                             highp int index = (grid_index.x + grid_index.y * grid_cell_count.x + grid_index.z * grid_cell_count.y * grid_cell_count.x);
                             highp int relative_index = index - current_buffer * slice_count * slice_size;
-                            highp float value = (node_radius - dis)/(node_radius);
                             if (relative_index < 0)
                             {
                                 atomicAdd(prev_grid[relative_index + slice_count * slice_size].density, int(value * density_strength));

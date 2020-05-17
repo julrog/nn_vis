@@ -38,19 +38,20 @@ uniform int work_group_offset;
 uniform int slice_size;
 uniform int slice_count;
 uniform int current_buffer;
-uniform int max_sample_points;
 
 uniform float density_strength;
-uniform float sample_radius;
+uniform float bandwidth;
 
 uniform ivec3 grid_cell_count;
 uniform vec3 grid_cell_size;
 uniform vec3 grid_bounding_min;
 
+const float cell_scale = 1.36602540378;
 
-vec4 read(highp uint index, highp uint offset)
+
+vec4 read(highp uint index)
 {
-    return input_sample[index + offset].pos;
+    return input_sample[index].pos;
 }
 
 ivec3 gridIndex(vec3 position)
@@ -67,19 +68,43 @@ vec3 gridPosition(ivec3 gridIndex)
     (float(gridIndex.z) * grid_cell_size.z + grid_bounding_min.z));
 }
 
+highp float density_estimation(vec3 position, float length, vec3 center, vec3 point_a, vec3 point_b, float min_distance)
+{
+    highp float value = 0.0;
+    vec3 direction = normalize(center - position);
+    float start_dis_a = length(point_a - position + direction * length);
+    float start_dis_b = length(point_b - position + direction * length);
+    float end_dis_a = length(point_a - position - direction * length);
+    float end_dis_b = length(point_b - position - direction * length);
+    float start_distance = start_dis_a + start_dis_b - min_distance;
+    float end_distance = end_dis_a + end_dis_b - min_distance;
+    if (start_distance < bandwidth || end_distance < bandwidth)
+    {
+        float cross_center = dot(center - (position + direction * length), center - (position - direction * length));
+        if (start_distance > bandwidth) start_distance = bandwidth;
+        if (end_distance > bandwidth) end_distance = bandwidth;
+        start_distance = start_distance / bandwidth;
+        end_distance = end_distance / bandwidth;
+        if (cross_center < 0) start_distance = -start_distance;
+
+        value = abs((end_distance - end_distance * end_distance * end_distance/3.0)
+        - (start_distance - start_distance * start_distance * start_distance/3.0));
+    }
+    return value;
+}
+
 void main() {
-    highp uint offset = (gl_WorkGroupID.x + work_group_offset) * max_sample_points;
-    highp uint current_read_index = 0;
-    ivec3 convolution_range = ivec3(ceil(sample_radius/grid_cell_size.x) + 1, ceil(sample_radius/grid_cell_size.y) + 1, ceil(sample_radius/grid_cell_size.z) + 1);
+    highp uint index = gl_WorkGroupID.x + work_group_offset;
+    ivec3 convolution_range = ivec3(ceil(bandwidth/grid_cell_size.x) + 1, ceil(bandwidth/grid_cell_size.y) + 1, ceil(bandwidth/grid_cell_size.z) + 1);
 
-    vec4 pointA = read(current_read_index++, offset);
-    vec4 pointB = vec4(0.0);
+    vec4 pointA = read(index);
+    vec4 pointB = read(index + 1);
 
-    do {
-        pointB = read(current_read_index++, offset);
+    if (pointA.w >= 1.0 ) {
         highp float disMin = length(pointA.xyz - pointB.xyz);
-        vec4 midPoint = (pointA + pointB)/2.0;
-        ivec3 midIndex = gridIndex(midPoint.xyz);
+        vec3 midPoint = (pointA.xyz + pointB.xyz)/2.0;
+        ivec3 midIndex = gridIndex(midPoint);
+        highp float min_distance = distance(pointA.xyz, pointB.xyz);
         if (midIndex.z >= current_buffer * slice_count && midIndex.z <= (current_buffer + 1) * (slice_count + 1)) {
             for (int ix = -convolution_range.x; ix <= convolution_range.x + 1; ix++)
             {
@@ -91,13 +116,12 @@ void main() {
                         if (grid_index.x >= 0 && grid_index.y >= 0 && grid_index.z >= 0 && grid_index.x < grid_cell_count.x && grid_index.y < grid_cell_count.y && grid_index.z < grid_cell_count.z)
                         {
                             vec3 grid_position = gridPosition(grid_index);
-                            float disA = length(pointA.xyz - grid_position);
-                            float disB = length(pointB.xyz - grid_position);
-                            if (disA + disB < sample_radius * 2.0)
+                            highp float value = density_estimation(grid_position, grid_cell_size.x * cell_scale, midPoint, pointA.xyz, pointB.xyz, min_distance);
+                            if (value * density_strength >= 1.0)
                             {
                                 highp int index = (grid_index.x + grid_index.y * grid_cell_count.x + grid_index.z * grid_cell_count.y * grid_cell_count.x);
                                 highp int relative_index = index - current_buffer * slice_count * slice_size;
-                                highp float value = (sample_radius * 2.0 - (disA + disB))/(sample_radius * 2.0 - disMin);
+
                                 if (relative_index < 0)
                                 {
                                     atomicAdd(prev_grid[relative_index + slice_count * slice_size].density, int(value * density_strength));
@@ -119,6 +143,5 @@ void main() {
                 }
             }
         }
-        pointA = pointB;
-    } while (pointB.w >= 1.0);
+    }
 }

@@ -62,9 +62,8 @@ void main()
     vec4 real_position_screen = projection * vec4(real_hit_position, 1.0);
     gl_FragDepth = 0.5 * (real_position_screen.z / real_position_screen.w) + 0.5;
 
-    float density_view = distance(local_hit_position, local_hit_position_back);
-    float max_density_view = gs_ellipsoid_radius.x * 2.0;
-    float ellipsoid_density = clamp(density_view/max_density_view, 0.0, 1.0);
+    float density_view = dot(normalize(local_ray_direction/gs_ellipsoid_radius), normalize((-local_hit_position)/gs_ellipsoid_radius));
+    float ellipsoid_density = clamp(density_view, 0.0, 1.0);
 
     frag_color = calculate_transparency_color(real_position_screen.z, ellipsoid_density);
 }

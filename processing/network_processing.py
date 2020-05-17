@@ -40,7 +40,7 @@ class NetworkProcessor:
         self.edge_processor.init_sample_edge()
         self.edge_renderer = EdgeRenderer(self.edge_processor, self.grid)
 
-        self.grid_processor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 10.0,
+        self.grid_processor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 100.0,
                                             self.sample_radius, 0.01)
         self.grid_processor.calculate_position()
         self.grid_processor.calculate_edge_density()

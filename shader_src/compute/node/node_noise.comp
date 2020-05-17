@@ -43,8 +43,8 @@ void main() {
     highp uint index = gl_WorkGroupID.x + work_group_offset;
 
     vec4 node = read(index);
-    highp float noise_x = (rand(node.xy) - 0.5) * 2.0 * noise_strength * sample_length;
-    highp float noise_y = (rand(node.yx) - 0.5) * 2.0 * noise_strength * sample_length;
+    highp float noise_x = (rand(node.xy + vec2(node.z, node.z/2.0)) - 0.5) * 2.0 * noise_strength * sample_length;
+    highp float noise_y = (rand(node.yx + vec2(node.z/2.0, node.z)) - 0.5) * 2.0 * noise_strength * sample_length;
     node = vec4(node.x + noise_x, node.y + noise_y, node.z, node.w);
     write(index, node);
 }

@@ -134,7 +134,7 @@ class GridProcessor:
                 ('slice_count', self.buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
                 ('density_strength', self.density_strength, 'float'),
-                ('node_radius', self.node_processor.node_size * 2.0, 'float'),
+                ('bandwidth', self.node_processor.node_size * 2.0, 'float'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
@@ -152,15 +152,14 @@ class GridProcessor:
                 ('slice_size', self.grid_slice_size, 'int'),
                 ('slice_count', self.buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
-                ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                 ('density_strength', self.density_strength, 'float'),
-                ('sample_radius', self.sample_radius, 'float'),
+                ('bandwidth', self.sample_radius * 2.0, 'float'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
             ])
 
-            self.sample_density_compute_shader.compute(len(self.edge_processor.edges), barrier=False)
+            self.sample_density_compute_shader.compute(self.edge_processor.get_buffer_points(), barrier=False)
         self.sample_density_compute_shader.barrier()
 
     @track_time

@@ -13,7 +13,7 @@ uniform float sphere_radius;
 
 const float base_opacity = 0.1;
 const float base_shpere_opacity = 0.2;
-const float opacity_exponent = 0.5;
+const float opacity_exponent = 1.0;
 
 vec2 sphereIntersection(vec3 ray_direction)
 {
