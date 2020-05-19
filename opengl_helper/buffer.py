@@ -4,6 +4,8 @@ from typing import List
 import numpy as np
 from OpenGL.GL import *
 
+LOG_SOURCE: str = "BUFFER"
+
 
 class BufferObject:
     def __init__(self, ssbo: bool = False):
@@ -20,7 +22,8 @@ class BufferObject:
         self.size = data.nbytes
         if self.ssbo:
             if data.nbytes > self.max_ssbo_size:
-                raise Exception("Data to big for SSBO (%d bytes, max %d bytes)." % (data.nbytes, self.max_ssbo_size))
+                raise Exception("[%s] Data to big for SSBO (%d bytes, max %d bytes)." % (
+                LOG_SOURCE, data.nbytes, self.max_ssbo_size))
 
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.handle)
             glBufferData(GL_SHADER_STORAGE_BUFFER, data.nbytes, data, GL_STATIC_DRAW)

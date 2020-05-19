@@ -9,6 +9,7 @@ glfw = "*"
 pyopengl = "*"
 pyrr = "*"
 pillow = "*"
+pandas = "*"
 
 [dev-packages]
 
