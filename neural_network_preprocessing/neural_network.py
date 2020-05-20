@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from typing import List, Tuple
 
@@ -11,7 +13,7 @@ from definitions import BASE_PATH, DATA_PATH
 LOG_SOURCE: str = "NEURAL_NETWORK"
 
 
-def insert_batchnorm_layer(model: Model):
+def insert_batchnorm_layer(model: Model) -> Model:
     max_layer: int = len(model.layers)
     last_output: Input = None
     network_input: Input = None
@@ -20,7 +22,7 @@ def insert_batchnorm_layer(model: Model):
             last_output = layer.output
             network_input = layer.input
         if 0 < i < max_layer:
-            new_layer: Layer = BatchNormalization(center=False, gamma_initializer="zeros")
+            new_layer: Layer = BatchNormalization(center=True, gamma_initializer="ones")
             last_output = new_layer(last_output)
             last_output = layer(last_output)
     return Model(inputs=network_input, outputs=last_output)
@@ -28,7 +30,7 @@ def insert_batchnorm_layer(model: Model):
 
 class ProcessedNetwork:
     def __init__(self, file: str):
-        self.num_classes = None
+        self.num_classes: int = -1
         self.model_path: str = BASE_PATH + '/storage/models/' + file
         model: Model = keras.models.load_model(self.model_path)
         print(model.summary())
@@ -43,8 +45,8 @@ class ProcessedNetwork:
 
     def get_fine_tuned_model_data(self, train_data: Tuple[np.array, np.array],
                                   test_data: Tuple[np.array, np.array]) -> Model:
-        batch_size = 128
-        epochs = 3
+        batch_size: int = 128
+        epochs: int = 10
 
         x_train, y_train = train_data
         x_test, y_test = test_data
@@ -97,12 +99,35 @@ class ProcessedNetwork:
             raise Exception("[%s] Data does not match number of classes %i." % (LOG_SOURCE, self.num_classes))
 
         for class_test_data, class_train_data in zip(test_data, train_data):
-            fine_tuned_model = self.get_fine_tuned_model_data(class_train_data, class_test_data)
+            fine_tuned_model: Model = self.get_fine_tuned_model_data(class_train_data, class_test_data)
             self.extract_importance_from_model(fine_tuned_model)
 
-        result = []
-        print(len(self.importance_value))
+        result: List[np.array] = []
         for importance_values in self.importance_value:
-            print(len(importance_values))
             result.append(np.stack(importance_values, axis=1))
         return result
+
+    def store_importance_data(self, export_path: str, train_data_path: str, test_data_path: str, normalize: bool = False):
+        importance_data: List[np.array] = self.generate_importance_for_data(train_data_path, test_data_path)
+        if normalize:
+            normalized_importance_data: List[np.array] = []
+            min_importance: float = 0.0
+            max_importance: float = 0.0
+            for layer_importance in importance_data:
+                normalized_layer_importance: np.array = np.absolute(layer_importance)
+                for node_importance in normalized_layer_importance:
+                    for node_class_importance in node_importance:
+                        if min_importance > node_class_importance:
+                            min_importance = node_class_importance
+                        if max_importance < node_class_importance:
+                            max_importance = node_class_importance
+                normalized_importance_data.append(normalized_layer_importance)
+            for i, normalized_layer_importance in enumerate(normalized_importance_data):
+                normalized_importance_data[i] = normalized_layer_importance / max_importance
+            importance_data = normalized_importance_data
+            print("[%s] min importance: %f, max importance: %f" % (LOG_SOURCE, min_importance, max_importance))
+
+        data_path: str = DATA_PATH + export_path
+        if not os.path.exists(os.path.dirname(data_path)):
+            os.makedirs(os.path.dirname(data_path))
+        np.savez(data_path, importance_data)

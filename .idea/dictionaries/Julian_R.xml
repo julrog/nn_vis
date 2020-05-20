@@ -5,6 +5,7 @@
       <w>batchnorm</w>
       <w>glfw</w>
       <w>ivec</w>
+      <w>mnist</w>
       <w>rebalance</w>
       <w>resample</w>
       <w>resampled</w>
