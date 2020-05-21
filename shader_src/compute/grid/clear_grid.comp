@@ -2,28 +2,25 @@
 
 struct DensityGrid
 {
-    int density;
-    float pad1;
-    float pad2;
-    float pad3;
-};
-
-struct GradientGrid
-{
-    vec3 normalized_gradient;
-    float strength;
+    int overall_density;
+    int density_0;
+    int density_1;
+    int density_2;
+    int density_3;
+    int density_4;
+    int density_5;
+    int density_6;
+    int density_7;
+    int density_8;
+    int density_9;
+    int fill;
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-layout(binding = 0) restrict writeonly buffer density_grid
+layout(std140, binding = 0) restrict writeonly buffer density_grid
 {
     DensityGrid density[];
-};
-
-layout(binding = 1) restrict writeonly buffer gradient_grid
-{
-    GradientGrid gradient[];
 };
 
 uniform int work_group_offset;
@@ -31,7 +28,15 @@ uniform int work_group_offset;
 void main() {
     int index = int(gl_WorkGroupID.x) + work_group_offset;
 
-    density[index].density = 0;
-    gradient[index].strength = 0.0;
-    gradient[index].normalized_gradient = vec3(0.0, 0.0, 0.0);
+    density[index].overall_density = 0;
+    density[index].density_0 = 0;
+    density[index].density_1 = 0;
+    density[index].density_2 = 0;
+    density[index].density_3 = 0;
+    density[index].density_4 = 0;
+    density[index].density_5 = 0;
+    density[index].density_6 = 0;
+    density[index].density_7 = 0;
+    density[index].density_8 = 0;
+    density[index].density_9 = 0;
 }

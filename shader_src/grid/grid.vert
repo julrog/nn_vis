@@ -1,7 +1,7 @@
 #version 440 core
 
 layout (location=0) in vec4 position;
-layout (location=1) in ivec4 density;
+layout (location=1) in int density;
 
 out float vs_density;
 flat out float vs_discard;
@@ -11,9 +11,9 @@ uniform mat4 view;
 
 void main()
 {
-    vs_density = density.x;
-    if (density.x <= 1.0) {
-        vs_discard = 1.0;
+    vs_density = density;
+    if (density <= 1.0) {
+        vs_discard = 0.0;
     } else {
         vs_discard = 0.0;
     }

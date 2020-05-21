@@ -45,7 +45,6 @@ class NetworkProcessor:
                                                            self.sample_radius, 0.01)
         self.grid_processor.calculate_position()
         self.grid_processor.calculate_edge_density()
-        self.grid_processor.calculate_gradient()
 
         self.grid_renderer: GridRenderer = GridRenderer(self.grid_processor)
 
@@ -68,14 +67,12 @@ class NetworkProcessor:
             if action_mode == 1:
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_node_density()
-                self.grid_processor.calculate_gradient()
                 if self.grid_processor.advect_strength < 0:
                     self.grid_processor.advect_strength = -self.grid_processor.advect_strength
                 self.grid_processor.node_advect()
             elif action_mode == 2:
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_node_density()
-                self.grid_processor.calculate_gradient()
                 if self.grid_processor.advect_strength > 0:
                     self.grid_processor.advect_strength = -self.grid_processor.advect_strength
                 self.grid_processor.node_advect()
@@ -84,14 +81,12 @@ class NetworkProcessor:
             if action_mode == 4:
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_edge_density()
-                self.grid_processor.calculate_gradient()
                 if self.grid_processor.advect_strength < 0:
                     self.grid_processor.advect_strength = -self.grid_processor.advect_strength
                 self.grid_processor.sample_advect()
             elif action_mode == 5:
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_edge_density()
-                self.grid_processor.calculate_gradient()
                 if self.grid_processor.advect_strength > 0:
                     self.grid_processor.advect_strength = -self.grid_processor.advect_strength
                 self.grid_processor.sample_advect()

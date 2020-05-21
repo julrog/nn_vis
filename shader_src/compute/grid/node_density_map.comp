@@ -3,36 +3,53 @@
 struct Node
 {
     vec4 pos;
-    float[10] importance;
+    float importance_0;
+    float importance_1;
+    float importance_2;
+    float importance_3;
+    float importance_4;
+    float importance_5;
+    float importance_6;
+    float importance_7;
+    float importance_8;
+    float importance_9;
     float overall_importance;
     float fill;
 };
 
 struct DensityGrid
 {
-    int density;
-    int pad1;
-    int pad2;
-    int pad3;
+    int overall_density;
+    int density_0;
+    int density_1;
+    int density_2;
+    int density_3;
+    int density_4;
+    int density_5;
+    int density_6;
+    int density_7;
+    int density_8;
+    int density_9;
+    int fill;
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-layout(binding = 0) restrict readonly buffer node_input
+layout(std140, binding = 0) restrict readonly buffer node_input
 {
     Node input_node[];
 };
 
-layout(binding = 2) coherent buffer prev_density_grid
+layout(std140, binding = 2) coherent buffer prev_density_grid
 {
     DensityGrid prev_grid[];
 };
 
-layout(binding = 3) coherent buffer density_grid
+layout(std140, binding = 3) coherent buffer density_grid
 {
     DensityGrid grid[];
 };
 
-layout(binding = 4) coherent buffer next_density_grid
+layout(std140, binding = 4) coherent buffer next_density_grid
 {
     DensityGrid next_grid[];
 };
@@ -117,17 +134,17 @@ void main() {
                             highp int relative_index = index - current_buffer * slice_count * slice_size;
                             if (relative_index < 0)
                             {
-                                atomicAdd(prev_grid[relative_index + slice_count * slice_size].density, int(value * density_strength));
+                                atomicAdd(prev_grid[relative_index + slice_count * slice_size].overall_density, int(value * density_strength));
                             } else {
                                 if (relative_index > slice_count * slice_size)
                                 {
-                                    atomicAdd(prev_grid[relative_index + slice_count * slice_size].density, int(value * density_strength));
+                                    atomicAdd(prev_grid[relative_index + slice_count * slice_size].overall_density, int(value * density_strength));
                                     if (relative_index < (slice_count + 1) * slice_size)
                                     {
-                                        atomicAdd(grid[relative_index].density, int(value * density_strength));
+                                        atomicAdd(grid[relative_index].overall_density, int(value * density_strength));
                                     }
                                 } else {
-                                    atomicAdd(grid[relative_index].density, int(value * density_strength));
+                                    atomicAdd(grid[relative_index].overall_density, int(value * density_strength));
                                 }
                             }
                         }

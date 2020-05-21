@@ -32,8 +32,7 @@ class GridRenderer:
                                             ("screen_height", 1080.0, "float")])
 
         for i in range(len(self.grid_processor.grid_position_buffer.handle)):
-            grid_count: int = int(
-                self.grid_processor.grid_position_buffer.size[i] / 16 - self.grid_processor.grid_slice_size)
+            grid_count: int = self.grid_processor.grid_position_buffer.get_objects() - self.grid_processor.grid_slice_size
 
             self.point_render.set()
 
@@ -47,12 +46,11 @@ class GridRenderer:
     def render_cube(self, window: Window, clear: bool = True, swap: bool = False):
         self.cube_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                            ("view", window.cam.view, "mat4"),
-                                            ("screen_width", 1920.0, "float"),
-                                            ("screen_height", 1080.0, "float")])
+                                           ("screen_width", 1920.0, "float"),
+                                           ("screen_height", 1080.0, "float")])
 
         for i in range(len(self.grid_processor.grid_position_buffer.handle)):
-            grid_count: int = int(
-                self.grid_processor.grid_position_buffer.size[i] / 16 - self.grid_processor.grid_slice_size)
+            grid_count: int = self.grid_processor.grid_position_buffer.get_objects() - self.grid_processor.grid_slice_size
 
             self.cube_render.set(i)
 

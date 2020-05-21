@@ -3,29 +3,48 @@
 struct Node
 {
     vec4 pos;
-    float[10] importance;
+    float importance_0;
+    float importance_1;
+    float importance_2;
+    float importance_3;
+    float importance_4;
+    float importance_5;
+    float importance_6;
+    float importance_7;
+    float importance_8;
+    float importance_9;
     float overall_importance;
     float fill;
 };
 
-struct GradientGrid
+struct DensityGrid
 {
-    vec3 normalized_gradient;
-    float strength;
+    int overall_density;
+    int density_0;
+    int density_1;
+    int density_2;
+    int density_3;
+    int density_4;
+    int density_5;
+    int density_6;
+    int density_7;
+    int density_8;
+    int density_9;
+    int fill;
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-layout(binding = 0) restrict readonly buffer node_input
+layout(std140, binding = 0) restrict readonly buffer node_input
 {
     Node input_node[];
 };
-layout(binding = 1) writeonly buffer node_output
+layout(std140, binding = 1) writeonly buffer node_output
 {
     Node output_node[];
 };
-layout(binding = 2) restrict readonly buffer gradient_grid
+layout(std140, binding = 2) restrict readonly buffer density_grid
 {
-    GradientGrid gradient[];
+    DensityGrid density[];
 };
 
 uniform int work_group_offset;
@@ -55,6 +74,28 @@ void write(highp uint index, vec4 pos)
     output_node[index].pos = pos;
 }
 
+float readGridIndex(ivec3 index)
+{
+    return density[index.x + index.y * grid_cell_count.x + index.z * grid_cell_count.x * grid_cell_count.y].overall_density;
+}
+
+vec4 getGradient(ivec3 grid_index)
+{
+    float current_density = readGridIndex(grid_index);
+    float gradient_x = readGridIndex(ivec3(grid_index.x + 1, grid_index.y, grid_index.z)) - current_density;
+    gradient_x -= readGridIndex(ivec3(grid_index.x - 1, grid_index.y, grid_index.z)) - current_density;
+    float gradient_y = readGridIndex(ivec3(grid_index.x, grid_index.y + 1, grid_index.z)) - current_density;
+    gradient_y -= readGridIndex(ivec3(grid_index.x, grid_index.y - 1, grid_index.z)) - current_density;
+    float gradient_z = readGridIndex(ivec3(grid_index.x, grid_index.y, grid_index.z + 1)) - current_density;
+    gradient_z -= readGridIndex(ivec3(grid_index.x, grid_index.y, grid_index.z - 1)) - current_density;
+    vec3 calc_gradient = vec3(gradient_x, gradient_y, gradient_z);
+    float strength = length(calc_gradient);
+
+    strength = max(strength, 0.00001);
+    calc_gradient = calc_gradient / strength;
+    return vec4(calc_gradient, strength);
+}
+
 void main() {
     highp uint index = gl_WorkGroupID.x + work_group_offset;
 
@@ -66,14 +107,14 @@ void main() {
             vec3 gradient_direction = vec3(0.0, 0.0, 0.0);
             highp float overall_strength = 0.0;
 
-            float first_inter_x = clamp((node_data.x - grid_bounding_min.x)/grid_cell_size.x - float(grid_index.x), 0.0, 1.0);
+            /*float first_inter_x = clamp((node_data.x - grid_bounding_min.x)/grid_cell_size.x - float(grid_index.x), 0.0, 1.0);
             float first_inter_y = clamp((node_data.y - grid_bounding_min.y)/grid_cell_size.y - float(grid_index.y), 0.0, 1.0);
             float first_inter_z = clamp((node_data.z - grid_bounding_min.z)/grid_cell_size.z - float(grid_index.z), 0.0, 1.0);
             float[2] inter_x = { 1.0 - first_inter_x, first_inter_x };
             float[2] inter_y = { 1.0 - first_inter_y, first_inter_y };
-            float[2] inter_z = { 1.0 - first_inter_z, first_inter_z };
+            float[2] inter_z = { 1.0 - first_inter_z, first_inter_z };*/
 
-            for (int ix = 0; ix <= 1; ix++)
+            /*for (int ix = 0; ix <= 1; ix++)
             {
                 for (int iy = 0; iy <= 1; iy++)
                 {
@@ -88,7 +129,12 @@ void main() {
                     }
                 }
             }
-            gradient_direction = normalize(gradient_direction);
+            gradient_direction = normalize(gradient_direction);*/
+
+            vec4 gradient = getGradient(grid_index);
+            gradient_direction = gradient.xyz;
+            overall_strength = gradient.w;
+
             if (overall_strength >= 1.0) {
                 node_data = vec4(node_data.x + gradient_direction.x * advect_strength, node_data.y + gradient_direction.y * advect_strength, node_data.z, node_data.w);
             }
