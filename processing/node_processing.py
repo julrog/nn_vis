@@ -15,7 +15,9 @@ LOG_SOURCE: str = "NODE_PROCESSING"
 class NodeProcessor:
     def __init__(self):
         self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("node_noise", "node/node_noise.comp")
-        self.node_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True)
+        self.node_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True, object_size=16,
+                                                                      render_data_offset=[0, 14],
+                                                                      render_data_size=[4, 1])
         self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.node_buffer, 0)])
 
         self.nodes: List[Node] = []
@@ -33,7 +35,7 @@ class NodeProcessor:
         # generate and load initial data for the buffer
         initial_data: List[float] = []
         for node in self.nodes:
-            initial_data.extend(node.position_data)
+            initial_data.extend(node.data)
         transfer_data = np.array(initial_data, dtype=np.float32)
         self.node_buffer.load(transfer_data)
         self.node_buffer.swap()
@@ -57,11 +59,12 @@ class NodeProcessor:
         if raw:
             return buffer_data
 
-        node_data = buffer_data.reshape((len(self.nodes), 4))
+        print(self.node_buffer.object_size)
+        node_data = buffer_data.reshape((len(self.nodes), self.node_buffer.object_size))
         node_count = len(self.nodes)
         self.nodes = []
         for i in range(node_count):
-            self.nodes.append(Node(Vector3([node_data[i][0], node_data[i][1], node_data[i][2]])))
+            self.nodes.append(Node(Vector3([node_data[i][0], node_data[i][1], node_data[i][2]]), node_data[i][4:-1]))
 
         return buffer_data
 

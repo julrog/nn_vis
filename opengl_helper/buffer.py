@@ -8,13 +8,21 @@ LOG_SOURCE: str = "BUFFER"
 
 
 class BufferObject:
-    def __init__(self, ssbo: bool = False):
+    def __init__(self, ssbo: bool = False, object_size: int = 4, render_data_offset: List[int] = None,
+                 render_data_size: List[int] = None):
         self.handle: int = glGenBuffers(1)
         self.location: int = 0
         self.ssbo: bool = ssbo
         if self.ssbo:
             self.size: int = 0
             self.max_ssbo_size: int = glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE)
+        self.object_size = object_size
+        self.render_data_offset = render_data_offset
+        if render_data_offset is None:
+            self.render_data_offset = [0]
+        self.render_data_size = render_data_size
+        if render_data_size is None:
+            self.render_data_size = [4]
 
     def load(self, data: any):
         glBindVertexArray(0)
@@ -23,7 +31,7 @@ class BufferObject:
         if self.ssbo:
             if data.nbytes > self.max_ssbo_size:
                 raise Exception("[%s] Data to big for SSBO (%d bytes, max %d bytes)." % (
-                LOG_SOURCE, data.nbytes, self.max_ssbo_size))
+                    LOG_SOURCE, data.nbytes, self.max_ssbo_size))
 
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.handle)
             glBufferData(GL_SHADER_STORAGE_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
@@ -40,14 +48,18 @@ class BufferObject:
         if self.ssbo:
             if rendering:
                 glBindBuffer(GL_ARRAY_BUFFER, self.handle)
-                glEnableVertexAttribArray(location)
-                glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+                for i in range(len(self.render_data_offset)):
+                    glEnableVertexAttribArray(location + i)
+                    glVertexAttribPointer(location + i, self.render_data_size[i], GL_FLOAT, GL_FALSE,
+                                          self.object_size * 4, ctypes.c_void_p(4 * self.render_data_offset[i]))
             else:
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.handle)
         else:
             glBindBuffer(GL_ARRAY_BUFFER, self.handle)
-            glEnableVertexAttribArray(location)
-            glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+            for i in range(len(self.render_data_offset)):
+                glEnableVertexAttribArray(location + i)
+                glVertexAttribPointer(location + i, self.render_data_size[i], GL_FLOAT, GL_FALSE,
+                                      self.object_size * 4, ctypes.c_void_p(4 * self.render_data_offset[i]))
 
     def clear(self):
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.handle)
@@ -58,8 +70,9 @@ class BufferObject:
 
 
 class SwappingBufferObject(BufferObject):
-    def __init__(self, ssbo: bool = False):
-        super().__init__(ssbo)
+    def __init__(self, ssbo: bool = False, object_size: int = 4, render_data_offset: List[int] = None,
+                 render_data_size: List[int] = None):
+        super().__init__(ssbo, object_size, render_data_offset, render_data_size)
         self.swap_handle: int = glGenBuffers(1)
 
     def swap(self):
@@ -69,15 +82,19 @@ class SwappingBufferObject(BufferObject):
         if self.ssbo:
             if rendering:
                 glBindBuffer(GL_ARRAY_BUFFER, self.handle)
-                glEnableVertexAttribArray(location)
-                glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+                for i in range(len(self.render_data_offset)):
+                    glEnableVertexAttribArray(location + i)
+                    glVertexAttribPointer(location + i, self.render_data_size[i], GL_FLOAT, GL_FALSE,
+                                          self.object_size * 4, ctypes.c_void_p(4 * self.render_data_offset[i]))
             else:
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.handle)
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location + 1, self.swap_handle)
         else:
             glBindBuffer(GL_ARRAY_BUFFER, self.handle)
-            glEnableVertexAttribArray(location)
-            glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE, 16, ctypes.c_void_p(0))
+            for i in range(len(self.render_data_offset)):
+                glEnableVertexAttribArray(location + i)
+                glVertexAttribPointer(location + i, self.render_data_size[i], GL_FLOAT, GL_FALSE,
+                                      self.object_size * 4, ctypes.c_void_p(4 * self.render_data_offset[i]))
 
     def delete(self):
         glDeleteBuffers(1, [self.handle])

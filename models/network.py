@@ -1,4 +1,5 @@
 import math
+import numpy as np
 from typing import List, Tuple
 
 from pyrr import Vector3
@@ -8,7 +9,7 @@ from models.node import Node, create_nodes
 
 
 class NetworkModel:
-    def __init__(self, layer: List[int], node_size: float, layer_distance: float):
+    def __init__(self, layer: List[int], node_size: float, layer_distance: float, layer_data: List[np.array] = None):
         self.layer: List[int] = layer
         self.node_size: float = node_size
         self.layer_distance: float = layer_distance
@@ -29,7 +30,7 @@ class NetworkModel:
 
         self.layer_nodes: List[List[Node]] = create_nodes(self.layer, self.bounding_mid,
                                                           (self.bounding_volume[0].z, self.bounding_volume[1].z),
-                                                          self.node_size)
+                                                          self.node_size, layer_data)
 
     def get_nodes(self) -> List[Node]:
         node_data: List[Node] = []

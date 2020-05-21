@@ -3,6 +3,9 @@
 struct Node
 {
     vec4 pos;
+    float[10] importance;
+    float overall_importance;
+    float fill;
 };
 
 struct DensityGrid

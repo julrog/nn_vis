@@ -3,6 +3,9 @@
 struct Node
 {
     vec4 pos;
+    float[10] importance;
+    float overall_importance;
+    float fill;
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;

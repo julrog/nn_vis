@@ -14,15 +14,15 @@ class NodeRenderer:
         self.grid = grid
 
         shader_handler: RenderShaderHandler = RenderShaderHandler()
-        node_point_shader: RenderShader = shader_handler.create("node_point", "sample/sample.vert",
+        node_point_shader: RenderShader = shader_handler.create("node_point", "node/sample.vert",
                                                                 "basic/discard_screen_color.frag")
-        node_sphere_shader: RenderShader = shader_handler.create("node_sphere", "sample/sample_impostor.vert",
-                                                                 "sample/point_to_sphere_impostor_phong.frag",
-                                                                 "sample/point_to_sphere_impostor.geom")
+        node_sphere_shader: RenderShader = shader_handler.create("node_sphere", "node/sample_impostor.vert",
+                                                                 "node/point_to_sphere_impostor_phong.frag",
+                                                                 "node/point_to_sphere_impostor.geom")
         node_transparent_shader: RenderShader = shader_handler.create("node_transparent_sphere",
-                                                                      "sample/sample_impostor.vert",
-                                                                      "sample/point_to_sphere_impostor_transparent.frag",
-                                                                      "sample/point_to_sphere_impostor.geom")
+                                                                      "node/sample_impostor.vert",
+                                                                      "node/point_to_sphere_impostor_transparent.frag",
+                                                                      "node/point_to_sphere_impostor.geom")
 
         self.data_handler: VertexDataHandler = VertexDataHandler([(self.node_processor.node_buffer, 0)])
 

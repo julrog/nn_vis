@@ -1,3 +1,4 @@
+import numpy as np
 from typing import List
 
 from pyrr import Vector3
@@ -17,36 +18,36 @@ LOG_SOURCE: str = "NETWORK_PROCESSING"
 
 
 class NetworkProcessor:
-    def __init__(self, layer_data: List[int], layer_distance: float = 1.0, node_size: float = 0.3,
-                 sampling_rate: float = 10.0):
-        self.layer_data = layer_data
-        self.layer_distance = layer_distance
-        self.node_size = node_size
+    def __init__(self, layer_nodes: List[int], layer_data: List[np.array] = None, layer_distance: float = 1.0,
+                 node_size: float = 0.3, sampling_rate: float = 10.0):
+        self.layer_nodes: List[int] = layer_nodes
+        self.layer_distance: float = layer_distance
+        self.node_size: float = node_size
 
-        self.network = NetworkModel(self.layer_data, self.node_size, self.layer_distance)
-        self.sample_length = self.network.max_layer_width / sampling_rate
-        self.grid_cell_size = self.sample_length / 3.0
-        self.sample_radius = self.sample_length * 2.0
+        self.network: NetworkModel = NetworkModel(self.layer_nodes, self.node_size, self.layer_distance, layer_data)
+        self.sample_length: float = self.network.max_layer_width / sampling_rate
+        self.grid_cell_size: float = self.sample_length / 3.0
+        self.sample_radius: float = self.sample_length * 2.0
 
-        self.grid = Grid(Vector3([self.grid_cell_size, self.grid_cell_size, self.grid_cell_size]),
-                         self.network.bounding_volume)
+        self.grid: Grid = Grid(Vector3([self.grid_cell_size, self.grid_cell_size, self.grid_cell_size]),
+                               self.network.bounding_volume)
 
-        self.node_processor = NodeProcessor()
+        self.node_processor: NodeProcessor = NodeProcessor()
         self.node_processor.set_data(self.network)
-        self.node_renderer = NodeRenderer(self.node_processor, self.grid)
+        self.node_renderer: NodeRenderer = NodeRenderer(self.node_processor, self.grid)
 
-        self.edge_processor = EdgeProcessor(self.sample_length)
+        self.edge_processor: EdgeProcessor = EdgeProcessor(self.sample_length)
         self.edge_processor.set_data(self.network)
         self.edge_processor.init_sample_edge()
-        self.edge_renderer = EdgeRenderer(self.edge_processor, self.grid)
+        self.edge_renderer: EdgeRenderer = EdgeRenderer(self.edge_processor, self.grid)
 
-        self.grid_processor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 100.0,
-                                            self.sample_radius, 0.01)
+        self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 100.0,
+                                                           self.sample_radius, 0.01)
         self.grid_processor.calculate_position()
         self.grid_processor.calculate_edge_density()
         self.grid_processor.calculate_gradient()
 
-        self.grid_renderer = GridRenderer(self.grid_processor)
+        self.grid_renderer: GridRenderer = GridRenderer(self.grid_processor)
 
     def reset_edges(self):
         self.edge_processor.delete()

@@ -1,13 +1,13 @@
 #version 440
 
 flat in vec3  gs_sphere_position;
+flat in float gs_sphere_radius;
 in vec3 gs_cube_hit_position;
 
 out vec4 frag_color;
 layout (depth_greater) out float gl_FragDepth;
 
 uniform mat4  projection;
-uniform float sphere_radius;
 
 const vec3 light_direction_cam = normalize(vec3(-1.0, 1.0, 1.0));
 const vec3 atom_color_diffuse  = vec3(0.8, 0.8, 0.8);
@@ -18,7 +18,7 @@ const vec3 atom_color_specular = vec3(0.1, 0.1, 0.1);
 vec2 sphereIntersection(vec3 ray_direction)
 {
     float a = dot(ray_direction, -gs_sphere_position);
-    float b = a * a - (dot(gs_sphere_position, gs_sphere_position) - sphere_radius * sphere_radius);
+    float b = a * a - (dot(gs_sphere_position, gs_sphere_position) - gs_sphere_radius * gs_sphere_radius);
 
     if (b < 0) discard; // no intersections
 

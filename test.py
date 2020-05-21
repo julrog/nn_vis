@@ -63,7 +63,7 @@ def compute_render(name: str):
         network_processor = NetworkProcessor(options.settings["current_layer_data"])
 
         while window.is_active() and not options.settings["Closed"]:
-            if network_processor.layer_data is not options.settings["current_layer_data"]:
+            if network_processor.layer_nodes is not options.settings["current_layer_data"]:
                 network_processor.delete()
                 print("Rebuilding network: " + str(options.settings["current_layer_data"]))
                 network_processor = NetworkProcessor(options.settings["current_layer_data"],
