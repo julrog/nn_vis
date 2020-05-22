@@ -6,15 +6,29 @@ from opengl_helper.shader import BaseShader
 
 
 class VertexDataHandler:
-    def __init__(self, targeted_buffer_objects: List[Tuple[BufferObject, int]]):
+    def __init__(self, targeted_buffer_objects: List[Tuple[BufferObject, int]],
+                 buffer_divisor: List[Tuple[int, int]] = None):
         self.handle: int = glGenVertexArrays(1)
         self.targeted_buffer_objects: List[Tuple[BufferObject, int]] = targeted_buffer_objects
+        if buffer_divisor is None:
+            self.buffer_divisor: List[Tuple[int, int]] = []
+        else:
+            self.buffer_divisor: List[Tuple[int, int]] = buffer_divisor
 
     def set(self, rendering: bool = False):
         glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
         glBindVertexArray(self.handle)
-        for buffer, location in self.targeted_buffer_objects:
-            buffer.bind(location, rendering)
+        for i, (buffer, location) in enumerate(self.targeted_buffer_objects):
+            found_divisor: bool = False
+            for buffer_id, divisor in self.buffer_divisor:
+                if buffer_id == i:
+                    found_divisor = True
+                    buffer.bind(location, rendering, divisor=divisor)
+            if not found_divisor:
+                if len(self.buffer_divisor) == 0:
+                    buffer.bind(location, rendering)
+                else:
+                    buffer.bind(location, rendering, divisor=1)
 
     def delete(self):
         glDeleteVertexArrays(1, [self.handle])
@@ -22,17 +36,31 @@ class VertexDataHandler:
 
 class OverflowingVertexDataHandler:
     def __init__(self, targeted_buffer_objects: List[Tuple[BufferObject, int]],
-                 targeted_overflowing_buffer_objects: List[Tuple[OverflowingBufferObject, int]]):
+                 targeted_overflowing_buffer_objects: List[Tuple[OverflowingBufferObject, int]],
+                 buffer_divisor: List[Tuple[int, int]] = None):
         self.handle: int = glGenVertexArrays(1)
         self.targeted_buffer_objects: List[Tuple[BufferObject, int]] = targeted_buffer_objects
         self.targeted_overflowing_buffer_objects: List[
             Tuple[OverflowingBufferObject, int]] = targeted_overflowing_buffer_objects
+        if buffer_divisor is None:
+            self.buffer_divisor: List[Tuple[int, int]] = []
+        else:
+            self.buffer_divisor: List[Tuple[int, int]] = buffer_divisor
 
     def set(self, buffer_id: int, rendering: bool = False):
         glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
         glBindVertexArray(self.handle)
-        for buffer, location in self.targeted_buffer_objects:
-            buffer.bind(location, rendering)
+        for i, (buffer, location) in enumerate(self.targeted_buffer_objects):
+            found_divisor: bool = False
+            for buffer_id, divisor in self.buffer_divisor:
+                if buffer_id == i:
+                    found_divisor = True
+                    buffer.bind(location, rendering, divisor=divisor)
+            if not found_divisor:
+                if len(self.buffer_divisor) == 0:
+                    buffer.bind(location, rendering)
+                else:
+                    buffer.bind(location, rendering, divisor=1)
         for buffer, location in self.targeted_overflowing_buffer_objects:
             buffer.bind_single(buffer_id, location, rendering)
 

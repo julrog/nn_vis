@@ -1,6 +1,7 @@
 #version 440
 
-layout(lines) in;
+layout(points) in;
+in vec4 vs_next_position[];
 in vec3 vs_normal[];
 in float vs_discard[];
 
@@ -27,7 +28,7 @@ void draw_vertex(vec3 position, vec3 right, vec3 up, vec3 front, vec3 offset)
 void main()
 {
     vec3 position_cam_a = gl_in[0].gl_Position.xyz;
-    vec3 position_cam_b = gl_in[1].gl_Position.xyz;
+    vec3 position_cam_b = vs_next_position[0].xyz;
 
     vec3 ellipsoid_position = (position_cam_a + position_cam_b)/2.0; // output
     vec3 line_right = normalize(ellipsoid_position - position_cam_a);
@@ -84,7 +85,7 @@ void main()
     gs_local_ray_origin = vec3(gs_local_ellipsoid_transformation * vec4(0.0, 0.0, 0.0, 1.0)); // output
     gs_ellipsoid_radius = vec3(length(line_right_offset), sample_radius, sample_radius); // output
 
-    if (vs_discard[1] == 0.0 && gs_ellipsoid_radius.x > sample_radius) {
+    if (vs_discard[0] == 0.0 && gs_ellipsoid_radius.x > sample_radius) {
         draw_vertex(ellipsoid_position, line_right_offset, line_up, line_front, vec3(-1.0, 1.0, -1.0));
         draw_vertex(ellipsoid_position, line_right_offset, line_up, line_front, vec3(1.0, 1.0, -1.0));
         draw_vertex(ellipsoid_position, line_right_offset, line_up, line_front, vec3(-1.0, -1.0, -1.0));

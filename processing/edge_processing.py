@@ -25,9 +25,12 @@ class EdgeProcessor:
                                                                                   "edge/sample_smooth.comp")
         self.limit_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_limits",
                                                                                  "edge/edge_limits.comp")
-        self.sample_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True)
-        self.limits_buffer: BufferObject = BufferObject(ssbo=True)
-        self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.sample_buffer, 0), (self.limits_buffer, 2)])
+        self.sample_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True, object_size=4,
+                                                                        render_data_size=[4, 4],
+                                                                        render_data_offset=[0, 4])
+        self.edge_buffer: BufferObject = BufferObject(ssbo=True, object_size=28, render_data_size=[4, 4],
+                                                      render_data_offset=[0, 4])
+        self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.sample_buffer, 0), (self.edge_buffer, 2)])
 
         self.edges: List[Edge] = []
         self.sampled: bool = False
@@ -56,7 +59,11 @@ class EdgeProcessor:
         self.sample_buffer.swap()
         self.sample_buffer.load(transfer_data)
 
-        self.limits_buffer.load(np.zeros(len(self.edges) * 4, dtype=np.float32))
+        initial_data: List[float] = []
+        for edge in self.edges:
+            initial_data.extend(edge.data)
+        transfer_data = np.array(initial_data, dtype=np.float32)
+        self.edge_buffer.load(transfer_data)
 
     @track_time
     def resize_sample_storage(self, new_max_samples: int):
@@ -162,7 +169,7 @@ class EdgeProcessor:
         self.limit_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
         self.limit_compute_shader.compute(len(self.edges))
 
-        limits: List[int] = np.frombuffer(self.limits_buffer.read(), dtype=np.float32)
+        limits: List[int] = np.frombuffer(self.edge_buffer.read(), dtype=np.float32)
 
         self.point_count = 0
         max_edge_samples: float = 0
@@ -180,5 +187,5 @@ class EdgeProcessor:
 
     def delete(self):
         self.sample_buffer.delete()
-        self.limits_buffer.delete()
+        self.edge_buffer.delete()
         self.ssbo_handler.delete()

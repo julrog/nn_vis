@@ -13,15 +13,15 @@ uniform float sphere_radius;
 
 void draw_vertex(float sphere_radius, vec3 offset)
 {
-    gs_cube_hit_position = gs_sphere_position + sphere_radius * offset; // output
-    gl_Position = projection * vec4(gs_cube_hit_position, 1.0); // output
+    gs_cube_hit_position = gs_sphere_position + sphere_radius * offset;// output
+    gl_Position = projection * vec4(gs_cube_hit_position, 1.0);// output
 
     EmitVertex();
 }
 
 void main()
 {
-    gs_sphere_position = gl_in[0].gl_Position.xyz; // output
+    gs_sphere_position = gl_in[0].gl_Position.xyz;// output
 
     if (vs_discard[0] == 0.0) {
         draw_vertex(sphere_radius, vec3(-1.0, 1.0, -1.0));

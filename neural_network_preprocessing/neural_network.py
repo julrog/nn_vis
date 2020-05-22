@@ -35,11 +35,14 @@ class ProcessedNetwork:
         model: Model = keras.models.load_model(self.model_path)
         print(model.summary())
         self.architecture_data: List[int] = []
-        self.importance_value: List[List[np.array]] = []
+        self.node_importance_value: List[List[np.array]] = []
+        self.edge_importance_value: List[np.array] = []
+        self.edge_importance_set: bool = False
         for i, layer in enumerate(model.layers):
             self.architecture_data.append(layer.output_shape[1])
             if i is not 0:
-                self.importance_value.append([])
+                self.node_importance_value.append([])
+                self.edge_importance_value.append(None)
             if i is len(model.layers) - 1:
                 self.num_classes = layer.output_shape[1]
 
@@ -84,10 +87,19 @@ class ProcessedNetwork:
         count: int = 0
         for layer in fine_tuned_model.layers:
             if type(layer) == BatchNormalization:
-                self.importance_value[count].append(layer.get_weights()[0])
+                self.node_importance_value[count].append(layer.get_weights()[0])
                 count += 1
 
-    def generate_importance_for_data(self, train_data_path: str, test_data_path: str) -> List[np.array]:
+        if not self.edge_importance_set:
+            count: int = 0
+            for i, layer in enumerate(fine_tuned_model.layers):
+                if type(layer) == BatchNormalization:
+                    self.edge_importance_value[count] = fine_tuned_model.layers[i + 1].get_weights()[0]
+                    count += 1
+            self.edge_importance_set = True
+
+    def generate_importance_for_data(self, train_data_path: str, test_data_path: str) -> Tuple[List[np.array],
+                                                                                               List[np.array]]:
         raw_train_data: dict = np.load("%s/%s.npz" % (DATA_PATH, train_data_path), allow_pickle=True)
         train_data: List[np.array] = raw_train_data["arr_0"]
 
@@ -102,18 +114,25 @@ class ProcessedNetwork:
             fine_tuned_model: Model = self.get_fine_tuned_model_data(class_train_data, class_test_data)
             self.extract_importance_from_model(fine_tuned_model)
 
-        result: List[np.array] = []
-        for importance_values in self.importance_value:
-            result.append(np.stack(importance_values, axis=1))
-        return result
+        result_node_importance: List[np.array] = []
+        for importance_values in self.node_importance_value:
+            result_node_importance.append(np.stack(importance_values, axis=1))
+        result_edge_importance: List[np.array] = []
+        for importance_values in self.edge_importance_value:
+            result_edge_importance.append(importance_values)
+        return result_node_importance, result_edge_importance
 
-    def store_importance_data(self, export_path: str, train_data_path: str, test_data_path: str, normalize: bool = False):
-        importance_data: List[np.array] = self.generate_importance_for_data(train_data_path, test_data_path)
+    def store_importance_data(self, export_path: str, train_data_path: str, test_data_path: str,
+                              normalize: bool = False):
+        importance_data: Tuple[List[np.array], List[np.array]] = self.generate_importance_for_data(train_data_path,
+                                                                                                   test_data_path)
+        node_importance_data: List[np.array] = importance_data[0]
+        edge_importance_data: List[np.array] = importance_data[1]
         if normalize:
-            normalized_importance_data: List[np.array] = []
+            normalized_node_importance_data: List[np.array] = []
             min_importance: float = 0.0
             max_importance: float = 0.0
-            for layer_importance in importance_data:
+            for layer_importance in node_importance_data:
                 normalized_layer_importance: np.array = np.absolute(layer_importance)
                 for node_importance in normalized_layer_importance:
                     for node_class_importance in node_importance:
@@ -121,13 +140,23 @@ class ProcessedNetwork:
                             min_importance = node_class_importance
                         if max_importance < node_class_importance:
                             max_importance = node_class_importance
-                normalized_importance_data.append(normalized_layer_importance)
-            for i, normalized_layer_importance in enumerate(normalized_importance_data):
-                normalized_importance_data[i] = normalized_layer_importance / max_importance
-            importance_data = normalized_importance_data
+                normalized_node_importance_data.append(normalized_layer_importance)
+            for i, normalized_layer_importance in enumerate(normalized_node_importance_data):
+                normalized_node_importance_data[i] = normalized_layer_importance / max_importance
+            node_importance_data = normalized_node_importance_data
             print("[%s] min importance: %f, max importance: %f" % (LOG_SOURCE, min_importance, max_importance))
+
+            normalized_edge_importance_data: List[np.array] = []
+            for layer_data in edge_importance_data:
+                new_layer_data: List[np.array] = []
+                for i in range(layer_data.shape[0]):
+                    absolute_layer_data: np.array = np.abs(layer_data[i])
+                    edge_sum: float = float(np.sum(absolute_layer_data))
+                    absolute_layer_data /= edge_sum
+                    new_layer_data.append(absolute_layer_data)
+                normalized_edge_importance_data.append(np.stack(new_layer_data, axis=0))
 
         data_path: str = DATA_PATH + export_path
         if not os.path.exists(os.path.dirname(data_path)):
             os.makedirs(os.path.dirname(data_path))
-        np.savez(data_path, importance_data)
+        np.savez(data_path, (node_importance_data, edge_importance_data))

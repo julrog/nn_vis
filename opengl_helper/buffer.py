@@ -44,7 +44,7 @@ class BufferObject:
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.handle)
             return glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, self.size)
 
-    def bind(self, location: int, rendering: bool = False):
+    def bind(self, location: int, rendering: bool = False, divisor: int = 0):
         if self.ssbo:
             if rendering:
                 glBindBuffer(GL_ARRAY_BUFFER, self.handle)
@@ -52,6 +52,8 @@ class BufferObject:
                     glEnableVertexAttribArray(location + i)
                     glVertexAttribPointer(location + i, self.render_data_size[i], GL_FLOAT, GL_FALSE,
                                           self.object_size * 4, ctypes.c_void_p(4 * self.render_data_offset[i]))
+                    if divisor > 0:
+                        glVertexAttribDivisor(location + i, divisor)
             else:
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.handle)
         else:
@@ -60,6 +62,8 @@ class BufferObject:
                 glEnableVertexAttribArray(location + i)
                 glVertexAttribPointer(location + i, self.render_data_size[i], GL_FLOAT, GL_FALSE,
                                       self.object_size * 4, ctypes.c_void_p(4 * self.render_data_offset[i]))
+                if divisor > 0:
+                    glVertexAttribDivisor(location + i, divisor)
 
     def clear(self):
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, self.handle)
@@ -78,7 +82,7 @@ class SwappingBufferObject(BufferObject):
     def swap(self):
         self.handle, self.swap_handle = self.swap_handle, self.handle
 
-    def bind(self, location: int, rendering: bool = False):
+    def bind(self, location: int, rendering: bool = False, divisor: int = 0):
         if self.ssbo:
             if rendering:
                 glBindBuffer(GL_ARRAY_BUFFER, self.handle)
@@ -86,6 +90,8 @@ class SwappingBufferObject(BufferObject):
                     glEnableVertexAttribArray(location + i)
                     glVertexAttribPointer(location + i, self.render_data_size[i], GL_FLOAT, GL_FALSE,
                                           self.object_size * 4, ctypes.c_void_p(4 * self.render_data_offset[i]))
+                    if divisor > 0:
+                        glVertexAttribDivisor(location + i, divisor)
             else:
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.handle)
                 glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location + 1, self.swap_handle)
@@ -95,6 +101,8 @@ class SwappingBufferObject(BufferObject):
                 glEnableVertexAttribArray(location + i)
                 glVertexAttribPointer(location + i, self.render_data_size[i], GL_FLOAT, GL_FALSE,
                                       self.object_size * 4, ctypes.c_void_p(4 * self.render_data_offset[i]))
+                if divisor > 0:
+                    glVertexAttribDivisor(location + i, divisor)
 
     def delete(self):
         glDeleteBuffers(1, [self.handle])
@@ -170,13 +178,15 @@ class OverflowingBufferObject:
                 data.extend(glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, self.size[i]))
         return data
 
-    def bind_single(self, buffer_id: int, location: int, rendering: bool = False):
+    def bind_single(self, buffer_id: int, location: int, rendering: bool = False, divisor: int = 0):
         if rendering:
             glBindBuffer(GL_ARRAY_BUFFER, self.handle[buffer_id])
             for i in range(len(self.render_data_offset)):
                 glEnableVertexAttribArray(location + i)
                 glVertexAttribPointer(location + i, self.render_data_size[i], GL_FLOAT, GL_FALSE,
                                       self.object_size * 4, ctypes.c_void_p(4 * self.render_data_offset[i]))
+                if divisor > 0:
+                    glVertexAttribDivisor(location + i, divisor)
         else:
             glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, self.handle[buffer_id])
 

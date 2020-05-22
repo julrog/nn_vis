@@ -62,9 +62,8 @@ class NodeProcessor:
         print(self.node_buffer.object_size)
         node_data = buffer_data.reshape((len(self.nodes), self.node_buffer.object_size))
         node_count = len(self.nodes)
-        self.nodes = []
         for i in range(node_count):
-            self.nodes.append(Node(Vector3([node_data[i][0], node_data[i][1], node_data[i][2]]), node_data[i][4:-1]))
+            self.nodes[i].reset_position(Vector3([node_data[i][0], node_data[i][1], node_data[i][2]]))
 
         return buffer_data
 

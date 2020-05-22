@@ -54,10 +54,7 @@ class NetworkModel:
         for i in range(len(self.layer) - 1):
             for node_one in self.layer_nodes[i]:
                 for node_two in self.layer_nodes[i + 1]:
-                    if i % 2 == 0:
-                        edges.append(Edge(node_one.position, node_two.position))
-                    else:
-                        edges.append(Edge(node_two.position, node_one.position))
+                    edges.append(Edge(node_one, node_two))
         return edges
 
     def generate_edges_special(self) -> List[Edge]:
@@ -67,7 +64,7 @@ class NetworkModel:
                 for i_two, node_two in enumerate(self.layer_nodes[i + 1]):
                     if ((node_one.position + node_two.position) / 2.0).y != (
                             self.bounding_volume[1].y + self.bounding_volume[0].y) / 2.0:
-                        edges.append(Edge(node_one.position, node_two.position))
+                        edges.append(Edge(node_one, node_two))
         return edges
 
     def generate_max_distance(self) -> float:

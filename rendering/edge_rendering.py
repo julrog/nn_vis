@@ -16,6 +16,9 @@ class EdgeRenderer:
         shader_handler: RenderShaderHandler = RenderShaderHandler()
         sample_point_shader: RenderShader = shader_handler.create("sample_point", "sample/sample.vert",
                                                                   "basic/discard_screen_color.frag")
+        sample_line_shader: RenderShader = shader_handler.create("sample_line", "sample/sample_impostor.vert",
+                                                                 "basic/screen_color.frag",
+                                                                 "sample/points_to_line.geom")
         sample_sphere_shader: RenderShader = shader_handler.create("sample_sphere", "sample/sample_impostor.vert",
                                                                    "sample/point_to_sphere_impostor_phong.frag",
                                                                    "sample/point_to_sphere_impostor.geom")
@@ -25,18 +28,22 @@ class EdgeRenderer:
                                                                         "sample/point_to_sphere_impostor.geom")
         sample_ellipse_shader: RenderShader = shader_handler.create("sample_ellipsoid_transparent",
                                                                     "sample/sample_impostor.vert",
-                                                                    "sample/line_to_ellipsoid_impostor_transparent.frag",
-                                                                    "sample/line_to_ellipsoid_impostor.geom")
+                                                                    "sample/points_to_ellipsoid_impostor_transparent.frag",
+                                                                    "sample/points_to_ellipsoid_impostor.geom")
 
-        self.data_handler: VertexDataHandler = VertexDataHandler([(self.edge_processor.sample_buffer, 0)])
+        self.data_handler: VertexDataHandler = VertexDataHandler(
+            [(self.edge_processor.sample_buffer, 0), (self.edge_processor.edge_buffer, 2)],
+            [])
 
         self.point_render: RenderSet = RenderSet(sample_point_shader, self.data_handler)
+        self.line_render: RenderSet = RenderSet(sample_line_shader, self.data_handler)
         self.sphere_render: RenderSet = RenderSet(sample_sphere_shader, self.data_handler)
         self.transparent_render: RenderSet = RenderSet(sample_transparent_shader, self.data_handler)
         self.ellipse_render: RenderSet = RenderSet(sample_ellipse_shader, self.data_handler)
 
     @track_time
     def render_point(self, window: Window, clear: bool = True, swap: bool = False):
+        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
         sampled_points: int = self.edge_processor.get_buffer_points()
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
@@ -48,29 +55,31 @@ class EdgeRenderer:
 
         render_setting_0(clear)
         glPointSize(10.0)
-        glDrawArrays(GL_POINTS, 0, sampled_points)
+        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
         if swap:
             window.swap()
 
     @track_time
     def render_line(self, window: Window, clear: bool = True, swap: bool = False):
+        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
         sampled_points: int = self.edge_processor.get_buffer_points()
 
-        self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                            ("view", window.cam.view, "mat4"),
-                                            ("screen_width", 1920.0, "float"),
-                                            ("screen_height", 1080.0, "float")])
+        self.line_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
+                                           ("view", window.cam.view, "mat4"),
+                                           ("screen_width", 1920.0, "float"),
+                                           ("screen_height", 1080.0, "float")])
 
-        self.point_render.set()
+        self.line_render.set()
 
         render_setting_0(clear)
         glLineWidth(2.0)
-        glDrawArrays(GL_LINE_STRIP, 0, sampled_points)
+        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
         if swap:
             window.swap()
 
     @track_time
     def render_sphere(self, window: Window, sphere_radius: float = 0.05, clear: bool = True, swap: bool = False):
+        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
         sampled_points: int = self.edge_processor.get_buffer_points()
 
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
@@ -80,13 +89,14 @@ class EdgeRenderer:
         self.sphere_render.set()
 
         render_setting_0(clear)
-        glDrawArrays(GL_POINTS, 0, sampled_points)
+        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
         if swap:
             window.swap()
 
     @track_time
     def render_transparent_sphere(self, window: Window, sphere_radius: float = 0.05, clear: bool = True,
                                   swap: bool = False):
+        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
         sampled_points: int = self.edge_processor.get_buffer_points()
 
         near, far = self.grid.get_near_far_from_view(window.cam.view)
@@ -99,12 +109,14 @@ class EdgeRenderer:
         self.transparent_render.set()
 
         render_setting_1(clear)
-        glDrawArrays(GL_POINTS, 0, sampled_points)
+        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
         if swap:
             window.swap()
 
     @track_time
-    def render_ellipsoid_transparent(self, window: Window, radius: float = 0.05, clear: bool = True, swap: bool = False):
+    def render_ellipsoid_transparent(self, window: Window, radius: float = 0.05, clear: bool = True,
+                                     swap: bool = False):
+        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
         sampled_points: int = self.edge_processor.get_buffer_points()
 
         near, far = self.grid.get_near_far_from_view(window.cam.view)
@@ -117,7 +129,7 @@ class EdgeRenderer:
         self.ellipse_render.set()
 
         render_setting_1(clear)
-        glDrawArrays(GL_LINE_STRIP, 0, sampled_points)
+        glDrawArraysInstanced(GL_POINTS, 0, 10, sampled_points)
         if swap:
             window.swap()
 

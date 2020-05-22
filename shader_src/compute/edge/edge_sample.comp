@@ -73,7 +73,7 @@ void main() {
     write(current_write_index++, offset, vec4(next_point.xyz, -1.0));
 
     // store the first point with sum of all points as w value
-    write(0, offset, vec4(first_point.xyz, int(current_write_index)));
+    write(0, offset, vec4(first_point.xyz, float(current_write_index)));
 
     while (current_write_index <= first_point.w) {
         write(current_write_index++, offset, vec4(0.0, 0.0, 0.0, 0.0));
