@@ -9,10 +9,12 @@ from models.node import Node, create_nodes
 
 
 class NetworkModel:
-    def __init__(self, layer: List[int], node_size: float, layer_distance: float, layer_data: List[np.array] = None):
+    def __init__(self, layer: List[int], node_size: float, layer_distance: float, layer_data: List[np.array] = None,
+                 importance_prune_threshold: float = 0.5):
         self.layer: List[int] = layer
         self.node_size: float = node_size
         self.layer_distance: float = layer_distance
+        self.importance_prune_threshold: float = importance_prune_threshold
 
         self.max_layer_width: float = 1.0
         for node_count in layer:
@@ -54,7 +56,9 @@ class NetworkModel:
         for i in range(len(self.layer) - 1):
             for node_one in self.layer_nodes[i]:
                 for node_two in self.layer_nodes[i + 1]:
-                    edges.append(Edge(node_one, node_two))
+                    new_edge: Edge = Edge(node_one, node_two)
+                    if new_edge.data[3] * new_edge.data[6] > self.importance_prune_threshold / new_edge.data[2]:
+                        edges.append(Edge(node_one, node_two))
         return edges
 
     def generate_edges_special(self) -> List[Edge]:

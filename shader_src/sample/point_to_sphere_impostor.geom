@@ -3,17 +3,19 @@
 layout(points) in;
 in vec3 vs_normal[];
 in float vs_discard[];
+in float vs_importance[];
 
 layout(triangle_strip, max_vertices = 14) out;
 flat out vec3 gs_sphere_position;
+flat out float gs_sphere_size;
 out vec3 gs_cube_hit_position;
 
 uniform mat4 projection;
 uniform float sphere_radius;
 
-void draw_vertex(float sphere_radius, vec3 offset)
+void draw_vertex(vec3 offset)
 {
-    gs_cube_hit_position = gs_sphere_position + sphere_radius * offset;// output
+    gs_cube_hit_position = gs_sphere_position + gs_sphere_size * offset;// output
     gl_Position = projection * vec4(gs_cube_hit_position, 1.0);// output
 
     EmitVertex();
@@ -22,22 +24,23 @@ void draw_vertex(float sphere_radius, vec3 offset)
 void main()
 {
     gs_sphere_position = gl_in[0].gl_Position.xyz;// output
+    gs_sphere_size = vs_importance[0] * sphere_radius;
 
     if (vs_discard[0] == 0.0) {
-        draw_vertex(sphere_radius, vec3(-1.0, 1.0, -1.0));
-        draw_vertex(sphere_radius, vec3(1.0, 1.0, -1.0));
-        draw_vertex(sphere_radius, vec3(-1.0, -1.0, -1.0));
-        draw_vertex(sphere_radius, vec3(1.0, -1.0, -1.0));
-        draw_vertex(sphere_radius, vec3(1.0, -1.0, 1.0));
-        draw_vertex(sphere_radius, vec3(1.0, 1.0, -1.0));
-        draw_vertex(sphere_radius, vec3(1.0, 1.0, 1.0));
-        draw_vertex(sphere_radius, vec3(-1.0, 1.0, -1.0));
-        draw_vertex(sphere_radius, vec3(-1.0, 1.0, 1.0));
-        draw_vertex(sphere_radius, vec3(-1.0, -1.0, -1.0));
-        draw_vertex(sphere_radius, vec3(-1.0, -1.0, 1.0));
-        draw_vertex(sphere_radius, vec3(1.0, -1.0, 1.0));
-        draw_vertex(sphere_radius, vec3(-1.0, 1.0, 1.0));
-        draw_vertex(sphere_radius, vec3(1.0, 1.0, 1.0));
+        draw_vertex(vec3(-1.0, 1.0, -1.0));
+        draw_vertex(vec3(1.0, 1.0, -1.0));
+        draw_vertex(vec3(-1.0, -1.0, -1.0));
+        draw_vertex(vec3(1.0, -1.0, -1.0));
+        draw_vertex(vec3(1.0, -1.0, 1.0));
+        draw_vertex(vec3(1.0, 1.0, -1.0));
+        draw_vertex(vec3(1.0, 1.0, 1.0));
+        draw_vertex(vec3(-1.0, 1.0, -1.0));
+        draw_vertex(vec3(-1.0, 1.0, 1.0));
+        draw_vertex(vec3(-1.0, -1.0, -1.0));
+        draw_vertex(vec3(-1.0, -1.0, 1.0));
+        draw_vertex(vec3(1.0, -1.0, 1.0));
+        draw_vertex(vec3(-1.0, 1.0, 1.0));
+        draw_vertex(vec3(1.0, 1.0, 1.0));
     }
 
     EndPrimitive();

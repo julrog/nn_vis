@@ -1,6 +1,7 @@
 #version 440
 
 flat in vec3  gs_sphere_position;
+flat in float gs_sphere_size;
 in vec3 gs_cube_hit_position;
 
 out vec4 frag_color;
@@ -9,7 +10,6 @@ layout (depth_greater) out float gl_FragDepth;
 uniform mat4  projection;
 uniform float farthest_point_view_z;
 uniform float nearest_point_view_z;
-uniform float sphere_radius;
 
 const float base_opacity = 0.1;
 const float base_shpere_opacity = 0.2;
@@ -18,7 +18,7 @@ const float opacity_exponent = 1.0;
 vec2 sphereIntersection(vec3 ray_direction)
 {
     float a = dot(ray_direction, -gs_sphere_position);
-    float b = a * a - (dot(gs_sphere_position, gs_sphere_position) - sphere_radius * sphere_radius);
+    float b = a * a - (dot(gs_sphere_position, gs_sphere_position) - gs_sphere_size * gs_sphere_size);
 
     if (b < 0) discard;// no intercections
 
@@ -51,7 +51,7 @@ void main()
     vec4 real_position_screen = projection * vec4(real_hit_position, 1.0);
     gl_FragDepth = 0.5 * (real_position_screen.z / real_position_screen.w) + 0.5;
 
-    float ray_depth = distance(real_hit_position, real_hit_position_back) / (2.0 * sphere_radius);
+    float ray_depth = distance(real_hit_position, real_hit_position_back) / (2.0 * gs_sphere_size);
     frag_color = calculate_transparency_color(real_position_screen.z, ray_depth);
 }
 
