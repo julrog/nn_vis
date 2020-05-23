@@ -61,7 +61,7 @@ class NetworkProcessor:
 
         self.grid_processor.set_edge_processor(self.edge_processor)
 
-    def process(self, window: Window, action_mode: int):
+    def process(self, window: Window, action_mode: int, smoothing: bool = False):
         self.edge_processor.check_limits(window.cam.view)
         if action_mode is not 0:
             if action_mode == 1:
@@ -93,8 +93,10 @@ class NetworkProcessor:
             elif action_mode == 6:
                 self.edge_processor.sample_noise(0.5)
 
-            self.edge_processor.sample_edges()
-            self.edge_processor.sample_smooth()
+            if action_mode > 3:
+                self.edge_processor.sample_edges()
+                if smoothing:
+                    self.edge_processor.sample_smooth()
 
     def render(self, window: Window, edge_render_mode: int, grid_render_mode: int, node_render_mode: int):
         clear_screen([1.0, 1.0, 1.0, 1.0])

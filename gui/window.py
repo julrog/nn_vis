@@ -205,12 +205,22 @@ class OptionGui:
         self.sample_button: Button = Button(self.action_frame, text="Sample Edges", width=15,
                                             command=lambda: self.change_setting("trigger_network", "sample", 1, True))
         self.sample_button.grid(row=1, column=0)
-        self.action_state: IntVar = IntVar(0)
+        self.action_state: IntVar = IntVar(value=0)
         self.action_buttons: RadioButtons = RadioButtons(self.action_frame,
                                                          ["Stop Everything", "Node Advect", "Node Diverge",
                                                           "Node Noise", "Edge Advect", "Edge Diverge", "Edge Noise"],
                                                          self.action_state, command=self.change_setting, row=2,
                                                          column=0)
+
+        self.smoothing_status: IntVar = IntVar(value=1)
+        self.smoothing_checkbox: Checkbutton = Checkbutton(self.action_frame, text="Smoothing",
+                                                           variable=self.smoothing_status,
+                                                           command=lambda: self.change_setting("edge",
+                                                                                               "smoothing",
+                                                                                               self.smoothing_status.get()))
+        self.change_setting("edge", "smoothing", self.smoothing_status.get())
+
+        self.smoothing_checkbox.grid(row=3, column=0)
 
         self.setting_frame: LabelFrame = LabelFrame(self.gui_root, text="Settings", width=60,
                                                     padx=5, pady=5)

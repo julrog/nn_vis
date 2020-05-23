@@ -40,7 +40,7 @@ def compute_render(name: str):
             options.settings["trigger_network_sample"] = 0
 
         if network_processor is not None:
-            network_processor.process(window, options.settings["action_state"])
+            network_processor.process(window, options.settings["action_state"], options.settings["edge_smoothing"])
             network_processor.render(window, options.settings["render_Edge"], options.settings["render_Grid"],
                                      options.settings["render_Node"])
 
