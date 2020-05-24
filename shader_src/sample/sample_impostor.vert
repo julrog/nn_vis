@@ -19,7 +19,7 @@ void main()
     } else {
         vs_discard = 0.0;
     }
-    vs_importance = edge_data_0.w;
+    vs_importance = edge_data_0.w * edge_data_1.z;
     vs_next_position = view * vec4(next_position.xyz, 1.0);
     gl_Position = view * vec4(position.xyz, 1.0);
     vec4 new_normal = view * vec4((position.xyz + vec3(0.0, 1.0, 0.0)), 1.0);

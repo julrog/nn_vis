@@ -12,7 +12,7 @@ LOG_SOURCE: str = "NETWORK_MODEL"
 
 class NetworkModel:
     def __init__(self, layer: List[int], layer_width: float, layer_distance: float, layer_data: List[np.array] = None,
-                 importance_prune_threshold: float = 0.5):
+                 importance_prune_threshold: float = 0.1):
         self.layer: List[int] = layer
         self.layer_width: float = layer_width
         self.layer_distance: float = layer_distance
@@ -62,20 +62,10 @@ class NetworkModel:
             for node_one in self.layer_nodes[i]:
                 for node_two in self.layer_nodes[i + 1]:
                     new_edge: Edge = Edge(node_one, node_two)
-                    if new_edge.data[3] * new_edge.data[6] > self.importance_prune_threshold / new_edge.data[2]:
-                        edges.append(Edge(node_one, node_two))
+                    if new_edge.data[3] * new_edge.data[6] > self.importance_prune_threshold:
+                        edges.append(new_edge)
                     else:
                         self.pruned_edges += 1
-        return edges
-
-    def generate_edges_special(self) -> List[Edge]:
-        edges: List[Edge] = []
-        for i in range(len(self.layer) - 1):
-            for i_one, node_one in enumerate(self.layer_nodes[i]):
-                for i_two, node_two in enumerate(self.layer_nodes[i + 1]):
-                    if ((node_one.position + node_two.position) / 2.0).y != (
-                            self.bounding_volume[1].y + self.bounding_volume[0].y) / 2.0:
-                        edges.append(Edge(node_one, node_two))
         return edges
 
     def generate_max_distance(self) -> float:

@@ -130,7 +130,7 @@ class ProcessedNetwork:
         edge_importance_data: List[np.array] = importance_data[1]
         if normalize:
             normalized_node_importance_data: List[np.array] = []
-            min_importance: float = 0.0
+            min_importance: float = 1000000.0
             max_importance: float = 0.0
             for layer_importance in node_importance_data:
                 normalized_layer_importance: np.array = np.absolute(layer_importance)
@@ -144,18 +144,25 @@ class ProcessedNetwork:
             for i, normalized_layer_importance in enumerate(normalized_node_importance_data):
                 normalized_node_importance_data[i] = normalized_layer_importance / max_importance
             node_importance_data = normalized_node_importance_data
-            print("[%s] min importance: %f, max importance: %f" % (LOG_SOURCE, min_importance, max_importance))
+            print("[%s] Node importance - Min: %f, Max: %f" % (LOG_SOURCE, min_importance, max_importance))
 
             normalized_edge_importance_data: List[np.array] = []
+            min_importance: float = 1000000.0
+            max_importance: float = 0.0
             for layer_data in edge_importance_data:
                 new_layer_data: List[np.array] = []
                 for i in range(layer_data.shape[0]):
                     absolute_layer_data: np.array = np.abs(layer_data[i])
-                    edge_sum: float = float(np.sum(absolute_layer_data))
-                    absolute_layer_data /= edge_sum
+                    input_node_max: float = float(np.max(absolute_layer_data))
+                    input_node_min: float = float(np.min(absolute_layer_data))
+                    if max_importance < input_node_max:
+                        max_importance = input_node_max
+                    if min_importance > input_node_min:
+                        min_importance = input_node_min
+                    absolute_layer_data /= input_node_max
                     new_layer_data.append(absolute_layer_data)
                 normalized_edge_importance_data.append(np.stack(new_layer_data, axis=0))
-
+            print("[%s] Edge importance - Min: %f, Max: %f" % (LOG_SOURCE, min_importance, max_importance))
         data_path: str = DATA_PATH + export_path
         if not os.path.exists(os.path.dirname(data_path)):
             os.makedirs(os.path.dirname(data_path))

@@ -219,7 +219,7 @@ class OptionGui:
 
         self.grid_render_settings: RenderSettings = RenderSettings(self.render_frame, "Grid", self.change_setting,
                                                                    ["None", "Cube", "Point"], 0, row=0, column=0)
-        edge_shader_settings: Dict[str, any] = {"Size": 0.1, "Base Opacity": 0.0, "Base Density Opacity": 0.0,
+        edge_shader_settings: Dict[str, any] = {"Size": 0.05, "Base Opacity": 0.0, "Base Density Opacity": 0.0,
                                                 "Density Exponent": 0.1}
         self.edge_render_settings: RenderSettings = RenderSettings(self.render_frame, "Edge", self.change_setting,
                                                                    ["None", "Sphere", "Sphere_Transparent",
@@ -269,7 +269,7 @@ class OptionGui:
                                                                      column=0, variable_type="float")
 
     def start(self, layer_data: List[int] = None, layer_distance: float = 1.0, node_size: float = 1.0,
-              sampling_rate: float = 10.0, importance_threshold: float = 0.5, bandwidth_reduction: float = 0.9):
+              sampling_rate: float = 10.0, importance_threshold: float = 0.1, bandwidth_reduction: float = 0.9):
         if layer_data is None:
             default_layer_data = [4, 9, 4]
             for nodes in default_layer_data:

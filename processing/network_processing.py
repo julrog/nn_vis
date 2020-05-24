@@ -19,7 +19,7 @@ LOG_SOURCE: str = "NETWORK_PROCESSING"
 
 class NetworkProcessor:
     def __init__(self, layer_nodes: List[int], layer_data: List[np.array] = None, layer_distance: float = 1.0,
-                 layer_width: float = 1.0, sampling_rate: float = 10.0, importance_prune_threshold: float = 0.5,
+                 layer_width: float = 1.0, sampling_rate: float = 10.0, importance_prune_threshold: float = 0.1,
                  bandwidth_reduction: float = 0.9):
         print("[%s] Prepare network processing for network of size: %s" % (LOG_SOURCE, layer_nodes))
         self.layer_nodes: List[int] = layer_nodes
