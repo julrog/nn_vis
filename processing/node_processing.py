@@ -59,7 +59,6 @@ class NodeProcessor:
         if raw:
             return buffer_data
 
-        print(self.node_buffer.object_size)
         node_data = buffer_data.reshape((len(self.nodes), self.node_buffer.object_size))
         node_count = len(self.nodes)
         for i in range(node_count):

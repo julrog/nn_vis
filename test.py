@@ -64,7 +64,6 @@ def compute_render(name: str):
         time.sleep(5)
 
     if not options.settings["Closed"]:
-        print(options.settings["current_layer_data"])
         print("Start building network: " + str(options.settings["current_layer_data"]))
         network_processor = NetworkProcessor(options.settings["current_layer_data"])
 

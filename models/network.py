@@ -8,6 +8,9 @@ from models.edge import Edge
 from models.node import Node, create_nodes
 
 
+LOG_SOURCE: str = "NETWORK_MODEL"
+
+
 class NetworkModel:
     def __init__(self, layer: List[int], node_size: float, layer_distance: float, layer_data: List[np.array] = None,
                  importance_prune_threshold: float = 0.5):
@@ -40,7 +43,7 @@ class NetworkModel:
             self.edge_count += len(self.layer_nodes[i]) * len(self.layer_nodes[i + 1])
         self.pruned_edges: int = 0
         self.average_edge_distance: float = self.get_average_edge_distance()
-        print("average edge dist: ", self.average_edge_distance)
+        print("[%s] Average edge distance: %f" % (LOG_SOURCE, self.average_edge_distance))
 
     def get_nodes(self) -> List[Node]:
         node_data: List[Node] = []
@@ -50,7 +53,6 @@ class NetworkModel:
         return node_data
 
     def set_nodes(self, node_data: List[Node]):
-        print(len(node_data))
         read_node_index: int = 0
         for i, layer in enumerate(self.layer_nodes):
             new_nodes = []

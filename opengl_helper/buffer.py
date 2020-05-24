@@ -153,9 +153,7 @@ class OverflowingBufferObject:
             empty = np.zeros(int(self.max_ssbo_size / 4), dtype=dtype)
             buffer_count = math.ceil(
                 int(size / component_size) / int(self.max_ssbo_size / (component_size * self.object_size * 4)))
-            print("component size %i, max components: %i, in buffer: %i, buffer: %i" % (
-                component_size, int(size / component_size),
-                int(self.max_ssbo_size / (component_size * self.object_size * 4)), buffer_count))
+            print("[%s] Data split into %i buffer" % (LOG_SOURCE, buffer_count))
             for i in range(buffer_count):
                 if i >= len(self.handle):
                     self.handle.append(glGenBuffers(1))

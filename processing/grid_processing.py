@@ -122,8 +122,6 @@ class GridProcessor:
     def calculate_position(self):
         for i in range(len(self.grid_position_buffer.handle)):
             self.position_ssbo_handler.set(i)
-            print("SET slice_size %i, slice_count %i, buffer %i" % (
-                self.grid_slice_size, self.position_buffer_slice_count, i))
             self.position_compute_shader.set_uniform_data([
                 ('slice_size', self.grid_slice_size, 'int'),
                 ('slice_count', self.position_buffer_slice_count, 'int'),
@@ -132,7 +130,6 @@ class GridProcessor:
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
             ])
-            print("Calculate buffer %i" % int(self.grid_position_buffer.get_objects(i)))
             self.position_compute_shader.compute(self.grid_position_buffer.get_objects(i), barrier=False)
         self.position_compute_shader.barrier()
 

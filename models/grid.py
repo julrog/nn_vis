@@ -27,14 +27,11 @@ class Grid:
             self.bounding_volume[0].z, self.bounding_volume[1].z = bounding_volume[0].z - extend_by, \
                                                                    bounding_volume[1].z + extend_by
 
-        print(self.bounding_volume)
-
         self.grid_cell_count: List[int] = [
             int((self.bounding_volume[1].x - self.bounding_volume[0].x) / self.grid_cell_size.x) + 1,
             int((self.bounding_volume[1].y - self.bounding_volume[0].y) / self.grid_cell_size.y) + 1,
             int((self.bounding_volume[1].z - self.bounding_volume[0].z) / self.grid_cell_size.z) + 1]
         self.grid_cell_count_overall: int = self.grid_cell_count[0] * self.grid_cell_count[1] * self.grid_cell_count[2]
-        print(self.grid_cell_count)
 
         self.extends: List[Vector4] = [vector4.create_from_vector3(self.bounding_volume[0], 1.0),
                                        vector4.create_from_vector3(self.bounding_volume[1], 1.0)]

@@ -314,10 +314,8 @@ class OptionGui:
         self.settings["node_size"] = self.neuron_size.get()
         self.settings["sampling_rate"] = self.sampling_rate.get()
         self.settings["importance_threshold"] = self.importance_threshold.get()
-        print("Generated network: " + str(layer_data))
 
     def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):
-        # print("Type: %s_%s value %i" % (setting_type, sub_type, value))
         if stop_action:
             self.action_buttons.press(0)
         self.settings[setting_type + "_" + sub_type] = value

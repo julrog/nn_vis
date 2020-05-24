@@ -57,16 +57,3 @@ class ComputeShaderHandler(metaclass=Singleton):
 
     def get(self, shader_name: str) -> ComputeShader:
         return self.shader_list[shader_name]
-
-
-'''data = []
-print(bool(glGetIntegeri_v))
-glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, data)
-print(data)
-glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &data); 1024
-glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &data); 64
-glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &data); 2.147.483.647
-glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &data); 65.535
-glGetIntegeri_v( GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &data); 65.535
-glGetIntegerv( GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &data); 1536
-glGetIntegerv( GL_MAX_COMPUTE_SHARED_MEMORY_SIZE, &data);'''
