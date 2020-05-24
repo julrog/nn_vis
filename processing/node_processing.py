@@ -22,7 +22,6 @@ class NodeProcessor:
 
         self.nodes: List[Node] = []
 
-        self.node_size: float = 0.1
         self.point_count: int = 0
         self.nearest_view_z: int = -1000000
         self.farthest_view_z: int = 1000000
@@ -30,7 +29,6 @@ class NodeProcessor:
 
     def set_data(self, network: NetworkModel):
         self.nodes = network.get_nodes()
-        self.node_size = network.node_size
 
         # generate and load initial data for the buffer
         initial_data: List[float] = []

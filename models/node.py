@@ -39,8 +39,8 @@ class Node:
 
 
 def create_nodes(layer_nodes: List[int], center_position: Vector3, x_range: Tuple[float, float],
-                 y_range: Tuple[float, float], z_range: Tuple[float, float], node_size: float = None,
-                 layer_data: List[np.array] = None) -> List[List[Node]]:
+                 y_range: Tuple[float, float], z_range: Tuple[float, float],
+                 layer_data: List[np.array] = None, node_size: float = None) -> List[List[Node]]:
     node_positions: List[List[Node]] = []
     for layer, nodes in enumerate(layer_nodes):
         input_edges: int = 0
@@ -65,8 +65,8 @@ def create_nodes(layer_nodes: List[int], center_position: Vector3, x_range: Tupl
             node_size_x: float = node_size
             node_size_y: float = node_size
             if node_size is None:
-                node_size_x = math.fabs(x_range[1] - x_range[0]) / nodes_sqrt
-                node_size_y = math.fabs(y_range[1] - y_range[0]) / nodes_sqrt
+                node_size_x = abs(x_range[1] - x_range[0]) / nodes_sqrt
+                node_size_y = abs(y_range[1] - y_range[0]) / nodes_sqrt
             for i in range(nodes):
                 pos_x: float = (i % nodes_sqrt) - (nodes_sqrt - 1.0) / 2.0
                 pos_y: float = (math.floor(i / nodes_sqrt)) - (nodes_sqrt - 1.0) / 2.0

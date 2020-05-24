@@ -19,15 +19,17 @@ LOG_SOURCE: str = "NETWORK_PROCESSING"
 
 class NetworkProcessor:
     def __init__(self, layer_nodes: List[int], layer_data: List[np.array] = None, layer_distance: float = 1.0,
-                 node_size: float = 0.3, sampling_rate: float = 10.0, importance_prune_threshold: float = 0.5):
+                 layer_width: float = 1.0, sampling_rate: float = 10.0, importance_prune_threshold: float = 0.5,
+                 bandwidth_reduction: float = 0.9):
         print("[%s] Prepare network processing for network of size: %s" % (LOG_SOURCE, layer_nodes))
         self.layer_nodes: List[int] = layer_nodes
         self.layer_distance: float = layer_distance
-        self.node_size: float = node_size
+        self.layer_width: float = layer_width
+        self.bandwidth_reduction = bandwidth_reduction
 
-        self.network: NetworkModel = NetworkModel(self.layer_nodes, self.node_size, self.layer_distance, layer_data,
+        self.network: NetworkModel = NetworkModel(self.layer_nodes, self.layer_width, self.layer_distance, layer_data,
                                                   importance_prune_threshold)
-        self.sample_length: float = self.network.max_layer_width / sampling_rate
+        self.sample_length: float = self.network.layer_width / sampling_rate
         self.grid_cell_size: float = self.sample_length / 3.0
         self.sample_radius: float = self.sample_length * 2.0
 
@@ -44,11 +46,15 @@ class NetworkProcessor:
         self.edge_renderer: EdgeRenderer = EdgeRenderer(self.edge_processor, self.grid)
 
         self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 100.0,
-                                                           self.network.average_edge_distance)
+                                                           self.network.average_node_distance,
+                                                           self.network.average_edge_distance, self.bandwidth_reduction)
         self.grid_processor.calculate_position()
         self.grid_processor.calculate_edge_density()
 
         self.grid_renderer: GridRenderer = GridRenderer(self.grid_processor)
+
+        self.action_finished: bool = False
+        self.last_action_mode: int = 0
 
     def reset_edges(self):
         self.edge_processor.delete()
@@ -62,27 +68,44 @@ class NetworkProcessor:
         self.edge_renderer = EdgeRenderer(self.edge_processor, self.grid)
 
         self.grid_processor.set_edge_processor(self.edge_processor)
-        self.grid_processor.reset(self.network.average_edge_distance)
+        self.grid_processor.reset(self.network.average_node_distance, self.network.average_edge_distance)
 
     def process(self, window: Window, action_mode: int, smoothing: bool = False):
+        if self.last_action_mode is not action_mode:
+            if action_mode == 0:
+                print("[%s] Resample %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
+                self.edge_processor.sample_edges()
+            else:
+                self.action_finished = False
+                self.grid_processor.reset()
+
         self.edge_processor.check_limits(window.cam.view)
-        if action_mode is not 0:
+
+        if action_mode is not 0 and not self.action_finished:
+            if action_mode > 3:
+                print("[%s] Resample %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
+                self.edge_processor.sample_edges()
+
             if action_mode == 1:
                 print("[%s] Advect %i nodes, iteration %i" % (
                     LOG_SOURCE, len(self.node_processor.nodes), self.grid_processor.node_iteration))
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_node_density()
-                if self.grid_processor.original_bandwidth < 0:
-                    self.grid_processor.reset(-self.grid_processor.original_bandwidth)
+                if self.grid_processor.advection_direction < 0:
+                    self.grid_processor.advection_direction = 1.0
                 self.grid_processor.node_advect()
+                if self.grid_processor.node_limit_reached:
+                    self.action_finished = True
             elif action_mode == 2:
                 print("[%s] Diverge %i nodes, iteration %i" % (
                     LOG_SOURCE, len(self.node_processor.nodes), self.grid_processor.node_iteration))
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_node_density()
-                if self.grid_processor.original_bandwidth > 0:
-                    self.grid_processor.reset(-self.grid_processor.original_bandwidth)
+                if self.grid_processor.advection_direction > 0:
+                    self.grid_processor.advection_direction = -1.0
                 self.grid_processor.node_advect()
+                if self.grid_processor.node_limit_reached:
+                    self.action_finished = True
             elif action_mode == 3:
                 print("[%s] Randomize %i nodes" % (LOG_SOURCE, len(self.node_processor.nodes)))
                 self.node_processor.node_noise(self.sample_length, 0.5)
@@ -91,28 +114,33 @@ class NetworkProcessor:
                     LOG_SOURCE, len(self.edge_processor.edges), self.grid_processor.edge_iteration))
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_edge_density()
-                if self.grid_processor.original_bandwidth < 0:
-                    self.grid_processor.reset(-self.grid_processor.original_bandwidth)
+                if self.grid_processor.advection_direction < 0:
+                    self.grid_processor.advection_direction = 1.0
                 self.grid_processor.sample_advect()
+                if self.grid_processor.edge_limit_reached:
+                    self.action_finished = True
             elif action_mode == 5:
                 print("[%s] Diverge %i edges, iteration %i" % (
                     LOG_SOURCE, len(self.edge_processor.edges), self.grid_processor.edge_iteration))
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_edge_density()
-                if self.grid_processor.original_bandwidth > 0:
-                    self.grid_processor.reset(-self.grid_processor.original_bandwidth)
+                if self.grid_processor.edge_bandwidth > 0:
+                    self.grid_processor.advection_direction = -1.0
                 self.grid_processor.sample_advect()
+                if self.grid_processor.edge_limit_reached:
+                    self.action_finished = True
             elif action_mode == 6:
                 print("[%s] Randomize %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
                 self.edge_processor.sample_noise(0.5)
                 self.grid_processor.reset()
 
             if action_mode > 3:
-                print("[%s] Resample %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
-                self.edge_processor.sample_edges()
                 if smoothing:
                     print("[%s] Smooth %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
-                    self.edge_processor.sample_smooth()
+                    for i in range(10):
+                        self.edge_processor.sample_smooth()
+
+        self.last_action_mode = action_mode
 
     def render(self, window: Window, edge_render_mode: int, grid_render_mode: int, node_render_mode: int,
                edge_render_options: Dict[str, float] = None, grid_render_options: Dict[str, float] = None,

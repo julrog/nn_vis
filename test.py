@@ -73,10 +73,11 @@ def compute_render(name: str):
                 print("Rebuilding network: " + str(options.settings["current_layer_data"]))
                 network_processor = NetworkProcessor(options.settings["current_layer_data"],
                                                      layer_distance=options.settings["layer_distance"],
-                                                     node_size=options.settings["node_size"],
+                                                     layer_width=options.settings["layer_width"],
                                                      sampling_rate=options.settings["sampling_rate"],
                                                      importance_prune_threshold=options.settings[
-                                                         "importance_threshold"])
+                                                         "importance_threshold"],
+                                                     bandwidth_reduction=options.settings["bandwidth_reduction"])
             if start_count < 0:
                 start_count = frame_count
                 start_time = time.perf_counter()

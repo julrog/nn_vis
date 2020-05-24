@@ -34,10 +34,11 @@ class GridRenderer:
                                             ("screen_height", 1080.0, "float")])
         self.point_render.set_uniform_labeled_data(options)
 
-        for i in range(len(self.grid_processor.grid_position_buffer.handle)):
-            grid_count: int = self.grid_processor.grid_position_buffer.get_objects() - self.grid_processor.grid_slice_size
+        for i in range(len(self.grid_processor.grid_density_buffer.handle)):
+            print("RENDER GRID %i" % i)
+            grid_count: int = self.grid_processor.grid_density_buffer.get_objects() - self.grid_processor.grid_slice_size
 
-            self.point_render.set()
+            self.point_render.set(i)
 
             render_setting_0(clear)
             glPointSize(10.0)
@@ -53,8 +54,8 @@ class GridRenderer:
                                            ("screen_height", 1080.0, "float")])
         self.cube_render.set_uniform_labeled_data(options)
 
-        for i in range(len(self.grid_processor.grid_position_buffer.handle)):
-            grid_count: int = self.grid_processor.grid_position_buffer.get_objects() - self.grid_processor.grid_slice_size
+        for i in range(len(self.grid_processor.grid_density_buffer.handle)):
+            grid_count: int = self.grid_processor.grid_density_buffer.get_objects() - self.grid_processor.grid_slice_size
 
             self.cube_render.set(i)
 

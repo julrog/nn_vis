@@ -15,7 +15,8 @@ LOG_SOURCE: str = "GRID_PROCESSING"
 
 class GridProcessor:
     def __init__(self, grid: Grid, node_processor: NodeProcessor, edge_processor: EdgeProcessor,
-                 density_strength: float = 100.0, original_bandwidth: float = 1.0):
+                 density_strength: float = 100.0, node_bandwidth: float = 1.0, edge_bandwidth: float = 1.0,
+                 bandwidth_reduction: float = 0.9):
         self.node_processor: NodeProcessor = node_processor
         self.edge_processor: EdgeProcessor = edge_processor
         self.grid: Grid = grid
@@ -50,7 +51,10 @@ class GridProcessor:
 
             return split_grid_data
 
-        self.grid_position_buffer: OverflowingBufferObject = OverflowingBufferObject(split_function_generation(grid))
+        self.grid_position_buffer: OverflowingBufferObject = OverflowingBufferObject(split_function_generation(grid),
+                                                                                     object_size=12,
+                                                                                     render_data_offset=[0],
+                                                                                     render_data_size=[4])
         self.grid_density_buffer: OverflowingBufferObject = OverflowingBufferObject(split_function_generation(grid),
                                                                                     object_size=12,
                                                                                     render_data_offset=[0],
@@ -72,7 +76,11 @@ class GridProcessor:
         self.density_strength: float = density_strength
         self.node_iteration: int = 0
         self.edge_iteration: int = 0
-        self.original_bandwidth: float = original_bandwidth
+        self.node_bandwidth: float = node_bandwidth
+        self.edge_bandwidth: float = edge_bandwidth
+        self.bandwidth_reduction: float = bandwidth_reduction
+        self.node_limit_reached: bool = False
+        self.edge_limit_reached: bool = False
 
         self.grid_position_buffer.load_empty(np.float32, self.grid_slice_size * grid.grid_cell_count[2],
                                              self.grid_slice_size)
@@ -84,11 +92,17 @@ class GridProcessor:
         self.density_buffer_slice_count: int = math.floor(
             self.grid_density_buffer.size[0] / (self.grid_density_buffer.object_size * 4 * self.grid_slice_size)) - 1
 
-    def reset(self, bandwidth: float = None):
+        self.advection_direction: float = 1.0
+
+    def reset(self, node_bandwidth: float = None, edge_bandwidth: float = None):
         self.node_iteration = 0
         self.edge_iteration = 0
-        if bandwidth is not None:
-            self.original_bandwidth = bandwidth
+        if node_bandwidth is not None:
+            self.node_bandwidth = node_bandwidth
+        if edge_bandwidth is not None:
+            self.edge_bandwidth = edge_bandwidth
+        self.node_limit_reached = False
+        self.edge_limit_reached = False
 
     def set_node_processor(self, node_processor: NodeProcessor):
         self.node_processor = node_processor
@@ -135,6 +149,12 @@ class GridProcessor:
 
     @track_time
     def calculate_node_density(self):
+        current_bandwidth: float = self.node_bandwidth * math.pow(self.bandwidth_reduction, self.node_iteration)
+        if current_bandwidth < self.grid.grid_cell_size[0] * 2.0:
+            if not self.node_limit_reached:
+                print("[%s] Reached node advection limit at iteration %i" % (LOG_SOURCE, self.node_iteration))
+                self.node_limit_reached = True
+            return
         for i in range(len(self.grid_density_buffer.handle)):
             self.node_density_ssbo_handler.set_range(i - 1, 3)
 
@@ -143,7 +163,7 @@ class GridProcessor:
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
                 ('density_strength', self.density_strength, 'float'),
-                ('bandwidth', self.original_bandwidth, 'float'),
+                ('bandwidth', current_bandwidth, 'float'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
@@ -154,15 +174,22 @@ class GridProcessor:
 
     @track_time
     def calculate_edge_density(self):
+        current_bandwidth: float = self.edge_bandwidth * math.pow(self.bandwidth_reduction, self.edge_iteration)
+        if current_bandwidth < self.grid.grid_cell_size[0] * 2.0:
+            if not self.edge_limit_reached:
+                print("[%s] Reached edge advection limit at iteration %i" % (LOG_SOURCE, self.edge_iteration))
+                self.edge_limit_reached = True
+            return
         for i in range(len(self.grid_density_buffer.handle)):
             self.sample_density_ssbo_handler.set_range(i - 1, 3)
 
+            print(self.grid_slice_size, self.density_buffer_slice_count, i)
             self.sample_density_compute_shader.set_uniform_data([
                 ('slice_size', self.grid_slice_size, 'int'),
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
                 ('density_strength', self.density_strength, 'float'),
-                ('bandwidth', self.original_bandwidth, 'float'),
+                ('bandwidth', current_bandwidth, 'float'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
@@ -173,13 +200,20 @@ class GridProcessor:
 
     @track_time
     def node_advect(self):
+        current_bandwidth: float = self.node_bandwidth * math.pow(self.bandwidth_reduction, self.node_iteration)
+        if current_bandwidth < self.grid.grid_cell_size[0] * 2.0:
+            if not self.node_limit_reached:
+                print("[%s] Reached node advection limit at iteration %i" % (LOG_SOURCE, self.node_iteration))
+                self.node_limit_reached = True
+            return
         for i in range(len(self.grid_density_buffer.handle)):
             self.node_advect_ssbo_handler.set(i)
 
             self.node_advect_compute_shader.set_uniform_data([
+                ('slice_size', self.grid_slice_size, 'int'),
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
-                ('advect_strength', self.original_bandwidth, 'float'),
+                ('advect_strength', current_bandwidth * self.advection_direction, 'float'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
@@ -192,13 +226,20 @@ class GridProcessor:
 
     @track_time
     def sample_advect(self):
+        current_bandwidth: float = self.edge_bandwidth * math.pow(self.bandwidth_reduction, self.edge_iteration)
+        if current_bandwidth < self.grid.grid_cell_size[0] * 2.0:
+            if not self.edge_limit_reached:
+                print("[%s] Reached edge advection limit at iteration %i" % (LOG_SOURCE, self.edge_iteration))
+                self.edge_limit_reached = True
+            return
         for i in range(len(self.grid_density_buffer.handle)):
             self.sample_advect_ssbo_handler.set(i)
 
             self.sample_advect_compute_shader.set_uniform_data([
+                ('slice_size', self.grid_slice_size, 'int'),
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
-                ('advect_strength', self.original_bandwidth, 'float'),
+                ('advect_strength', current_bandwidth * self.advection_direction, 'float'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
@@ -218,3 +259,6 @@ class GridProcessor:
         self.sample_density_ssbo_handler.delete()
         self.density_ssbo_handler.delete()
         self.sample_advect_ssbo_handler.delete()
+
+    def get_current_edge_bandwidth(self) -> float:
+        return self.edge_bandwidth * math.pow(self.bandwidth_reduction, self.edge_iteration)

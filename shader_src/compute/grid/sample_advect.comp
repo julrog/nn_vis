@@ -37,6 +37,7 @@ layout(std140, binding = 2) restrict readonly buffer density_grid
 
 uniform int work_group_offset;
 uniform int slice_count;
+uniform int slice_size;
 uniform int current_buffer;
 
 uniform float advect_strength;
@@ -52,13 +53,13 @@ ivec3 gridIndex(vec3 position)
     int(floor((position.z - grid_bounding_min.z)/grid_cell_size.z)));
 }
 
-vec3 gridDirection(vec3 position)
+vec3 gridDirection(ivec3 index, vec3 position)
 {
-    float x = sign((position.x - grid_bounding_min.x)/grid_cell_size.x - 0.5);
+    float x = sign((position.x - grid_bounding_min.x)/grid_cell_size.x - (float(index.x)) - 0.5);
     if (x == 0.0) x = 1.0;
-    float y = sign((position.y - grid_bounding_min.y)/grid_cell_size.x - 0.5);
+    float y = sign((position.y - grid_bounding_min.y)/grid_cell_size.x - (float(index.y)) - 0.5);
     if (y == 0.0) y = 1.0;
-    float z = sign((position.z - grid_bounding_min.z)/grid_cell_size.x - 0.5);
+    float z = sign((position.z - grid_bounding_min.z)/grid_cell_size.x - (float(index.z)) - 0.5);
     if (z == 0.0) z = 1.0;
     return vec3(x, y, z);
 }
@@ -75,15 +76,16 @@ void write(highp uint index, vec4 pos)
 
 float readGridIndex(ivec3 index)
 {
-    return density[index.x + index.y * grid_cell_count.x + index.z * grid_cell_count.x * grid_cell_count.y].overall_density;
+    highp int original_index = index.x + index.y * grid_cell_count.x + index.z * grid_cell_count.x * grid_cell_count.y;
+    return density[original_index - current_buffer * slice_count * slice_size].overall_density;
 }
 
 vec4 getGradient(ivec3 grid_index, vec3 grid_direction)
 {
     float current_density = readGridIndex(grid_index);
-    float gradient_x = grid_direction.x * readGridIndex(ivec3(grid_index.x + 1, grid_index.y, grid_index.z)) - grid_direction.x * current_density;
-    float gradient_y = grid_direction.x * readGridIndex(ivec3(grid_index.x, grid_index.y + 1, grid_index.z)) - grid_direction.x * current_density;
-    float gradient_z = grid_direction.x * readGridIndex(ivec3(grid_index.x, grid_index.y, grid_index.z + 1)) - grid_direction.x * current_density;
+    float gradient_x = (readGridIndex(ivec3(grid_index.x + int(grid_direction.x), grid_index.y, grid_index.z)) - current_density) * grid_direction.x;
+    float gradient_y = (readGridIndex(ivec3(grid_index.x, grid_index.y + int(grid_direction.y), grid_index.z)) - current_density) * grid_direction.y;
+    float gradient_z = (readGridIndex(ivec3(grid_index.x, grid_index.y, grid_index.z + int(grid_direction.z))) - current_density) * grid_direction.z;
     vec3 calc_gradient = vec3(gradient_x, gradient_y, gradient_z);
     float strength = length(calc_gradient);
 
@@ -127,7 +129,7 @@ void main() {
             }
             gradient_direction = normalize(gradient_direction);*/
 
-            vec4 gradient = getGradient(grid_index, gridDirection(sample_data.xyz));
+            vec4 gradient = getGradient(grid_index, gridDirection(grid_index, sample_data.xyz));
             gradient_direction = gradient.xyz;
             overall_strength = gradient.w;
 

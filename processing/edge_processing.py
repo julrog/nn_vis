@@ -40,6 +40,7 @@ class EdgeProcessor:
         self.nearest_view_z: int = -1000000
         self.farthest_view_z: int = 1000000
         self.max_sample_points: int = 0
+        self.smooth_radius: float = 0.0
 
     def set_data(self, network: NetworkModel):
         # generate edges
@@ -48,6 +49,7 @@ class EdgeProcessor:
         #  estimate a suitable sample size for buffer objects
         max_distance: float = network.generate_max_distance()
         self.max_sample_points = int((max_distance * 2.0) / self.sample_length) + 2
+        self.smooth_radius = (self.max_sample_points * 8.0)/100.0
 
         # generate and load initial data for the buffer
         initial_data: List[float] = []
@@ -135,6 +137,9 @@ class EdgeProcessor:
     def sample_smooth(self):
         self.ssbo_handler.set()
 
+        self.smooth_compute_shader.set_uniform_data([
+            ('max_sample_points', self.max_sample_points, 'int')
+        ])
         self.smooth_compute_shader.compute(self.get_buffer_points())
 
         self.sample_buffer.swap()

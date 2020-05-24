@@ -219,8 +219,8 @@ class OptionGui:
 
         self.grid_render_settings: RenderSettings = RenderSettings(self.render_frame, "Grid", self.change_setting,
                                                                    ["None", "Cube", "Point"], 0, row=0, column=0)
-        edge_shader_settings: Dict[str, any] = {"Size": 0.05, "Base Opacity": 0.1, "Base Density Opacity": 0.2,
-                                                "Density Exponent": 1.0}
+        edge_shader_settings: Dict[str, any] = {"Size": 0.1, "Base Opacity": 0.0, "Base Density Opacity": 0.0,
+                                                "Density Exponent": 0.1}
         self.edge_render_settings: RenderSettings = RenderSettings(self.render_frame, "Edge", self.change_setting,
                                                                    ["None", "Sphere", "Sphere_Transparent",
                                                                     "Ellipsoid_Transparent", "Line", "Point"],
@@ -259,15 +259,17 @@ class OptionGui:
         self.setting_frame.grid(row=2, column=2, padx=5, pady=5)
         self.layer_distance: SettingEntry = SettingEntry(self.setting_frame, "Layer distance:", row=0, column=0,
                                                          variable_type="float")
-        self.neuron_size: SettingEntry = SettingEntry(self.setting_frame, "Neuron size:", row=1, column=0,
+        self.layer_width: SettingEntry = SettingEntry(self.setting_frame, "Layer width:", row=1, column=0,
                                                       variable_type="float")
         self.sampling_rate: SettingEntry = SettingEntry(self.setting_frame, "Sampling rate:", row=2, column=0,
                                                         variable_type="float")
         self.importance_threshold: SettingEntry = SettingEntry(self.setting_frame, "Importance threshold:", row=3,
                                                                column=0, variable_type="float")
+        self.bandwidth_reduction: SettingEntry = SettingEntry(self.setting_frame, "Bandwidth reduction:", row=4,
+                                                                     column=0, variable_type="float")
 
-    def start(self, layer_data: List[int] = None, layer_distance: float = 1.0, node_size: float = 0.3,
-              sampling_rate: float = 10.0, importance_threshold: float = 0.5):
+    def start(self, layer_data: List[int] = None, layer_distance: float = 1.0, node_size: float = 1.0,
+              sampling_rate: float = 10.0, importance_threshold: float = 0.5, bandwidth_reduction: float = 0.9):
         if layer_data is None:
             default_layer_data = [4, 9, 4]
             for nodes in default_layer_data:
@@ -277,9 +279,10 @@ class OptionGui:
                 self.add_layer(nodes)
 
         self.layer_distance.set(layer_distance)
-        self.neuron_size.set(node_size)
+        self.layer_width.set(node_size)
         self.sampling_rate.set(sampling_rate)
         self.importance_threshold.set(importance_threshold)
+        self.bandwidth_reduction.set(bandwidth_reduction)
         self.generate()
 
         self.gui_root.mainloop()
@@ -311,9 +314,10 @@ class OptionGui:
             layer_data.append(ls.get_neurons())
         self.settings["current_layer_data"] = layer_data
         self.settings["layer_distance"] = self.layer_distance.get()
-        self.settings["node_size"] = self.neuron_size.get()
+        self.settings["layer_width"] = self.layer_width.get()
         self.settings["sampling_rate"] = self.sampling_rate.get()
         self.settings["importance_threshold"] = self.importance_threshold.get()
+        self.settings["bandwidth_reduction"] = self.bandwidth_reduction.get()
 
     def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):
         if stop_action:

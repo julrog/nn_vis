@@ -3,6 +3,8 @@
 struct GridPosition
 {
     vec4 pos;
+    vec4 fill0;
+    vec4 fill1;
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -34,8 +36,8 @@ void main() {
     int relative_index = int(gl_WorkGroupID.x) + work_group_offset;
     ivec3 grid_index = getGridIndex(index);
 
-    float pos_x = (float(grid_index.x)) * grid_cell_size.x + grid_bounding_min.x;
-    float pos_y = (float(grid_index.y)) * grid_cell_size.y + grid_bounding_min.y;
-    float pos_z = (float(grid_index.z)) * grid_cell_size.z + grid_bounding_min.z;
+    float pos_x = (float(grid_index.x) + 0.5) * grid_cell_size.x + grid_bounding_min.x;
+    float pos_y = (float(grid_index.y) + 0.5) * grid_cell_size.y + grid_bounding_min.y;
+    float pos_z = (float(grid_index.z) + 0.5) * grid_cell_size.z + grid_bounding_min.z;
     grid_position[relative_index].pos = vec4(pos_x, pos_y, pos_z, 1.0);
 }

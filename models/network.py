@@ -7,27 +7,20 @@ from pyrr import Vector3
 from models.edge import Edge
 from models.node import Node, create_nodes
 
-
 LOG_SOURCE: str = "NETWORK_MODEL"
 
 
 class NetworkModel:
-    def __init__(self, layer: List[int], node_size: float, layer_distance: float, layer_data: List[np.array] = None,
+    def __init__(self, layer: List[int], layer_width: float, layer_distance: float, layer_data: List[np.array] = None,
                  importance_prune_threshold: float = 0.5):
         self.layer: List[int] = layer
-        self.node_size: float = node_size
+        self.layer_width: float = layer_width
         self.layer_distance: float = layer_distance
         self.importance_prune_threshold: float = importance_prune_threshold
 
-        self.max_layer_width: float = 1.0
-        for node_count in layer:
-            sqrt_node_count = math.ceil(math.sqrt(node_count))
-            if self.max_layer_width < sqrt_node_count * node_size:
-                self.max_layer_width = sqrt_node_count * node_size
-
         self.bounding_volume: Tuple[Vector3, Vector3] = (
-            Vector3([-self.max_layer_width, -self.max_layer_width, -len(self.layer) * self.layer_distance / 2.0]),
-            Vector3([self.max_layer_width, self.max_layer_width, len(self.layer) * self.layer_distance / 2.0]))
+            Vector3([-self.layer_width / 2.0, -self.layer_width / 2.0, -len(self.layer) * self.layer_distance / 2.0]),
+            Vector3([self.layer_width / 2.0, self.layer_width / 2.0, len(self.layer) * self.layer_distance / 2.0]))
         self.bounding_mid: Vector3 = (self.bounding_volume[1] + self.bounding_volume[0]) / 2.0
         self.bounding_range: Vector3 = (self.bounding_volume[1] - self.bounding_volume[0]) / 2.0
         self.bounding_range = Vector3(
@@ -37,12 +30,14 @@ class NetworkModel:
                                                           (self.bounding_volume[0].x, self.bounding_volume[1].x),
                                                           (self.bounding_volume[0].y, self.bounding_volume[1].y),
                                                           (self.bounding_volume[0].z, self.bounding_volume[1].z),
-                                                          None, layer_data)
+                                                          layer_data)
         self.edge_count: int = 0
         for i in range(len(self.layer) - 1):
             self.edge_count += len(self.layer_nodes[i]) * len(self.layer_nodes[i + 1])
         self.pruned_edges: int = 0
+        self.average_node_distance: float = self.get_average_node_distance()
         self.average_edge_distance: float = self.get_average_edge_distance()
+        print("[%s] Average node distance: %f" % (LOG_SOURCE, self.average_node_distance))
         print("[%s] Average edge distance: %f" % (LOG_SOURCE, self.average_edge_distance))
 
     def get_nodes(self) -> List[Node]:
@@ -95,10 +90,30 @@ class NetworkModel:
 
     def get_average_edge_distance(self) -> float:
         distance_sum: float = 0.0
-        distance_values: int = 0
+        distance_value_count: int = 0
+        edge_positions: List[List[Vector3]] = []
         for i in range(len(self.layer) - 1):
-            distance_values += len(self.layer_nodes[i]) * len(self.layer_nodes[i])
+            layer_edge_position: List[Vector3] = []
+            for node_one in self.layer_nodes[i]:
+                for node_two in self.layer_nodes[i + 1]:
+                    layer_edge_position.append((node_one.position + node_two.position) / 2.0)
+            edge_positions.append(layer_edge_position)
+            distance_value_count += (len(layer_edge_position) * (len(layer_edge_position) - 1))
         for i in range(len(self.layer) - 1):
+            for edge_one in edge_positions[i]:
+                for edge_two in edge_positions[i]:
+                    distance_sum += math.sqrt(
+                        (edge_one.x - edge_two.x) * (edge_one.x - edge_two.x)
+                        + (edge_one.y - edge_two.y) * (edge_one.y - edge_two.y)
+                        + (edge_one.z - edge_two.z) * (edge_one.z - edge_two.z))
+        return distance_sum / distance_value_count
+
+    def get_average_node_distance(self) -> float:
+        distance_sum: float = 0.0
+        distance_value_count: int = 0
+        for i in range(len(self.layer)):
+            distance_value_count += len(self.layer_nodes[i]) * (len(self.layer_nodes[i]) - 1)
+        for i in range(len(self.layer)):
             layer_distance_sum: float = 0.0
             for node_one in self.layer_nodes[i]:
                 for node_two in self.layer_nodes[i]:
@@ -106,5 +121,5 @@ class NetworkModel:
                         (node_one.position.x - node_two.position.x) * (node_one.position.x - node_two.position.x)
                         + (node_one.position.y - node_two.position.y) * (node_one.position.y - node_two.position.y)
                         + (node_one.position.z - node_two.position.z) * (node_one.position.z - node_two.position.z))
-            distance_sum += layer_distance_sum / float(distance_values)
+            distance_sum += layer_distance_sum / float(distance_value_count)
         return distance_sum

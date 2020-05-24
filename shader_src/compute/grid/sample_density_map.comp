@@ -71,9 +71,9 @@ ivec3 gridIndex(vec3 position)
 
 vec3 gridPosition(ivec3 gridIndex)
 {
-    return vec3((float(gridIndex.x) * grid_cell_size.x + grid_bounding_min.x),
-    (float(gridIndex.y) * grid_cell_size.y + grid_bounding_min.y),
-    (float(gridIndex.z) * grid_cell_size.z + grid_bounding_min.z));
+    return vec3(((float(gridIndex.x) + 0.5) * grid_cell_size.x + grid_bounding_min.x),
+    ((float(gridIndex.y) + 0.5) * grid_cell_size.y + grid_bounding_min.y),
+    ((float(gridIndex.z) + 0.5) * grid_cell_size.z + grid_bounding_min.z));
 }
 
 highp float density_estimation(vec3 position, float length, vec3 center, vec3 point_a, vec3 point_b, float min_distance)
@@ -108,12 +108,12 @@ void main() {
     vec4 pointA = read(index);
     vec4 pointB = read(index + 1);
 
-    if (pointA.w >= 1.0 ) {
+    if (pointA.w >= 1.0) {
         highp float disMin = length(pointA.xyz - pointB.xyz);
         vec3 midPoint = (pointA.xyz + pointB.xyz)/2.0;
         ivec3 midIndex = gridIndex(midPoint);
         highp float min_distance = distance(pointA.xyz, pointB.xyz);
-        if (midIndex.z >= current_buffer * slice_count && midIndex.z <= (current_buffer + 1) * (slice_count + 1)) {
+        if (midIndex.z >= current_buffer * slice_count && midIndex.z < (current_buffer + 1) * slice_count) {
             for (int ix = -convolution_range.x; ix <= convolution_range.x + 1; ix++)
             {
                 for (int iy = -convolution_range.y; iy <= convolution_range.y + 1; iy++)
