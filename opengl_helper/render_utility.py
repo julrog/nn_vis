@@ -1,8 +1,10 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from OpenGL.GL import *
 
 from opengl_helper.buffer import BufferObject, OverflowingBufferObject
 from opengl_helper.shader import BaseShader
+
+LOG_SOURCE = "RENDER_UTILITY"
 
 
 class VertexDataHandler:
@@ -90,10 +92,23 @@ class RenderSet:
     def __init__(self, shader: BaseShader, data_handler: VertexDataHandler):
         self.shader: BaseShader = shader
         self.data_handler: VertexDataHandler = data_handler
+        self.uniform_label: Dict[str, str] = dict()
+
+    def set_uniform_label(self, data: List[Tuple[str, str]]):
+        for label, uniform_name in data:
+            self.uniform_label[label] = uniform_name
 
     def set_uniform_data(self, data: List[Tuple[str, any, any]]):
         if self.shader is not None:
             self.shader.set_uniform_data(data)
+
+    def set_uniform_labeled_data(self, data: Dict[str, float]):
+        if self.shader is not None and data is not None:
+            uniform_data = []
+            for label, value in data.items():
+                if label in self.uniform_label.keys():
+                    uniform_data.append((self.uniform_label[label], value, "float"))
+            self.shader.set_uniform_data(uniform_data)
 
     def set(self):
         if self.shader is not None:
@@ -105,9 +120,22 @@ class OverflowingRenderSet:
     def __init__(self, shader: BaseShader, data_handler: OverflowingVertexDataHandler):
         self.shader: BaseShader = shader
         self.data_handler: OverflowingVertexDataHandler = data_handler
+        self.uniform_label: Dict[str, str] = dict()
+
+    def set_uniform_label(self, data: List[Tuple[str, str]]):
+        for label, uniform_name in data:
+            self.uniform_label[label] = uniform_name
 
     def set_uniform_data(self, data: List[Tuple[str, any, any]]):
         self.shader.set_uniform_data(data)
+
+    def set_uniform_labeled_data(self, data: Dict[str, float]):
+        if self.shader is not None and data is not None:
+            uniform_data = []
+            for label, value in data.items():
+                if label in self.uniform_label.keys():
+                    uniform_data.append((self.uniform_label[label], value, "float"))
+            self.shader.set_uniform_data(uniform_data)
 
     def set(self, buffer_index: int = 0):
         self.shader.use()

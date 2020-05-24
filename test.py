@@ -5,7 +5,7 @@ from gui.window import OptionGui
 from processing.network_processing import NetworkProcessor
 from utility.file import FileHandler
 from utility.performance import track_time
-from utility.window import WindowHandler
+from utility.window import WindowHandler, Window
 from OpenGL.GL import *
 
 global options
@@ -19,17 +19,19 @@ def compute_render(name: str):
 
     FileHandler().read_statistics()
 
-    window_handler = WindowHandler()
-    window = window_handler.create_window("Testing", width, height, 1)
+    window_handler: WindowHandler = WindowHandler()
+    window: Window = window_handler.create_window("Testing", width, height, 1)
     window.set_position(0, 0)
     window.set_callbacks()
     window.activate()
 
     print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
-    network_processor = None
+    network_processor: NetworkProcessor or None = None
 
     frame_count: int = 0
+    start_count: int = -1
+    start_time: float = time.perf_counter()
 
     @track_time(track_recursive=False)
     def frame():
@@ -42,7 +44,9 @@ def compute_render(name: str):
         if network_processor is not None:
             network_processor.process(window, options.settings["action_state"], options.settings["edge_smoothing"])
             network_processor.render(window, options.settings["render_Edge"], options.settings["render_Grid"],
-                                     options.settings["render_Node"])
+                                     options.settings["render_Node"], options.settings["render_shader_setting_Edge"],
+                                     options.settings["render_shader_setting_Grid"],
+                                     options.settings["render_shader_setting_Node"])
 
         if "sample_count" in options.settings:
             options.settings["sample_count"].set(network_processor.edge_processor.get_buffer_points())
@@ -50,6 +54,8 @@ def compute_render(name: str):
             options.settings["edge_count"].set(len(network_processor.edge_processor.edges))
         if "cell_count" in options.settings:
             options.settings["cell_count"].set(network_processor.grid_processor.grid.grid_cell_count_overall)
+        if "pruned_edges" in options.settings:
+            options.settings["pruned_edges"].set(network_processor.network.pruned_edges)
 
         window.swap()
 
@@ -69,9 +75,18 @@ def compute_render(name: str):
                 network_processor = NetworkProcessor(options.settings["current_layer_data"],
                                                      layer_distance=options.settings["layer_distance"],
                                                      node_size=options.settings["node_size"],
-                                                     sampling_rate=options.settings["sampling_rate"])
+                                                     sampling_rate=options.settings["sampling_rate"],
+                                                     importance_prune_threshold=options.settings[
+                                                         "importance_threshold"])
+            if start_count < 0:
+                start_count = frame_count
+                start_time = time.perf_counter()
             frame()
             frame_count += 1
+            if time.perf_counter() - start_time > 1.0:
+                options.settings["fps"].set(
+                    float("{:.2f}".format(float(frame_count - start_count) / (time.perf_counter() - start_time))))
+                start_count = -1
 
         network_processor.delete()
 

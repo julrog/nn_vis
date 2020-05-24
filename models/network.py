@@ -31,8 +31,16 @@ class NetworkModel:
             [abs(self.bounding_range.x), abs(self.bounding_range.y), abs(self.bounding_range.z)])
 
         self.layer_nodes: List[List[Node]] = create_nodes(self.layer, self.bounding_mid,
+                                                          (self.bounding_volume[0].x, self.bounding_volume[1].x),
+                                                          (self.bounding_volume[0].y, self.bounding_volume[1].y),
                                                           (self.bounding_volume[0].z, self.bounding_volume[1].z),
-                                                          self.node_size, layer_data)
+                                                          None, layer_data)
+        self.edge_count: int = 0
+        for i in range(len(self.layer) - 1):
+            self.edge_count += len(self.layer_nodes[i]) * len(self.layer_nodes[i + 1])
+        self.pruned_edges: int = 0
+        self.average_edge_distance: float = self.get_average_edge_distance()
+        print("average edge dist: ", self.average_edge_distance)
 
     def get_nodes(self) -> List[Node]:
         node_data: List[Node] = []
@@ -59,6 +67,8 @@ class NetworkModel:
                     new_edge: Edge = Edge(node_one, node_two)
                     if new_edge.data[3] * new_edge.data[6] > self.importance_prune_threshold / new_edge.data[2]:
                         edges.append(Edge(node_one, node_two))
+                    else:
+                        self.pruned_edges += 1
         return edges
 
     def generate_edges_special(self) -> List[Edge]:
@@ -80,3 +90,19 @@ class NetworkModel:
                     if max_distance < distance:
                         max_distance = distance
         return max_distance
+
+    def get_average_edge_distance(self) -> float:
+        distance_sum: float = 0.0
+        distance_values: int = 0
+        for i in range(len(self.layer) - 1):
+            distance_values += len(self.layer_nodes[i]) * len(self.layer_nodes[i])
+        for i in range(len(self.layer) - 1):
+            layer_distance_sum: float = 0.0
+            for node_one in self.layer_nodes[i]:
+                for node_two in self.layer_nodes[i]:
+                    layer_distance_sum += math.sqrt(
+                        (node_one.position.x - node_two.position.x) * (node_one.position.x - node_two.position.x)
+                        + (node_one.position.y - node_two.position.y) * (node_one.position.y - node_two.position.y)
+                        + (node_one.position.z - node_two.position.z) * (node_one.position.z - node_two.position.z))
+            distance_sum += layer_distance_sum / float(distance_values)
+        return distance_sum

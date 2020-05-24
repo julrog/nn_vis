@@ -1,3 +1,5 @@
+from typing import Dict
+
 from OpenGL.GL import *
 from opengl_helper.render_utility import RenderSet, VertexDataHandler, render_setting_0, OverflowingVertexDataHandler, \
     OverflowingRenderSet
@@ -25,11 +27,12 @@ class GridRenderer:
         self.cube_render: OverflowingRenderSet = OverflowingRenderSet(cube_shader, self.data_handler)
 
     @track_time
-    def render_point(self, window: Window, clear: bool = True, swap: bool = False):
+    def render_point(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                             ("view", window.cam.view, "mat4"),
                                             ("screen_width", 1920.0, "float"),
                                             ("screen_height", 1080.0, "float")])
+        self.point_render.set_uniform_labeled_data(options)
 
         for i in range(len(self.grid_processor.grid_position_buffer.handle)):
             grid_count: int = self.grid_processor.grid_position_buffer.get_objects() - self.grid_processor.grid_slice_size
@@ -43,11 +46,12 @@ class GridRenderer:
             window.swap()
 
     @track_time
-    def render_cube(self, window: Window, clear: bool = True, swap: bool = False):
+    def render_cube(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
         self.cube_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                            ("view", window.cam.view, "mat4"),
                                            ("screen_width", 1920.0, "float"),
                                            ("screen_height", 1080.0, "float")])
+        self.cube_render.set_uniform_labeled_data(options)
 
         for i in range(len(self.grid_processor.grid_position_buffer.handle)):
             grid_count: int = self.grid_processor.grid_position_buffer.get_objects() - self.grid_processor.grid_slice_size

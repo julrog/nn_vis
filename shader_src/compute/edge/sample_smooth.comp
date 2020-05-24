@@ -34,7 +34,7 @@ void main() {
     if(sample_data.w == 1.0) {
         vec4 previous_sample = read(index - 1);
         vec4 next_sample = read(index + 1);
-        write(index, vec4((previous_sample.xyz + next_sample.xyz + sample_data.xyz)/3.0, 1.0));
+        write(index, vec4((previous_sample.xyz + next_sample.xyz)/2.0, 1.0));
     } else {
         write(index, sample_data);
     }

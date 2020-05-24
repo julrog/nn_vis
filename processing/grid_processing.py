@@ -15,7 +15,7 @@ LOG_SOURCE: str = "GRID_PROCESSING"
 
 class GridProcessor:
     def __init__(self, grid: Grid, node_processor: NodeProcessor, edge_processor: EdgeProcessor,
-                 density_strength: float = 100.0, sample_radius_scale: float = 2.0, advect_strength: float = 0.01):
+                 density_strength: float = 100.0, original_bandwidth: float = 1.0):
         self.node_processor: NodeProcessor = node_processor
         self.edge_processor: EdgeProcessor = edge_processor
         self.grid: Grid = grid
@@ -70,8 +70,9 @@ class GridProcessor:
             [], [(self.grid_density_buffer, 0)])
 
         self.density_strength: float = density_strength
-        self.sample_radius: float = sample_radius_scale
-        self.advect_strength: float = advect_strength
+        self.node_iteration: int = 0
+        self.edge_iteration: int = 0
+        self.original_bandwidth: float = original_bandwidth
 
         self.grid_position_buffer.load_empty(np.float32, self.grid_slice_size * grid.grid_cell_count[2],
                                              self.grid_slice_size)
@@ -83,6 +84,12 @@ class GridProcessor:
         self.density_buffer_slice_count: int = math.floor(
             self.grid_density_buffer.size[0] / (self.grid_density_buffer.object_size * 4 * self.grid_slice_size)) - 1
 
+    def reset(self, bandwidth: float = None):
+        self.node_iteration = 0
+        self.edge_iteration = 0
+        if bandwidth is not None:
+            self.original_bandwidth = bandwidth
+
     def set_node_processor(self, node_processor: NodeProcessor):
         self.node_processor = node_processor
         self.node_density_ssbo_handler.delete()
@@ -91,6 +98,8 @@ class GridProcessor:
         self.sample_advect_ssbo_handler.delete()
         self.sample_advect_ssbo_handler = OverflowingVertexDataHandler(
             [(self.node_processor.node_buffer, 0)], [(self.grid_density_buffer, 2)])
+        self.node_iteration = 0
+        self.edge_iteration = 0
 
     def set_edge_processor(self, edge_processor: EdgeProcessor):
         self.edge_processor = edge_processor
@@ -100,6 +109,7 @@ class GridProcessor:
         self.sample_advect_ssbo_handler.delete()
         self.sample_advect_ssbo_handler = OverflowingVertexDataHandler(
             [(self.edge_processor.sample_buffer, 0)], [(self.grid_density_buffer, 2)])
+        self.edge_iteration = 0
 
     @track_time
     def clear_buffer(self):
@@ -136,7 +146,7 @@ class GridProcessor:
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
                 ('density_strength', self.density_strength, 'float'),
-                ('bandwidth', self.node_processor.node_size * 2.0, 'float'),
+                ('bandwidth', self.original_bandwidth, 'float'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
@@ -155,7 +165,7 @@ class GridProcessor:
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
                 ('density_strength', self.density_strength, 'float'),
-                ('bandwidth', self.sample_radius * 2.0, 'float'),
+                ('bandwidth', self.original_bandwidth, 'float'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
@@ -172,7 +182,7 @@ class GridProcessor:
             self.node_advect_compute_shader.set_uniform_data([
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
-                ('advect_strength', self.advect_strength, 'float'),
+                ('advect_strength', self.original_bandwidth, 'float'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
@@ -181,6 +191,7 @@ class GridProcessor:
             self.node_advect_compute_shader.compute(self.node_processor.get_buffer_points())
         self.node_advect_compute_shader.barrier()
         self.node_processor.node_buffer.swap()
+        self.node_iteration += 1
 
     @track_time
     def sample_advect(self):
@@ -190,7 +201,7 @@ class GridProcessor:
             self.sample_advect_compute_shader.set_uniform_data([
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
-                ('advect_strength', self.advect_strength, 'float'),
+                ('advect_strength', self.original_bandwidth, 'float'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
@@ -199,6 +210,7 @@ class GridProcessor:
             self.sample_advect_compute_shader.compute(self.edge_processor.get_buffer_points())
         self.sample_advect_compute_shader.barrier()
         self.edge_processor.sample_buffer.swap()
+        self.edge_iteration += 1
 
     def delete(self):
         self.grid_position_buffer.delete()

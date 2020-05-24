@@ -130,12 +130,23 @@ class RadioButtons:
 
 class RenderSettings:
     def __init__(self, root: LabelFrame, name: str, change_setting_func, render_options: List[str],
-                 default_value: int = 0, row: int = 0, column: int = 0):
+                 default_value: int = 0, shader_settings: Dict[str, any] = None, row: int = 0, column: int = 0):
         self.name: str = name
         self.render_frame: LabelFrame = LabelFrame(root, text=self.name, width=60,
-                                                   padx=5, pady=5)
+                                                   padx=1, pady=1)
         self.render_mode: IntVar = IntVar(value=default_value)
         self.render_radio_buttons: List[Radiobutton] = []
+        self.shader_settings: List[SettingEntry] = []
+        self.shader_setting_frame: LabelFrame = LabelFrame(self.render_frame, text="Shader Settings", padx=1, pady=1)
+
+        def create_apply_func(function, inner_func):
+            def command():
+                function(inner_func)
+
+            return command
+
+        self.apply_settings: Button = Button(self.shader_setting_frame, text="Apply",
+                                             command=create_apply_func(self.get_settings, change_setting_func))
 
         def create_radio_func(value: int):
             def command():
@@ -148,8 +159,24 @@ class RenderSettings:
                 Radiobutton(self.render_frame, text=option, variable=self.render_mode, value=i,
                             command=create_radio_func(i)))
             self.render_radio_buttons[i].grid(row=i, column=0)
-        self.render_frame.grid(row=row, column=column, padx=5, pady=5)
+
         change_setting_func("render", self.name, default_value)
+
+        if shader_settings is not None:
+            for i, (setting, value) in enumerate(shader_settings.items()):
+                self.shader_settings.append(SettingEntry(self.shader_setting_frame, setting, value, "float", i, 0))
+
+            self.apply_settings.grid(row=len(self.shader_settings), column=0, columnspan=2)
+            self.shader_setting_frame.grid(row=0, column=1, rowspan=len(self.render_radio_buttons), padx=1, pady=1)
+        self.render_frame.grid(row=row, column=column, padx=1, pady=1)
+
+        self.get_settings(change_setting_func)
+
+    def get_settings(self, change_setting_func):
+        render_settings: Dict[str, float] = dict()
+        for shader_setting in self.shader_settings:
+            render_settings[shader_setting.name] = shader_setting.get()
+        change_setting_func("render_shader_setting", self.name, render_settings)
 
 
 class OptionGui:
@@ -181,24 +208,30 @@ class OptionGui:
         self.settings["sample_count"] = self.sample_count_setting
         self.cell_count_setting: SettingField = SettingField(self.stats_frame, "Grid Cells:", row=2, column=0)
         self.settings["cell_count"] = self.cell_count_setting
+        self.pruned_edges: SettingField = SettingField(self.stats_frame, "Pruned Edges:", row=3, column=0)
+        self.settings["pruned_edges"] = self.pruned_edges
+        self.frame_time: SettingField = SettingField(self.stats_frame, "FPS:", row=4, column=0)
+        self.settings["fps"] = self.frame_time
 
         self.render_frame: LabelFrame = LabelFrame(self.gui_root, text="Render Settings", width=60,
                                                    padx=5, pady=5)
-        self.render_frame.grid(row=1, column=1, rowspan=2, padx=5, pady=5)
+        self.render_frame.grid(row=0, column=2, rowspan=2, padx=5, pady=5)
 
         self.grid_render_settings: RenderSettings = RenderSettings(self.render_frame, "Grid", self.change_setting,
-                                                                   ["None", "Cube", "Point"], 0, 0, 0)
+                                                                   ["None", "Cube", "Point"], 0, row=0, column=0)
+        edge_shader_settings: Dict[str, any] = {"Size": 0.05, "Base Opacity": 0.1, "Base Density Opacity": 0.2,
+                                                "Density Exponent": 1.0}
         self.edge_render_settings: RenderSettings = RenderSettings(self.render_frame, "Edge", self.change_setting,
                                                                    ["None", "Sphere", "Sphere_Transparent",
                                                                     "Ellipsoid_Transparent", "Line", "Point"],
-                                                                   4, 1, 0)
+                                                                   4, edge_shader_settings, row=0, column=1)
         self.node_render_settings: RenderSettings = RenderSettings(self.render_frame, "Node", self.change_setting,
                                                                    ["None", "Sphere", "Sphere_Transparent", "Point"], 2,
-                                                                   2, 0)
+                                                                   row=0, column=2)
 
         self.action_frame: LabelFrame = LabelFrame(self.gui_root, text="Settings", width=60,
                                                    padx=5, pady=5)
-        self.action_frame.grid(row=0, column=2, rowspan=2, padx=5, pady=5)
+        self.action_frame.grid(row=1, column=1, rowspan=2, padx=5, pady=5)
         self.generate_button: Button = Button(self.action_frame, text="Generate Network", width=15,
                                               command=self.generate)
         self.generate_button.grid(row=0, column=0)
@@ -209,7 +242,7 @@ class OptionGui:
         self.action_buttons: RadioButtons = RadioButtons(self.action_frame,
                                                          ["Stop Everything", "Node Advect", "Node Diverge",
                                                           "Node Noise", "Edge Advect", "Edge Diverge", "Edge Noise"],
-                                                         self.action_state, command=self.change_setting, row=2,
+                                                         self.action_state, command=self.change_setting, row=3,
                                                          column=0)
 
         self.smoothing_status: IntVar = IntVar(value=1)
@@ -219,8 +252,7 @@ class OptionGui:
                                                                                                "smoothing",
                                                                                                self.smoothing_status.get()))
         self.change_setting("edge", "smoothing", self.smoothing_status.get())
-
-        self.smoothing_checkbox.grid(row=3, column=0)
+        self.smoothing_checkbox.grid(row=2, column=0)
 
         self.setting_frame: LabelFrame = LabelFrame(self.gui_root, text="Settings", width=60,
                                                     padx=5, pady=5)
@@ -231,9 +263,11 @@ class OptionGui:
                                                       variable_type="float")
         self.sampling_rate: SettingEntry = SettingEntry(self.setting_frame, "Sampling rate:", row=2, column=0,
                                                         variable_type="float")
+        self.importance_threshold: SettingEntry = SettingEntry(self.setting_frame, "Importance threshold:", row=3,
+                                                               column=0, variable_type="float")
 
     def start(self, layer_data: List[int] = None, layer_distance: float = 1.0, node_size: float = 0.3,
-              sampling_rate: float = 10.0):
+              sampling_rate: float = 10.0, importance_threshold: float = 0.5):
         if layer_data is None:
             default_layer_data = [4, 9, 4]
             for nodes in default_layer_data:
@@ -245,6 +279,7 @@ class OptionGui:
         self.layer_distance.set(layer_distance)
         self.neuron_size.set(node_size)
         self.sampling_rate.set(sampling_rate)
+        self.importance_threshold.set(importance_threshold)
         self.generate()
 
         self.gui_root.mainloop()
@@ -278,6 +313,7 @@ class OptionGui:
         self.settings["layer_distance"] = self.layer_distance.get()
         self.settings["node_size"] = self.neuron_size.get()
         self.settings["sampling_rate"] = self.sampling_rate.get()
+        self.settings["importance_threshold"] = self.importance_threshold.get()
         print("Generated network: " + str(layer_data))
 
     def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):
