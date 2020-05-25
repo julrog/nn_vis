@@ -2,6 +2,7 @@
 
 flat in vec3  gs_sphere_position;
 flat in float gs_sphere_radius;
+flat in vec3 gs_color;
 in vec3 gs_cube_hit_position;
 
 out vec4 frag_color;

@@ -15,7 +15,7 @@ LOG_SOURCE: str = "GRID_PROCESSING"
 
 class GridProcessor:
     def __init__(self, grid: Grid, node_processor: NodeProcessor, edge_processor: EdgeProcessor,
-                 density_strength: float = 100.0, node_bandwidth: float = 1.0, edge_bandwidth: float = 1.0,
+                 density_strength: float = 1000.0, node_bandwidth: float = 1.0, edge_bandwidth: float = 1.0,
                  bandwidth_reduction: float = 0.9):
         self.node_processor: NodeProcessor = node_processor
         self.edge_processor: EdgeProcessor = edge_processor
@@ -150,6 +150,11 @@ class GridProcessor:
     @track_time
     def calculate_node_density(self):
         current_bandwidth: float = self.node_bandwidth * math.pow(self.bandwidth_reduction, self.node_iteration)
+        current_density_clamp: int = int(100.0 * math.pow(self.bandwidth_reduction, self.node_iteration))
+        if current_density_clamp < 1:
+            current_density_clamp = 1
+        else:
+            current_bandwidth = current_bandwidth * 3.0
         if current_bandwidth < self.grid.grid_cell_size[0] * 3.0:
             if not self.node_limit_reached:
                 print("[%s] Reached node advection limit at iteration %i" % (LOG_SOURCE, self.node_iteration))
@@ -164,6 +169,7 @@ class GridProcessor:
                 ('current_buffer', i, 'int'),
                 ('density_strength', self.density_strength, 'float'),
                 ('bandwidth', current_bandwidth, 'float'),
+                ('density_clamp', current_density_clamp, 'int'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
@@ -200,6 +206,9 @@ class GridProcessor:
     @track_time
     def node_advect(self):
         current_bandwidth: float = self.node_bandwidth * math.pow(self.bandwidth_reduction, self.node_iteration)
+        current_density_clamp: int = int(100.0 * math.pow(self.bandwidth_reduction, self.node_iteration))
+        if current_density_clamp > 1:
+            current_bandwidth = current_bandwidth * 3.0
         if current_bandwidth < self.grid.grid_cell_size[0] * 3.0:
             if not self.node_limit_reached:
                 print("[%s] Reached node advection limit at iteration %i" % (LOG_SOURCE, self.node_iteration))
@@ -222,6 +231,7 @@ class GridProcessor:
         self.node_advect_compute_shader.barrier()
         self.node_processor.node_buffer.swap()
         self.node_iteration += 1
+
 
     @track_time
     def sample_advect(self):

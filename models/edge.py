@@ -17,7 +17,7 @@ class Edge:
         self.sample_points: List[Vector4] = [self.start, self.end]
         if importance is None:
             importance = random.random()
-        self.data: List[float] = [2.0, start_node.output_edges, end_node.input_edges, importance, 0.0, 0.0,
-                                  start_node.data[14], end_node.data[14]]
+        self.data: List[float] = [2.0, start_node.output_edges, end_node.input_edges, importance, start_node.data[15],
+                                  end_node.data[15], start_node.data[14], end_node.data[14]]
         self.data.extend(start_node.data[4:14])
         self.data.extend(end_node.data[4:14])

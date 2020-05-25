@@ -51,7 +51,7 @@ class NodeRenderer:
             window.swap()
 
     @track_time
-    def render_sphere(self, window: Window, sphere_radius: float = 0.05, clear: bool = True, swap: bool = False,
+    def render_sphere(self, window: Window, sphere_radius: float = 0.03, clear: bool = True, swap: bool = False,
                       options: Dict[str, float] = None):
         node_count: int = len(self.node_processor.nodes)
 
@@ -68,7 +68,7 @@ class NodeRenderer:
             window.swap()
 
     @track_time
-    def render_transparent(self, window: Window, sphere_radius: float = 0.05, clear: bool = True, swap: bool = False,
+    def render_transparent(self, window: Window, sphere_radius: float = 0.03, clear: bool = True, swap: bool = False,
                            options: Dict[str, float] = None):
         node_count: int = len(self.node_processor.nodes)
 

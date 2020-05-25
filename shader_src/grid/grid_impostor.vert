@@ -13,6 +13,6 @@ void main()
     } else {
         vs_discard = 0.0;
     }
-    vs_density = pow(density, 1.0/3.0) / 900;
+    vs_density = pow(density, 1.0/3.0) / 2700;
     gl_Position = vec4(position.xyz, 1.0);
 }

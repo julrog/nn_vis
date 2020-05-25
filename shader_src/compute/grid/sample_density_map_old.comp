@@ -21,28 +21,66 @@ struct DensityGrid
     int fill;
 };
 
+struct EdgeData
+{
+    float samples;
+    float start_edge_count;
+    float end_edge_count;
+    float importance;
+    float start_importance_length;
+    float end_importance_length;
+    float start_importance;
+    float end_importance;
+    float start_importance_0;
+    float start_importance_1;
+    float start_importance_2;
+    float start_importance_3;
+    float start_importance_4;
+    float start_importance_5;
+    float start_importance_6;
+    float start_importance_7;
+    float start_importance_8;
+    float start_importance_9;
+    float end_importance_0;
+    float end_importance_1;
+    float end_importance_2;
+    float end_importance_3;
+    float end_importance_4;
+    float end_importance_5;
+    float end_importance_6;
+    float end_importance_7;
+    float end_importance_8;
+    float end_importance_9;
+};
+
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 layout(std140, binding = 0) restrict readonly buffer sample_input
 {
     SamplePoint input_sample[];
 };
 
-layout(std140, binding = 2) coherent buffer prev_density_grid
+layout(std140, binding = 2) restrict readonly buffer edge_data
+{
+    EdgeData edge[];
+};
+
+layout(std140, binding = 3) coherent buffer prev_density_grid
 {
     DensityGrid prev_grid[];
 };
 
-layout(std140, binding = 3) coherent buffer density_grid
+layout(std140, binding = 4) coherent buffer density_grid
 {
     DensityGrid grid[];
 };
 
-layout(std140, binding = 4) coherent buffer next_density_grid
+layout(std140, binding = 5) coherent buffer next_density_grid
 {
     DensityGrid next_grid[];
 };
 
 uniform int work_group_offset;
+uniform int max_sample_points;
 uniform int slice_size;
 uniform int slice_count;
 uniform int current_buffer;
@@ -60,6 +98,11 @@ const float cell_scale = 1.36602540378;
 vec4 read(highp uint index)
 {
     return input_sample[index].pos;
+}
+
+EdgeData readEdge(highp uint index)
+{
+    return edge[int(floor(index/max_sample_points))];
 }
 
 ivec3 gridIndex(vec3 position)

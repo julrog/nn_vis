@@ -11,8 +11,8 @@ struct EdgeData
     float start_edge_count;
     float end_edge_count;
     float importance;
-    float fill0;
-    float fill1;
+    float start_importance_length;
+    float end_importance_length;
     float start_importance;
     float end_importance;
     float start_importance_0;

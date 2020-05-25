@@ -17,19 +17,32 @@ class Node:
         self.data: List[float] = [position.x, position.y, position.z, 1.0]
         if data is None:
             importance_sum: float = 0
-            for _ in range(10):
-                random_value: float = random.random()
+            importance_squared_sum: float = 0
+            position_max_0: int = int(random.random() * 10)
+            #position_max_1: int = int(random.random() * 10)
+            for i in range(10):
+                '''random_value: float = random.random()
                 importance_sum += random_value
-                self.data.append(random_value)
+                importance_squared_sum += random_value * random_value
+                self.data.append(random_value)'''
+                if i == position_max_0: #or i == position_max_1:
+                    random_value: float = random.random()/2.0 + 0.5
+                    importance_sum += random_value
+                    importance_squared_sum += random_value * random_value
+                    self.data.append(random_value)
+                else:
+                    self.data.append(0.0)
             self.data.append(importance_sum / 10.0)
-            self.data.append(0.0)
+            self.data.append(math.sqrt(importance_squared_sum))
         else:
             importance_sum: float = 0
+            importance_squared_sum: float = 0
             for d in data:
                 importance_sum += d
+                importance_squared_sum += d * d
                 self.data.append(d)
             self.data.append(importance_sum / 10.0)
-            self.data.append(0.0)
+            self.data.append(math.sqrt(importance_squared_sum))
 
     def reset_position(self, position: Vector3):
         self.position: Vector3 = position

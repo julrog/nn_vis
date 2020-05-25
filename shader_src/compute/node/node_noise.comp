@@ -14,7 +14,7 @@ struct Node
     float importance_8;
     float importance_9;
     float overall_importance;
-    float fill;
+    float importance_length;
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;

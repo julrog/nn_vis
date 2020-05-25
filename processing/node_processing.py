@@ -16,8 +16,8 @@ class NodeProcessor:
     def __init__(self):
         self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("node_noise", "node/node_noise.comp")
         self.node_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True, object_size=16,
-                                                                      render_data_offset=[0, 14],
-                                                                      render_data_size=[4, 1])
+                                                                      render_data_offset=[0, 4, 8, 12],
+                                                                      render_data_size=[4, 4, 4, 4])
         self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.node_buffer, 0)])
 
         self.nodes: List[Node] = []

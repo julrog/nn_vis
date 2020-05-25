@@ -45,7 +45,7 @@ class NetworkProcessor:
         self.edge_processor.init_sample_edge()
         self.edge_renderer: EdgeRenderer = EdgeRenderer(self.edge_processor, self.grid)
 
-        self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 100.0,
+        self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 1000.0,
                                                            self.network.average_node_distance,
                                                            self.network.average_edge_distance, self.bandwidth_reduction)
         self.grid_processor.calculate_position()
@@ -68,7 +68,7 @@ class NetworkProcessor:
         self.edge_renderer = EdgeRenderer(self.edge_processor, self.grid)
 
         self.grid_processor.set_edge_processor(self.edge_processor)
-        self.grid_processor.reset(self.network.average_node_distance, self.network.average_edge_distance)
+        self.grid_processor.reset(self.network.average_node_distance * 2.0, self.network.average_edge_distance)
 
     def process(self, window: Window, action_mode: int, smoothing: bool = False):
         if self.last_action_mode is not action_mode:

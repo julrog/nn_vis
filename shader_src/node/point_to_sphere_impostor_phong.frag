@@ -2,6 +2,7 @@
 
 flat in vec3  gs_sphere_position;
 flat in float gs_sphere_radius;
+flat in vec3 gs_color;
 in vec3 gs_cube_hit_position;
 
 out vec4 frag_color;
@@ -35,7 +36,7 @@ void main()
     vec3 normal = normalize(real_hit_position - gs_sphere_position);
 
     frag_color = vec4(atom_color_ambient +
-    clamp(atom_color_diffuse * max(dot(normal, light_direction_cam), 0.0), 0.0, 1.0) +
+    clamp(gs_color * max(dot(normal, light_direction_cam), 0.0), 0.0, 1.0) +
     clamp(atom_color_specular * pow(max(dot(reflect(light_direction_cam, normal), ray_direction), 0.0), 4.0), 0.0, 1.0), 1.0);
 
     vec4 real_position_screen = projection * vec4(real_hit_position, 1.0);
