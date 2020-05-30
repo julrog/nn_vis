@@ -164,22 +164,19 @@ class GridProcessor:
                 print("[%s] Reached node advection limit at iteration %i" % (LOG_SOURCE, self.node_iteration))
                 self.node_limit_reached = True
             return
-        for i in range(len(self.grid_density_buffer.handle)):
-            self.node_density_ssbo_handler.set_range(i - 1, 3)
 
-            self.node_density_compute_shader.set_uniform_data([
-                ('slice_size', self.grid_slice_size, 'int'),
-                ('slice_count', self.density_buffer_slice_count, 'int'),
-                ('current_buffer', i, 'int'),
-                ('density_strength', self.density_strength, 'float'),
-                ('bandwidth', current_bandwidth, 'float'),
-                ('density_clamp', current_density_clamp, 'int'),
-                ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
-                ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
-                ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
-            ])
+        self.node_density_ssbo_handler.set(0)
 
-            self.node_density_compute_shader.compute(len(self.node_processor.nodes), barrier=False)
+        self.node_density_compute_shader.set_uniform_data([
+            ('density_strength', self.density_strength, 'float'),
+            ('bandwidth', current_bandwidth, 'float'),
+            ('density_clamp', current_density_clamp, 'int'),
+            ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
+            ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
+            ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
+        ])
+
+        self.node_density_compute_shader.compute(len(self.node_processor.nodes), barrier=False)
         self.node_density_compute_shader.barrier()
 
     @track_time
@@ -219,20 +216,16 @@ class GridProcessor:
                 print("[%s] Reached node advection limit at iteration %i" % (LOG_SOURCE, self.node_iteration))
                 self.node_limit_reached = True
             return
-        for i in range(len(self.grid_density_buffer.handle)):
-            self.node_advect_ssbo_handler.set(i)
+        self.node_advect_ssbo_handler.set(0)
 
-            self.node_advect_compute_shader.set_uniform_data([
-                ('slice_size', self.grid_slice_size, 'int'),
-                ('slice_count', self.density_buffer_slice_count, 'int'),
-                ('current_buffer', i, 'int'),
-                ('advect_strength', current_bandwidth * self.advection_direction, 'float'),
-                ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
-                ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
-                ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
-            ])
+        self.node_advect_compute_shader.set_uniform_data([
+            ('advect_strength', current_bandwidth * self.advection_direction, 'float'),
+            ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
+            ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
+            ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
+        ])
 
-            self.node_advect_compute_shader.compute(self.node_processor.get_buffer_points())
+        self.node_advect_compute_shader.compute(self.node_processor.get_buffer_points())
         self.node_advect_compute_shader.barrier()
         self.node_processor.node_buffer.swap()
         self.node_iteration += 1
