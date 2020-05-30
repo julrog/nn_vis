@@ -19,7 +19,7 @@ class EdgeRenderer:
         sample_point_shader: RenderShader = shader_handler.create("sample_point", "sample/sample.vert",
                                                                   "basic/discard_screen_color.frag")
         sample_line_shader: RenderShader = shader_handler.create("sample_line", "sample/sample_impostor.vert",
-                                                                 "basic/screen_color.frag",
+                                                                 "basic/color.frag",
                                                                  "sample/points_to_line.geom")
         sample_sphere_shader: RenderShader = shader_handler.create("sample_sphere", "sample/sample_impostor.vert",
                                                                    "sample/point_to_sphere_impostor_phong.frag",
@@ -60,7 +60,8 @@ class EdgeRenderer:
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                             ("view", window.cam.view, "mat4"),
                                             ("screen_width", 1920.0, "float"),
-                                            ("screen_height", 1080.0, "float")])
+                                            ("screen_height", 1080.0, "float"),
+                                            ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.point_render.set_uniform_labeled_data(options)
 
         self.point_render.set()
@@ -78,8 +79,7 @@ class EdgeRenderer:
 
         self.line_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                            ("view", window.cam.view, "mat4"),
-                                           ("screen_width", 1920.0, "float"),
-                                           ("screen_height", 1080.0, "float")])
+                                           ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.line_render.set_uniform_labeled_data(options)
 
         self.line_render.set()
@@ -98,7 +98,8 @@ class EdgeRenderer:
 
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                              ("view", window.cam.view, "mat4"),
-                                             ("object_radius", sphere_radius, "float")])
+                                             ("object_radius", sphere_radius, "float"),
+                                             ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.sphere_render.set_uniform_labeled_data(options)
 
         self.sphere_render.set()
@@ -119,7 +120,8 @@ class EdgeRenderer:
                                                   ("view", window.cam.view, "mat4"),
                                                   ("farthest_point_view_z", far, "float"),
                                                   ("nearest_point_view_z", near, "float"),
-                                                  ("object_radius", sphere_radius, "float")])
+                                                  ("object_radius", sphere_radius, "float"),
+                                                  ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.transparent_render.set_uniform_labeled_data(options)
 
         self.transparent_render.set()
@@ -140,7 +142,8 @@ class EdgeRenderer:
                                               ("view", window.cam.view, "mat4"),
                                               ("farthest_point_view_z", far, "float"),
                                               ("nearest_point_view_z", near, "float"),
-                                              ("object_radius", self.edge_processor.sample_length * 0.5, "float")])
+                                              ("object_radius", self.edge_processor.sample_length * 0.5, "float"),
+                                              ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.ellipse_render.set_uniform_labeled_data(options)
 
         self.ellipse_render.set()

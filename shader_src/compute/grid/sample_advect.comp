@@ -21,21 +21,62 @@ struct DensityGrid
     int fill;
 };
 
+struct EdgeData
+{
+    float samples;
+    float start_edge_count;
+    float end_edge_count;
+    float importance;
+    float start_importance_length;
+    float end_importance_length;
+    float start_importance;
+    float end_importance;
+    float start_importance_0;
+    float start_importance_1;
+    float start_importance_2;
+    float start_importance_3;
+    float start_importance_4;
+    float start_importance_5;
+    float start_importance_6;
+    float start_importance_7;
+    float start_importance_8;
+    float start_importance_9;
+    float end_importance_0;
+    float end_importance_1;
+    float end_importance_2;
+    float end_importance_3;
+    float end_importance_4;
+    float end_importance_5;
+    float end_importance_6;
+    float end_importance_7;
+    float end_importance_8;
+    float end_importance_9;
+};
+
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
 layout(std140, binding = 0) restrict readonly buffer sample_input
 {
     SamplePoint input_sample[];
 };
+
 layout(std140, binding = 1) writeonly buffer sample_output
 {
     SamplePoint output_sample[];
 };
-layout(std140, binding = 2) restrict readonly buffer density_grid
+
+layout(std140, binding = 2) restrict readonly buffer edge_data
+{
+    EdgeData edge[];
+};
+
+layout(std140, binding = 3) restrict readonly buffer density_grid
 {
     DensityGrid density[];
 };
 
 uniform int work_group_offset;
+uniform int max_sample_points;
 uniform int slice_count;
 uniform int slice_size;
 uniform int current_buffer;
@@ -45,6 +86,10 @@ uniform float advect_strength;
 uniform ivec3 grid_cell_count;
 uniform vec3 grid_cell_size;
 uniform vec3 grid_bounding_min;
+
+EdgeData current_edge;
+float importance[10];
+float overall_importance;
 
 ivec3 gridIndex(vec3 position)
 {
@@ -69,23 +114,49 @@ vec4 read(highp uint index)
     return input_sample[index].pos;
 }
 
+EdgeData readEdge(highp uint index)
+{
+    return edge[int(floor(index/max_sample_points))];
+}
+
 void write(highp uint index, vec4 pos)
 {
     output_sample[index].pos = pos;
 }
 
-float readGridIndex(ivec3 index)
+DensityGrid readGridIndex(ivec3 index)
 {
     highp int original_index = index.x + index.y * grid_cell_count.x + index.z * grid_cell_count.x * grid_cell_count.y;
-    return density[original_index - current_buffer * slice_count * slice_size].overall_density;
+    return density[original_index - current_buffer * slice_count * slice_size];
+}
+
+highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to)
+{
+    highp float drive = 0.0;
+    drive += importance[0] * (density_to.density_0 - density_from.density_0);
+    drive += importance[1] * (density_to.density_1 - density_from.density_1);
+    drive += importance[2] * (density_to.density_2 - density_from.density_2);
+    drive += importance[3] * (density_to.density_3 - density_from.density_3);
+    drive += importance[4] * (density_to.density_4 - density_from.density_4);
+    drive += importance[5] * (density_to.density_5 - density_from.density_5);
+    drive += importance[6] * (density_to.density_6 - density_from.density_6);
+    drive += importance[7] * (density_to.density_7 - density_from.density_7);
+    drive += importance[8] * (density_to.density_8 - density_from.density_8);
+    drive += importance[9] * (density_to.density_9 - density_from.density_9);
+    drive -= 1.0 * (density_to.overall_density - density_from.overall_density) * overall_importance;
+    return drive;
 }
 
 vec4 getGradient(ivec3 grid_index, vec3 grid_direction)
 {
-    float current_density = readGridIndex(grid_index);
-    float gradient_x = (readGridIndex(ivec3(grid_index.x + int(grid_direction.x), grid_index.y, grid_index.z)) - current_density) * grid_direction.x;
-    float gradient_y = (readGridIndex(ivec3(grid_index.x, grid_index.y + int(grid_direction.y), grid_index.z)) - current_density) * grid_direction.y;
-    float gradient_z = (readGridIndex(ivec3(grid_index.x, grid_index.y, grid_index.z + int(grid_direction.z))) - current_density) * grid_direction.z;
+    DensityGrid current_density = readGridIndex(grid_index);
+    DensityGrid x_diff_density = readGridIndex(ivec3(grid_index.x + int(grid_direction.x), grid_index.y, grid_index.z));
+    DensityGrid y_diff_density = readGridIndex(ivec3(grid_index.x, grid_index.y + int(grid_direction.y), grid_index.z));
+    DensityGrid z_diff_density = readGridIndex(ivec3(grid_index.x, grid_index.y, grid_index.z + int(grid_direction.z)));
+
+    float gradient_x = getGradientAxis(current_density, x_diff_density) * grid_direction.x;
+    float gradient_y = getGradientAxis(current_density, y_diff_density) * grid_direction.y;
+    float gradient_z = getGradientAxis(current_density, z_diff_density) * grid_direction.z;
     vec3 calc_gradient = vec3(gradient_x, gradient_y, gradient_z);
     float strength = length(calc_gradient);
 
@@ -99,35 +170,25 @@ void main() {
 
     vec4 sample_data = read(index);
     if (sample_data.w == 1.0) {
+        current_edge = readEdge(index);
+        float t = mod(index, max_sample_points)/current_edge.samples;
+        importance[0] = (1.0 - t) * current_edge.start_importance_0/current_edge.start_importance_length + t * current_edge.end_importance_0/current_edge.end_importance_length;
+        importance[1] = (1.0 - t) * current_edge.start_importance_1/current_edge.start_importance_length + t * current_edge.end_importance_1/current_edge.end_importance_length;
+        importance[2] = (1.0 - t) * current_edge.start_importance_2/current_edge.start_importance_length + t * current_edge.end_importance_2/current_edge.end_importance_length;
+        importance[3] = (1.0 - t) * current_edge.start_importance_3/current_edge.start_importance_length + t * current_edge.end_importance_3/current_edge.end_importance_length;
+        importance[4] = (1.0 - t) * current_edge.start_importance_4/current_edge.start_importance_length + t * current_edge.end_importance_4/current_edge.end_importance_length;
+        importance[5] = (1.0 - t) * current_edge.start_importance_5/current_edge.start_importance_length + t * current_edge.end_importance_5/current_edge.end_importance_length;
+        importance[6] = (1.0 - t) * current_edge.start_importance_6/current_edge.start_importance_length + t * current_edge.end_importance_6/current_edge.end_importance_length;
+        importance[7] = (1.0 - t) * current_edge.start_importance_7/current_edge.start_importance_length + t * current_edge.end_importance_7/current_edge.end_importance_length;
+        importance[8] = (1.0 - t) * current_edge.start_importance_8/current_edge.start_importance_length + t * current_edge.end_importance_8/current_edge.end_importance_length;
+        importance[9] = (1.0 - t) * current_edge.start_importance_9/current_edge.start_importance_length + t * current_edge.end_importance_9/current_edge.end_importance_length;
+        overall_importance = (1.0 - t) * current_edge.start_importance + t * current_edge.end_importance;
+
         ivec3 grid_index = gridIndex(sample_data.xyz);
         if (grid_index.z >= current_buffer * slice_count && grid_index.z < (current_buffer + 1) * slice_count)
         {
             vec3 gradient_direction = vec3(0.0, 0.0, 0.0);
             highp float overall_strength = 0.0;
-
-            /*float first_inter_x = clamp((sample_data.x - grid_bounding_min.x)/grid_cell_size.x - float(grid_index.x), 0.0, 1.0);
-            float first_inter_y = clamp((sample_data.y - grid_bounding_min.y)/grid_cell_size.y - float(grid_index.y), 0.0, 1.0);
-            float first_inter_z = clamp((sample_data.z - grid_bounding_min.z)/grid_cell_size.z - float(grid_index.z), 0.0, 1.0);
-            float[2] inter_x = { 1.0 - first_inter_x, first_inter_x };
-            float[2] inter_y = { 1.0 - first_inter_y, first_inter_y };
-            float[2] inter_z = { 1.0 - first_inter_z, first_inter_z };
-
-            for (int ix = 0; ix <= 1; ix++)
-            {
-                for (int iy = 0; iy <= 1; iy++)
-                {
-                    for (int iz = 0; iz <= 1; iz++)
-                    {
-                        int gradient_index = grid_index.x + ix + (grid_index.y + iy) * grid_cell_count.x + (grid_index.z - current_buffer * slice_count + iz) * grid_cell_count.x * grid_cell_count.y;
-                        GradientGrid current_grid = gradient[gradient_index];
-                        if (current_grid.strength > 0.0) {
-                            gradient_direction += current_grid.normalized_gradient * current_grid.strength * inter_x[ix] * inter_y[iy] * inter_z[iz];
-                        }
-                        overall_strength += current_grid.strength;
-                    }
-                }
-            }
-            gradient_direction = normalize(gradient_direction);*/
 
             vec4 gradient = getGradient(grid_index, gridDirection(grid_index, sample_data.xyz));
             gradient_direction = gradient.xyz;

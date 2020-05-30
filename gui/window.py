@@ -148,9 +148,9 @@ class RenderSettings:
         self.apply_settings: Button = Button(self.shader_setting_frame, text="Apply",
                                              command=create_apply_func(self.get_settings, change_setting_func))
 
-        def create_radio_func(value: int):
+        def create_radio_func(setting_value: int):
             def command():
-                change_setting_func("render", self.name, value)
+                change_setting_func("render", self.name, setting_value)
 
             return command
 
@@ -266,10 +266,10 @@ class OptionGui:
         self.importance_threshold: SettingEntry = SettingEntry(self.setting_frame, "Importance threshold:", row=3,
                                                                column=0, variable_type="float")
         self.bandwidth_reduction: SettingEntry = SettingEntry(self.setting_frame, "Bandwidth reduction:", row=4,
-                                                                     column=0, variable_type="float")
+                                                              column=0, variable_type="float")
 
     def start(self, layer_data: List[int] = None, layer_distance: float = 1.0, node_size: float = 1.0,
-              sampling_rate: float = 10.0, importance_threshold: float = 0.1, bandwidth_reduction: float = 0.9):
+              sampling_rate: float = 10.0, importance_threshold: float = 0.0, bandwidth_reduction: float = 0.9):
         if layer_data is None:
             default_layer_data = [4, 9, 4]
             for nodes in default_layer_data:

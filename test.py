@@ -65,7 +65,15 @@ def compute_render(name: str):
 
     if not options.settings["Closed"]:
         print("Start building network: " + str(options.settings["current_layer_data"]))
-        network_processor = NetworkProcessor(options.settings["current_layer_data"])
+        network_processor = NetworkProcessor(options.settings["current_layer_data"],
+                                             layer_distance=options.settings[
+                                                 "layer_distance"],
+                                             layer_width=options.settings["layer_width"],
+                                             sampling_rate=options.settings["sampling_rate"],
+                                             importance_prune_threshold=options.settings[
+                                                 "importance_threshold"],
+                                             bandwidth_reduction=options.settings[
+                                                 "bandwidth_reduction"])
 
         while window.is_active() and not options.settings["Closed"]:
             if network_processor.layer_nodes is not options.settings["current_layer_data"]:

@@ -22,7 +22,6 @@ const vec3 color_6 = vec3(0, 1, 0);
 const vec3 color_7 = vec3(0, 1, 1);
 const vec3 color_8 = vec3(1, 0, 1);
 const vec3 color_9 = vec3(0.392, 0.584, 0.929);
-const float sqrt_ten = 3.162277660168379;
 
 
 void main()

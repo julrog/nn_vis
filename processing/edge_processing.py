@@ -28,8 +28,8 @@ class EdgeProcessor:
         self.sample_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True, object_size=4,
                                                                         render_data_size=[4, 4],
                                                                         render_data_offset=[0, 4])
-        self.edge_buffer: BufferObject = BufferObject(ssbo=True, object_size=28, render_data_size=[4, 4],
-                                                      render_data_offset=[0, 4])
+        self.edge_buffer: BufferObject = BufferObject(ssbo=True, object_size=28, render_data_size=[4, 4, 4, 4, 4, 4, 4],
+                                                      render_data_offset=[0, 4, 8, 12, 16, 20, 24])
         self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.sample_buffer, 0), (self.edge_buffer, 2)])
 
         self.edges: List[Edge] = []
