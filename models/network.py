@@ -35,10 +35,8 @@ class NetworkModel:
         for i in range(len(self.layer) - 1):
             self.edge_count += len(self.layer_nodes[i]) * len(self.layer_nodes[i + 1])
         self.pruned_edges: int = 0
-        self.average_node_distance: float = self.get_average_node_distance()
-        self.average_edge_distance: float = self.get_average_edge_distance()
-        print("[%s] Average node distance: %f" % (LOG_SOURCE, self.average_node_distance))
-        print("[%s] Average edge distance: %f" % (LOG_SOURCE, self.average_edge_distance))
+        self.average_node_distance: float = layer_width/2.0  # self.get_average_node_distance()
+        self.average_edge_distance: float = layer_width/2.0  # self.get_average_edge_distance()
 
     def get_nodes(self) -> List[Node]:
         node_data: List[Node] = []
@@ -105,6 +103,7 @@ class NetworkModel:
             distance_value_count += len(self.layer_nodes[i]) * (len(self.layer_nodes[i]) - 1)
         for i in range(len(self.layer)):
             layer_distance_sum: float = 0.0
+            nodes: List[Node] = self.layer_nodes[i]
             for node_one in self.layer_nodes[i]:
                 for node_two in self.layer_nodes[i]:
                     layer_distance_sum += math.sqrt(

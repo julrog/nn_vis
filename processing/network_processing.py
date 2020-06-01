@@ -27,30 +27,33 @@ class NetworkProcessor:
         self.layer_width: float = layer_width
         self.bandwidth_reduction = bandwidth_reduction
 
+        print("[%s] Create network model..." % LOG_SOURCE)
         self.network: NetworkModel = NetworkModel(self.layer_nodes, self.layer_width, self.layer_distance, layer_data,
                                                   importance_prune_threshold)
         self.sample_length: float = self.network.layer_width / sampling_rate
         self.grid_cell_size: float = self.sample_length / 3.0
         self.sample_radius: float = self.sample_length * 2.0
 
+        print("[%s] Create grid..." % LOG_SOURCE)
         self.grid: Grid = Grid(Vector3([self.grid_cell_size, self.grid_cell_size, self.grid_cell_size]),
                                self.network.bounding_volume)
 
+        print("[%s] Prepare node processing..." % LOG_SOURCE)
         self.node_processor: NodeProcessor = NodeProcessor()
         self.node_processor.set_data(self.network)
         self.node_renderer: NodeRenderer = NodeRenderer(self.node_processor, self.grid)
 
+        print("[%s] Prepare edge processing..." % LOG_SOURCE)
         self.edge_processor: EdgeProcessor = EdgeProcessor(self.sample_length)
         self.edge_processor.set_data(self.network)
         self.edge_processor.init_sample_edge()
         self.edge_renderer: EdgeRenderer = EdgeRenderer(self.edge_processor, self.grid)
 
+        print("[%s] Prepare grid processing..." % LOG_SOURCE)
         self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 1000.0,
                                                            self.network.average_node_distance,
                                                            self.network.average_edge_distance, self.bandwidth_reduction)
         self.grid_processor.calculate_position()
-        self.grid_processor.calculate_edge_density()
-
         self.grid_renderer: GridRenderer = GridRenderer(self.grid_processor)
 
         self.action_finished: bool = False

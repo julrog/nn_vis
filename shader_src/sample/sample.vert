@@ -30,10 +30,10 @@ const vec3 color_9 = vec3(0.392, 0.584, 0.929);
 
 void main()
 {
-    if (position.w == 1.0) {
-        vs_discard = 0.0;
-    } else {
+    if (position.w < 1.0 || next_position.w > 1.0) {
         vs_discard = 1.0;
+    } else {
+        vs_discard = 0.0;
     }
     gl_Position = projection * view * vec4(position.xyz, 1.0);
 

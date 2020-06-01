@@ -138,6 +138,7 @@ class GridProcessor:
 
     @track_time
     def calculate_position(self):
+        print("[%s] Calculate grid positions." % LOG_SOURCE)
         for i in range(len(self.grid_position_buffer.handle)):
             self.position_ssbo_handler.set(i)
             self.position_compute_shader.set_uniform_data([

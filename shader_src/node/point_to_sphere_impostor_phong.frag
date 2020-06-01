@@ -10,7 +10,7 @@ layout (depth_greater) out float gl_FragDepth;
 
 uniform mat4  projection;
 
-const vec3 light_direction_cam = normalize(vec3(-1.0, 1.0, 1.0));
+const vec3 light_direction_cam = normalize(vec3(-1.0, 1.0, -1.0));
 const vec3 atom_color_diffuse  = vec3(0.8, 0.8, 0.8);
 const vec3 atom_color_ambient  = vec3(0.2, 0.2, 0.2);
 const vec3 atom_color_specular = vec3(0.1, 0.1, 0.1);
