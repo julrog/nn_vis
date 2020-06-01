@@ -53,6 +53,7 @@ uniform float advect_strength;
 uniform ivec3 grid_cell_count;
 uniform vec3 grid_cell_size;
 uniform vec3 grid_bounding_min;
+uniform vec3 grid_bounding_max;
 
 const float sqrt_ten = 3.162277660168379;
 
@@ -149,8 +150,13 @@ void main() {
         gradient_direction = gradient.xyz;
         overall_strength = gradient.w;
 
-        if (overall_strength >= 1.0) {
-            node_data = vec4(node_data.x + gradient_direction.x * advect_strength * 0.1, node_data.y + gradient_direction.y * advect_strength * 0.1, node_data.z, node_data.w);
+        if (overall_strength >= 0.1) {
+            node_data = vec4(node_data.x + gradient_direction.x * advect_strength * 0.2, node_data.y + gradient_direction.y * advect_strength * 0.2, node_data.z, node_data.w);
+            float bounding_offset = abs(advect_strength) * 0.2;
+            if(node_data.x < grid_bounding_min.x + bounding_offset + 2.0 * grid_cell_size.x) node_data = vec4(grid_bounding_min.x + bounding_offset + 2.0 * grid_cell_size.x, node_data.y,  node_data.z,  node_data.w);
+            if(node_data.x > grid_bounding_max.x - bounding_offset - 2.0 * grid_cell_size.x) node_data = vec4(grid_bounding_max.x - bounding_offset - 2.0 * grid_cell_size.x, node_data.y,  node_data.z,  node_data.w);
+            if(node_data.y < grid_bounding_min.y + bounding_offset + 2.0 * grid_cell_size.y) node_data = vec4(node_data.x, grid_bounding_min.y + bounding_offset + 2.0 * grid_cell_size.y, node_data.z,  node_data.w);
+            if(node_data.y > grid_bounding_max.y - bounding_offset - 2.0 * grid_cell_size.y) node_data = vec4(node_data.x, grid_bounding_max.y - bounding_offset - 2.0 * grid_cell_size.y, node_data.z,  node_data.w);
         }
         write(index, node_data);
     } else {

@@ -140,7 +140,7 @@ class NetworkProcessor:
             if action_mode > 3:
                 if smoothing:
                     print("[%s] Smooth %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
-                    for i in range(10):
+                    for i in range(7):
                         self.edge_processor.sample_smooth()
 
         self.last_action_mode = action_mode

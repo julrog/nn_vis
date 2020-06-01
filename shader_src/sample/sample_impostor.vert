@@ -43,7 +43,7 @@ void main()
     vec4 new_normal = view * vec4((position.xyz + vec3(0.0, 1.0, 0.0)), 1.0);
     vs_normal = normalize(vec3(new_normal.xyz - gl_Position.xyz));
 
-    float t = mod(gl_InstanceID, max_sample_points)/edge_data_0.x;
+    float t = mod(gl_InstanceID + 1, max_sample_points)/edge_data_0.x;
     float importance[10];
     importance[0] = (1.0 - t) * (edge_data_2.x / edge_data_1.x) + t * (edge_data_4.z / edge_data_1.y);
     importance[1] = (1.0 - t) * (edge_data_2.y / edge_data_1.x) + t * (edge_data_4.w / edge_data_1.y);

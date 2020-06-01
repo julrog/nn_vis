@@ -223,6 +223,7 @@ class GridProcessor:
             ('advect_strength', current_bandwidth * self.advection_direction, 'float'),
             ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
             ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
+            ('grid_bounding_max', self.grid.bounding_volume[1], 'vec3'),
             ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
         ])
 
