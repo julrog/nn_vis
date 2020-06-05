@@ -82,6 +82,7 @@ uniform int slice_size;
 uniform int current_buffer;
 
 uniform float advect_strength;
+uniform float importance_similarity = 0.5;
 
 uniform ivec3 grid_cell_count;
 uniform vec3 grid_cell_size;
@@ -132,19 +133,54 @@ DensityGrid readGridIndex(ivec3 index)
 
 highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to)
 {
-    highp float drive = 0.0;
-    drive += importance[0] * (density_to.density_0 - density_from.density_0);
-    drive += importance[1] * (density_to.density_1 - density_from.density_1);
-    drive += importance[2] * (density_to.density_2 - density_from.density_2);
-    drive += importance[3] * (density_to.density_3 - density_from.density_3);
-    drive += importance[4] * (density_to.density_4 - density_from.density_4);
-    drive += importance[5] * (density_to.density_5 - density_from.density_5);
-    drive += importance[6] * (density_to.density_6 - density_from.density_6);
-    drive += importance[7] * (density_to.density_7 - density_from.density_7);
-    drive += importance[8] * (density_to.density_8 - density_from.density_8);
-    drive += importance[9] * (density_to.density_9 - density_from.density_9);
-    drive -= 1.0 * (density_to.overall_density - density_from.overall_density) * overall_importance;
-    return drive;
+    highp float drive_towards = 0.0;
+    highp float drive_from = 0.0;
+
+    float towards_density_overall = sqrt(density_to.density_0 * density_to.density_0
+    + density_to.density_1 * density_to.density_1
+    + density_to.density_2 * density_to.density_2
+    + density_to.density_3 * density_to.density_3
+    + density_to.density_4 * density_to.density_4
+    + density_to.density_5 * density_to.density_5
+    + density_to.density_6 * density_to.density_6
+    + density_to.density_7 * density_to.density_7
+    + density_to.density_8 * density_to.density_8
+    + density_to.density_9 * density_to.density_9);
+    float from_density_overall = sqrt(density_from.density_0 * density_from.density_0
+    + density_from.density_1 * density_from.density_1
+    + density_from.density_2 * density_from.density_2
+    + density_from.density_3 * density_from.density_3
+    + density_from.density_4 * density_from.density_4
+    + density_from.density_5 * density_from.density_5
+    + density_from.density_6 * density_from.density_6
+    + density_from.density_7 * density_from.density_7
+    + density_from.density_8 * density_from.density_8
+    + density_from.density_9 * density_from.density_9);
+
+
+    drive_towards += importance[0] * (density_to.density_0/towards_density_overall);
+    drive_towards += importance[1] * (density_to.density_1/towards_density_overall);
+    drive_towards += importance[2] * (density_to.density_2/towards_density_overall);
+    drive_towards += importance[3] * (density_to.density_3/towards_density_overall);
+    drive_towards += importance[4] * (density_to.density_4/towards_density_overall);
+    drive_towards += importance[5] * (density_to.density_5/towards_density_overall);
+    drive_towards += importance[6] * (density_to.density_6/towards_density_overall);
+    drive_towards += importance[7] * (density_to.density_7/towards_density_overall);
+    drive_towards += importance[8] * (density_to.density_8/towards_density_overall);
+    drive_towards += importance[9] * (density_to.density_9/towards_density_overall);
+
+    drive_from += importance[0] * (density_from.density_0/from_density_overall);
+    drive_from += importance[1] * (density_from.density_1/from_density_overall);
+    drive_from += importance[2] * (density_from.density_2/from_density_overall);
+    drive_from += importance[3] * (density_from.density_3/from_density_overall);
+    drive_from += importance[4] * (density_from.density_4/from_density_overall);
+    drive_from += importance[5] * (density_from.density_5/from_density_overall);
+    drive_from += importance[6] * (density_from.density_6/from_density_overall);
+    drive_from += importance[7] * (density_from.density_7/from_density_overall);
+    drive_from += importance[8] * (density_from.density_8/from_density_overall);
+    drive_from += importance[9] * (density_from.density_9/from_density_overall);
+
+    return towards_density_overall * (drive_towards - importance_similarity) - from_density_overall * (drive_from - importance_similarity);
 }
 
 vec4 getGradient(ivec3 grid_index, vec3 grid_direction)

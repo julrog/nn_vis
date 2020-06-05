@@ -37,7 +37,7 @@ void main()
     }
     gl_Position = projection * view * vec4(position.xyz, 1.0);
 
-    float t = mod(gl_VertexID + 1, max_sample_points)/edge_data_0.x;
+    float t = mod(0, max_sample_points)/edge_data_0.x;
     float importance[10];
     importance[0] = (1.0 - t) * (edge_data_2.x / edge_data_1.x) + t * (edge_data_4.z / edge_data_1.y);
     importance[1] = (1.0 - t) * (edge_data_2.y / edge_data_1.x) + t * (edge_data_4.w / edge_data_1.y);

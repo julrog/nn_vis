@@ -49,7 +49,7 @@ class ProcessedNetwork:
     def get_fine_tuned_model_data(self, train_data: Tuple[np.array, np.array],
                                   test_data: Tuple[np.array, np.array]) -> Model:
         batch_size: int = 128
-        epochs: int = 10
+        epochs: int = 500
 
         x_train, y_train = train_data
         x_test, y_test = test_data
@@ -162,7 +162,16 @@ class ProcessedNetwork:
                     absolute_layer_data /= input_node_max
                     new_layer_data.append(absolute_layer_data)
                 normalized_edge_importance_data.append(np.stack(new_layer_data, axis=0))
+            edge_importance_data = normalized_edge_importance_data
             print("[%s] Edge importance - Min: %f, Max: %f" % (LOG_SOURCE, min_importance, max_importance))
+
+        last_layer_node_importance = []
+        for i in range(self.num_classes):
+            new_node_data = np.zeros(self.num_classes, dtype=np.float32)
+            new_node_data[i] = 1.0
+            last_layer_node_importance.append(new_node_data)
+        node_importance_data.append(last_layer_node_importance)
+
         data_path: str = DATA_PATH + export_path
         if not os.path.exists(os.path.dirname(data_path)):
             os.makedirs(os.path.dirname(data_path))

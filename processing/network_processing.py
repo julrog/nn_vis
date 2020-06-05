@@ -3,6 +3,7 @@ from typing import List, Dict
 
 from pyrr import Vector3
 
+from gui.importance_data_handler import ImportanceDataHandler
 from models.grid import Grid
 from models.network import NetworkModel
 from opengl_helper.render_utility import clear_screen
@@ -18,18 +19,20 @@ LOG_SOURCE: str = "NETWORK_PROCESSING"
 
 
 class NetworkProcessor:
-    def __init__(self, layer_nodes: List[int], layer_data: List[np.array] = None, layer_distance: float = 1.0,
-                 layer_width: float = 1.0, sampling_rate: float = 10.0, importance_prune_threshold: float = 0.1,
-                 bandwidth_reduction: float = 0.9):
+    def __init__(self, layer_nodes: List[int], importance_data: ImportanceDataHandler = None,
+                 layer_distance: float = 1.0, layer_width: float = 1.0, sampling_rate: float = 10.0,
+                 importance_prune_threshold: float = 0.1, node_bandwidth_reduction: float = 0.98,
+                 edge_bandwidth_reduction: float = 0.9):
         print("[%s] Prepare network processing for network of size: %s" % (LOG_SOURCE, layer_nodes))
         self.layer_nodes: List[int] = layer_nodes
         self.layer_distance: float = layer_distance
         self.layer_width: float = layer_width
-        self.bandwidth_reduction = bandwidth_reduction
+        self.node_bandwidth_reduction: float = node_bandwidth_reduction
+        self.edge_bandwidth_reduction: float = edge_bandwidth_reduction
 
         print("[%s] Create network model..." % LOG_SOURCE)
-        self.network: NetworkModel = NetworkModel(self.layer_nodes, self.layer_width, self.layer_distance, layer_data,
-                                                  importance_prune_threshold)
+        self.network: NetworkModel = NetworkModel(self.layer_nodes, self.layer_width, self.layer_distance,
+                                                  importance_data, importance_prune_threshold)
         self.sample_length: float = self.network.layer_width / sampling_rate
         self.grid_cell_size: float = self.sample_length / 3.0
         self.sample_radius: float = self.sample_length * 2.0
@@ -52,7 +55,8 @@ class NetworkProcessor:
         print("[%s] Prepare grid processing..." % LOG_SOURCE)
         self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 1000.0,
                                                            self.network.average_node_distance,
-                                                           self.network.average_edge_distance, self.bandwidth_reduction)
+                                                           self.network.average_edge_distance,
+                                                           self.node_bandwidth_reduction, self.edge_bandwidth_reduction)
         self.grid_processor.calculate_position()
         self.grid_renderer: GridRenderer = GridRenderer(self.grid_processor)
 
@@ -81,8 +85,6 @@ class NetworkProcessor:
             else:
                 self.action_finished = False
                 self.grid_processor.reset()
-
-        self.edge_processor.check_limits(window.cam.view)
 
         if action_mode is not 0 and not self.action_finished:
             if action_mode > 3:
@@ -142,6 +144,9 @@ class NetworkProcessor:
                     print("[%s] Smooth %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
                     for i in range(7):
                         self.edge_processor.sample_smooth()
+                self.edge_processor.check_limits(window.cam.view)
+        else:
+            self.edge_processor.check_limits(window.cam.view, False)
 
         self.last_action_mode = action_mode
 

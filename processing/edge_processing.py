@@ -167,24 +167,25 @@ class EdgeProcessor:
         return buffer_data
 
     @track_time
-    def check_limits(self, view: Matrix44):
+    def check_limits(self, view: Matrix44, check_resize: bool = True):
         self.ssbo_handler.set()
 
         # self.limit_compute_shader.set_uniform_data([('view', view, 'mat4')])
         self.limit_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
         self.limit_compute_shader.compute(len(self.edges))
 
-        limits: List[int] = np.frombuffer(self.edge_buffer.read(), dtype=np.float32)
+        if check_resize:
+            limits: List[int] = np.frombuffer(self.edge_buffer.read(), dtype=np.float32)
 
-        self.point_count = 0
-        max_edge_samples: float = 0
-        for samples, _, _, _ in pairwise(limits):
-            self.point_count += samples
-            if samples > max_edge_samples:
-                max_edge_samples = samples
+            self.point_count = 0
+            max_edge_samples: float = 0
+            for samples in pairwise(limits, 28):
+                self.point_count += samples
+                if samples > max_edge_samples:
+                    max_edge_samples = samples
 
-        if max_edge_samples >= (self.max_sample_points - 1) * 0.8:
-            self.resize_sample_storage(int(max_edge_samples * 2))
+            if max_edge_samples >= (self.max_sample_points - 1) * 0.8:
+                self.resize_sample_storage(int(max_edge_samples * 2))
 
     @track_time
     def get_buffer_points(self) -> int:

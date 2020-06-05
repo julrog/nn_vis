@@ -149,7 +149,7 @@ class EdgeRenderer:
         self.ellipse_render.set()
 
         render_setting_1(clear)
-        glDrawArraysInstanced(GL_POINTS, 0, 10, sampled_points)
+        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
         if swap:
             window.swap()
 
