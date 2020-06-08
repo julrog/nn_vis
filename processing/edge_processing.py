@@ -191,7 +191,16 @@ class EdgeProcessor:
     def get_buffer_points(self) -> int:
         return int(self.sample_buffer.size / 16.0)
 
+    @track_time
+    def read_edges_from_buffer(self, raw: bool = False) -> List[float]:
+        buffer_data = np.frombuffer(self.edge_buffer.read(), dtype=np.float32)
+        if raw:
+            return buffer_data
+
+        return buffer_data
+
     def delete(self):
         self.sample_buffer.delete()
         self.edge_buffer.delete()
         self.ssbo_handler.delete()
+

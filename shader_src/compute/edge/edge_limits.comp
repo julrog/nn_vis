@@ -8,8 +8,8 @@ struct SamplePoint
 struct EdgeData
 {
     float samples;
-    float start_edge_count;
-    float end_edge_count;
+    float layer_id;
+    float layer_edge_id;
     float importance;
     float start_importance_length;
     float end_importance_length;

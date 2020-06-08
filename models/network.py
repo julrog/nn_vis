@@ -4,16 +4,17 @@ from typing import List, Tuple
 
 from pyrr import Vector3
 
-from gui.importance_data_handler import ImportanceDataHandler
+from gui.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from models.edge import Edge
-from models.node import Node, create_nodes
+from models.node import Node, create_random_nodes, create_nodes_from_data, create_nodes_with_importance
 
 LOG_SOURCE: str = "NETWORK_MODEL"
 
 
 class NetworkModel:
     def __init__(self, layer: List[int], layer_width: float, layer_distance: float,
-                 importance_data: ImportanceDataHandler = None, importance_prune_threshold: float = 0.1):
+                 importance_data: ImportanceDataHandler = None, processed_nn: ProcessedNNHandler = None,
+                 importance_prune_threshold: float = 0.1):
         self.layer: List[int] = layer
         self.layer_width: float = layer_width
         self.layer_distance: float = layer_distance
@@ -27,16 +28,30 @@ class NetworkModel:
         self.bounding_range = Vector3(
             [abs(self.bounding_range.x), abs(self.bounding_range.y), abs(self.bounding_range.z)])
 
-        node_importance: List[np.array] or None = None
-        self.importance_data: ImportanceDataHandler = importance_data
-        if self.importance_data is not None:
-            node_importance = self.importance_data.node_importance_data
+        self.layer_nodes: List[List[Node]] = []
+        self.edge_data: List[np.array] = []
 
-        self.layer_nodes: List[List[Node]] = create_nodes(self.layer, self.bounding_mid,
-                                                          (self.bounding_volume[0].x, self.bounding_volume[1].x),
-                                                          (self.bounding_volume[0].y, self.bounding_volume[1].y),
-                                                          (self.bounding_volume[0].z, self.bounding_volume[1].z),
-                                                          node_importance)
+        if importance_data is not None:
+            self.layer_nodes: List[List[Node]] = create_nodes_with_importance(self.layer, self.bounding_mid,
+                                                                              (self.bounding_volume[0].x,
+                                                                               self.bounding_volume[1].x),
+                                                                              (self.bounding_volume[0].y,
+                                                                               self.bounding_volume[1].y),
+                                                                              (self.bounding_volume[0].z,
+                                                                               self.bounding_volume[1].z),
+                                                                              importance_data.node_importance_data)
+            self.edge_data = importance_data.edge_importance_data
+        elif processed_nn is not None:
+            self.layer_nodes: List[List[Node]] = create_nodes_from_data(self.layer, processed_nn.node_data)
+            self.edge_data = processed_nn.edge_data
+        else:
+            self.layer_nodes: List[List[Node]] = create_random_nodes(self.layer, self.bounding_mid,
+                                                                     (self.bounding_volume[0].x,
+                                                                      self.bounding_volume[1].x),
+                                                                     (self.bounding_volume[0].y,
+                                                                      self.bounding_volume[1].y),
+                                                                     (self.bounding_volume[0].z,
+                                                                      self.bounding_volume[1].z))
         self.edge_count: int = 0
         for i in range(len(self.layer) - 1):
             self.edge_count += len(self.layer_nodes[i]) * len(self.layer_nodes[i + 1])
@@ -63,7 +78,7 @@ class NetworkModel:
     def generate_edges(self) -> List[Edge]:
         self.pruned_edges = 0
         edges: List[Edge] = []
-        if self.importance_data is None:
+        if len(self.edge_data) == 0:
             for i in range(len(self.layer) - 1):
                 for node_one_i, node_one in enumerate(self.layer_nodes[i]):
                     for node_two_i, node_two in enumerate(self.layer_nodes[i + 1]):
@@ -77,7 +92,7 @@ class NetworkModel:
                 for node_one_i, node_one in enumerate(self.layer_nodes[i]):
                     for node_two_i, node_two in enumerate(self.layer_nodes[i + 1]):
                         new_edge: Edge = Edge(node_one, node_two,
-                                              self.importance_data.edge_importance_data[i][node_one_i][node_two_i])
+                                              self.edge_data[i][node_one_i][node_two_i])
                         if new_edge.data[3] * new_edge.data[6] > self.importance_prune_threshold:
                             edges.append(new_edge)
                         else:

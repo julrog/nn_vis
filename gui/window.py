@@ -3,7 +3,7 @@ from tkinter import filedialog
 from typing import List, Dict
 
 from definitions import DATA_PATH
-from gui.importance_data_handler import ImportanceDataHandler
+from gui.data_handler import ImportanceDataHandler, ProcessedNNHandler
 
 
 class LayerSettings:
@@ -196,18 +196,24 @@ class OptionGui:
         self.architecture_frame: LabelFrame = LabelFrame(self.gui_root, text="Neural Network Architecture", width=60,
                                                          padx=5, pady=5)
         self.architecture_frame.grid(row=0, column=0, rowspan=3, padx=5, pady=5)
-        self.load_button: Button = Button(self.architecture_frame, text="Load Network", width=15,
+        self.save_processed_button: Button = Button(self.architecture_frame, text="Save Processed Network", width=20,
+                                                    command=self.save_processed_nn_file)
+        self.save_processed_button.grid(row=0, column=0, columnspan=3)
+        self.load_processed_button: Button = Button(self.architecture_frame, text="Load Processed Network", width=20,
+                                                    command=self.open_processed_nn_file)
+        self.load_processed_button.grid(row=1, column=0, columnspan=3)
+        self.load_button: Button = Button(self.architecture_frame, text="Load Network", width=20,
                                           command=self.open_importance_file)
-        self.load_button.grid(row=0, column=0, columnspan=3)
-        self.generate_button: Button = Button(self.architecture_frame, text="Generate Network", width=15,
+        self.load_button.grid(row=2, column=0, columnspan=3)
+        self.generate_button: Button = Button(self.architecture_frame, text="Generate Network", width=20,
                                               command=self.generate)
-        self.generate_button.grid(row=1, column=0, columnspan=3)
+        self.generate_button.grid(row=3, column=0, columnspan=3)
         self.layer_label: Label = Label(self.architecture_frame, text="Modify:")
         self.add_layer_button: Button = Button(self.architecture_frame, text="Add Layer", command=self.add_layer)
         self.clear_layer_button: Button = Button(self.architecture_frame, text="Clear Layer", command=self.clear_layer)
-        self.layer_label.grid(row=2, column=0)
-        self.add_layer_button.grid(row=2, column=1)
-        self.clear_layer_button.grid(row=2, column=2)
+        self.layer_label.grid(row=4, column=0)
+        self.add_layer_button.grid(row=4, column=1)
+        self.clear_layer_button.grid(row=4, column=2)
 
         self.stats_frame: LabelFrame = LabelFrame(self.gui_root, text="Statistics", width=60,
                                                   padx=5, pady=5)
@@ -301,22 +307,36 @@ class OptionGui:
         self.gui_root.mainloop()
         self.settings["Closed"] = True
 
+    def save_processed_nn_file(self):
+        filename = filedialog.asksaveasfilename()
+        if not filename:
+            return
+        self.settings["save_processed_nn_path"] = filename
+        self.settings["save_file"] = True
+
+    def open_processed_nn_file(self):
+        filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
+                                              filetypes=(("processed nn files", "*.npz"),))
+        data_loader: ProcessedNNHandler = ProcessedNNHandler(filename)
+        self.update_layer(data_loader.layer_data, processed_nn=data_loader)
+
     def open_importance_file(self):
         filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
                                               filetypes=(("importance files", "*.npz"),))
         data_loader: ImportanceDataHandler = ImportanceDataHandler(filename)
-        self.update_layer(data_loader.layer_data, data_loader)
+        self.update_layer(data_loader.layer_data, importance_data=data_loader)
 
-    def update_layer(self, layer_data: List[int], importance_data: ImportanceDataHandler = None):
+    def update_layer(self, layer_data: List[int], importance_data: ImportanceDataHandler = None,
+                     processed_nn: ProcessedNNHandler = None):
         self.clear_layer()
 
         for nodes in layer_data:
             self.add_layer(nodes)
-        self.generate(importance_data)
+        self.generate(importance_data, processed_nn)
 
     def add_layer(self, nodes: int = 9):
         layer_id: int = len(self.layer_settings)
-        self.layer_settings.append(LayerSettings(self.architecture_frame, layer_id, 3, 0, self.remove_layer))
+        self.layer_settings.append(LayerSettings(self.architecture_frame, layer_id, 5, 0, self.remove_layer))
         self.layer_settings[layer_id].set_neurons(nodes)
 
     def clear_layer(self):
@@ -333,19 +353,21 @@ class OptionGui:
             ls.grid()
         self.layer_label.grid(row=0, column=0)
 
-    def generate(self, importance_data: ImportanceDataHandler = None):
+    def generate(self, importance_data: ImportanceDataHandler = None, processed_nn: ProcessedNNHandler = None):
         self.action_buttons.press(0)
         layer_data: List[int] = []
         for ls in self.layer_settings:
             layer_data.append(ls.get_neurons())
         self.settings["current_layer_data"] = layer_data
         self.settings["importance_data"] = importance_data
+        self.settings["processed_nn"] = processed_nn
         self.settings["layer_distance"] = self.layer_distance.get()
         self.settings["layer_width"] = self.layer_width.get()
         self.settings["sampling_rate"] = self.sampling_rate.get()
         self.settings["importance_threshold"] = self.importance_threshold.get()
         self.settings["node_bandwidth_reduction"] = self.node_bandwidth_reduction.get()
         self.settings["edge_bandwidth_reduction"] = self.edge_bandwidth_reduction.get()
+        self.settings["update_model"] = True
 
     def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):
         if stop_action:

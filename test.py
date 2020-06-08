@@ -69,6 +69,7 @@ def compute_render(name: str):
                                              importance_data=options.settings["importance_data"],
                                              layer_distance=options.settings[
                                                  "layer_distance"],
+                                             processed_nn=options.settings["processed_nn"],
                                              layer_width=options.settings["layer_width"],
                                              sampling_rate=options.settings["sampling_rate"],
                                              importance_prune_threshold=options.settings[
@@ -79,11 +80,13 @@ def compute_render(name: str):
                                                  "edge_bandwidth_reduction"])
 
         while window.is_active() and not options.settings["Closed"]:
-            if network_processor.layer_nodes is not options.settings["current_layer_data"]:
+            if options.settings["update_model"]:
+                options.settings["update_model"] = False
                 network_processor.delete()
                 print("Rebuilding network: " + str(options.settings["current_layer_data"]))
                 network_processor = NetworkProcessor(options.settings["current_layer_data"],
                                                      importance_data=options.settings["importance_data"],
+                                                     processed_nn=options.settings["processed_nn"],
                                                      layer_distance=options.settings["layer_distance"],
                                                      layer_width=options.settings["layer_width"],
                                                      sampling_rate=options.settings["sampling_rate"],
@@ -102,6 +105,9 @@ def compute_render(name: str):
                 options.settings["fps"].set(
                     float("{:.2f}".format(float(frame_count - start_count) / (time.perf_counter() - start_time))))
                 start_count = -1
+            if "save_file" in options.settings.keys() and options.settings["save_file"]:
+                network_processor.save_model(options.settings["save_processed_nn_path"])
+                options.settings["save_file"] = False
 
         network_processor.delete()
 
