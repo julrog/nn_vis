@@ -53,7 +53,7 @@ class NetworkProcessor:
         self.edge_renderer: EdgeRenderer = EdgeRenderer(self.edge_processor, self.grid)
 
         print("[%s] Prepare grid processing..." % LOG_SOURCE)
-        self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 1000.0,
+        self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 100.0,
                                                            self.network.average_node_distance,
                                                            self.network.average_edge_distance,
                                                            self.node_bandwidth_reduction, self.edge_bandwidth_reduction)

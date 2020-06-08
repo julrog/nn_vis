@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 from tensorflow import keras
 from tensorflow_core.python.keras import Model, Input
-from tensorflow_core.python.keras.layers import BatchNormalization
+from tensorflow_core.python.keras.layers import BatchNormalization, Dense
 from tensorflow_core.python.layers.base import Layer
 
 from definitions import BASE_PATH, DATA_PATH
@@ -13,7 +13,11 @@ from definitions import BASE_PATH, DATA_PATH
 LOG_SOURCE: str = "NEURAL_NETWORK"
 
 
-def insert_batchnorm_layer(model: Model) -> Model:
+def modify_model(model: Model, class_index: int, batch_norm_centering: bool = False,
+                 importance_start_at_one: bool = False) -> Model:
+    gamma_initializer: str = "zeros"
+    if importance_start_at_one:
+        gamma_initializer = "ones"
     max_layer: int = len(model.layers)
     last_output: Input = None
     network_input: Input = None
@@ -22,9 +26,27 @@ def insert_batchnorm_layer(model: Model) -> Model:
             last_output = layer.output
             network_input = layer.input
         if 0 < i < max_layer:
-            new_layer: Layer = BatchNormalization(center=True, gamma_initializer="ones")
+            new_layer: Layer = BatchNormalization(center=batch_norm_centering, gamma_initializer=gamma_initializer)
             last_output = new_layer(last_output)
+        if i == max_layer - 1:
+            new_end_layer: Layer = Dense(2, activation='softmax', name="binary_output_layer")
+            last_output = new_end_layer(last_output)
+
+            old_weights = layer.get_weights()
+            old_weights[0] = np.transpose(old_weights[0], (1, 0))
+            new_weights: List[np.array] = [
+                np.append(old_weights[0][class_index:class_index + 1],
+                          np.subtract(np.sum(old_weights[0], axis=0, keepdims=True),
+                                      old_weights[0][class_index:class_index + 1]), axis=0),
+                np.append(old_weights[1][class_index:class_index + 1],
+                          np.subtract(np.sum(old_weights[1], axis=0, keepdims=True),
+                                      old_weights[1][class_index:class_index + 1]), axis=0)
+            ]
+            new_weights[0] = np.transpose(new_weights[0], (1, 0))
+            new_end_layer.set_weights(new_weights)
+        elif i > 0:
             last_output = layer(last_output)
+
     return Model(inputs=network_input, outputs=last_output)
 
 
@@ -46,34 +68,38 @@ class ProcessedNetwork:
             if i is len(model.layers) - 1:
                 self.num_classes = layer.output_shape[1]
 
-    def get_fine_tuned_model_data(self, train_data: Tuple[np.array, np.array],
-                                  test_data: Tuple[np.array, np.array]) -> Model:
+        self.batch_norm_centering: bool = False
+        self.importance_start_at_one: bool = False
+
+    def get_fine_tuned_model_data(self, class_index: int, train_data: Tuple[np.array, np.array],
+                                  test_data: Tuple[np.array, np.array]) -> Tuple[Model, Model]:
         batch_size: int = 128
-        epochs: int = 500
+        epochs: int = 20
 
         x_train, y_train = train_data
         x_test, y_test = test_data
 
         # convert class vectors to binary class matrices
-        y_train = keras.utils.to_categorical(y_train, self.num_classes)
-        y_test = keras.utils.to_categorical(y_test, self.num_classes)
+        y_train = keras.utils.to_categorical(y_train, 2)
+        y_test = keras.utils.to_categorical(y_test, 2)
 
         print('x_train shape:', x_train.shape)
         print(x_train.shape[0], 'train samples')
         print(x_test.shape[0], 'test samples')
 
         model: Model = keras.models.load_model(self.model_path)
-        modified_model: Model = insert_batchnorm_layer(model)
+        modified_model: Model = modify_model(model, class_index, self.batch_norm_centering,
+                                             self.importance_start_at_one)
 
         for layer in modified_model.layers:
             layer.trainable = False
-            if type(layer) is BatchNormalization:
+            if layer.__class__.__name__ == "BatchNormalization":
                 layer.trainable = True
 
         print(modified_model.summary())
 
         modified_model.compile(loss=keras.losses.categorical_crossentropy,
-                               optimizer=keras.optimizers.Adam(0.001),
+                               optimizer=keras.optimizers.Adam(0.005),
                                metrics=['accuracy'])
 
         modified_model.fit(x_train, y_train,
@@ -81,20 +107,20 @@ class ProcessedNetwork:
                            epochs=epochs,
                            verbose=1,
                            validation_data=(x_test, y_test))
-        return modified_model
+        return model, modified_model
 
-    def extract_importance_from_model(self, fine_tuned_model: Model):
+    def extract_importance_from_model(self, original_model: Model, fine_tuned_model: Model):
         count: int = 0
         for layer in fine_tuned_model.layers:
-            if type(layer) == BatchNormalization:
+            if layer.__class__.__name__ == "BatchNormalization":
                 self.node_importance_value[count].append(layer.get_weights()[0])
                 count += 1
 
         if not self.edge_importance_set:
             count: int = 0
-            for i, layer in enumerate(fine_tuned_model.layers):
-                if type(layer) == BatchNormalization:
-                    self.edge_importance_value[count] = fine_tuned_model.layers[i + 1].get_weights()[0]
+            for i, layer in enumerate(original_model.layers):
+                if layer.__class__.__name__ == "Dense":
+                    self.edge_importance_value[count] = original_model.layers[i].get_weights()[0]
                     count += 1
             self.edge_importance_set = True
 
@@ -110,9 +136,9 @@ class ProcessedNetwork:
                 len(test_data) is not self.num_classes and self.num_classes is not None):
             raise Exception("[%s] Data does not match number of classes %i." % (LOG_SOURCE, self.num_classes))
 
-        for class_test_data, class_train_data in zip(test_data, train_data):
-            fine_tuned_model: Model = self.get_fine_tuned_model_data(class_train_data, class_test_data)
-            self.extract_importance_from_model(fine_tuned_model)
+        for i, (class_test_data, class_train_data) in enumerate(zip(test_data, train_data)):
+            original_model, fine_tuned_model = self.get_fine_tuned_model_data(i, class_train_data, class_test_data)
+            self.extract_importance_from_model(original_model, fine_tuned_model)
 
         result_node_importance: List[np.array] = []
         for importance_values in self.node_importance_value:
@@ -123,7 +149,11 @@ class ProcessedNetwork:
         return result_node_importance, result_edge_importance
 
     def store_importance_data(self, export_path: str, train_data_path: str, test_data_path: str,
-                              normalize: bool = False):
+                              normalize: bool = False, batch_norm_centering: bool = False,
+                              importance_start_at_one: bool = False):
+        self.batch_norm_centering: bool = batch_norm_centering
+        self.importance_start_at_one: bool = importance_start_at_one
+
         importance_data: Tuple[List[np.array], List[np.array]] = self.generate_importance_for_data(train_data_path,
                                                                                                    test_data_path)
         node_importance_data: List[np.array] = importance_data[0]

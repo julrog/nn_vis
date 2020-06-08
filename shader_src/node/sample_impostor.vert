@@ -36,14 +36,14 @@ void main()
     vs_normal = normalize(vec3(new_normal.xyz - gl_Position.xyz));
     vs_size = node_data_2.w;
 
-    vs_color += color_0 * (node_data_0.x / node_data_2.w);
-    vs_color += color_1 * (node_data_0.y / node_data_2.w);
-    vs_color += color_2 * (node_data_0.z / node_data_2.w);
-    vs_color += color_3 * (node_data_0.w / node_data_2.w);
-    vs_color += color_4 * (node_data_1.x / node_data_2.w);
-    vs_color += color_5 * (node_data_1.y / node_data_2.w);
-    vs_color += color_6 * (node_data_1.z / node_data_2.w);
-    vs_color += color_7 * (node_data_1.w / node_data_2.w);
-    vs_color += color_8 * (node_data_2.x / node_data_2.w);
-    vs_color += color_9 * (node_data_2.y / node_data_2.w);
+    vs_color += color_0 * (node_data_0.x / (node_data_2.z * 10));
+    vs_color += color_1 * (node_data_0.y / (node_data_2.z * 10));
+    vs_color += color_2 * (node_data_0.z / (node_data_2.z * 10));
+    vs_color += color_3 * (node_data_0.w / (node_data_2.z * 10));
+    vs_color += color_4 * (node_data_1.x / (node_data_2.z * 10));
+    vs_color += color_5 * (node_data_1.y / (node_data_2.z * 10));
+    vs_color += color_6 * (node_data_1.z / (node_data_2.z * 10));
+    vs_color += color_7 * (node_data_1.w / (node_data_2.z * 10));
+    vs_color += color_8 * (node_data_2.x / (node_data_2.z * 10));
+    vs_color += color_9 * (node_data_2.y / (node_data_2.z * 10));
 }

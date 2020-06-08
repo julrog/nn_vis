@@ -25,25 +25,48 @@ separated_test_data: List[Tuple[np.array or List[any], np.array or List[any]]] =
 
 for result, image in zip(y_train, x_train):
     separated_train_data[result][0].append(image)
-    separated_train_data[result][1].append(result)
+    separated_train_data[result][1].append(0)
 
 for result, image in zip(y_test, x_test):
     separated_test_data[result][0].append(image)
-    separated_test_data[result][1].append(result)
+    separated_test_data[result][1].append(0)
 
 for i in range(num_classes):
     separated_train_data[i] = (np.array(separated_train_data[i][0]).reshape([-1, img_size, 1]),
                                np.array(separated_train_data[i][1]).reshape([-1, 1]))
     separated_test_data[i] = (np.array(separated_test_data[i][0]).reshape([-1, img_size, 1]),
                               np.array(separated_test_data[i][1]).reshape([-1, 1]))
-    print("[%s] %i train samples for class #%i" % (LOG_SOURCE, separated_train_data[i][0].shape[0], i))
-    print("[%s] %i test samples for class #%i" % (LOG_SOURCE, separated_test_data[i][0].shape[0], i))
+
+processed_separated_train_data: List[Tuple[np.array, np.array]] = [([], []) for _ in range(num_classes)]
+processed_separated_test_data: List[Tuple[np.array, np.array]] = [([], []) for _ in range(num_classes)]
+for i in range(num_classes):
+    processed_separated_train_data[i] = (np.copy(separated_train_data[i][0]), np.copy(separated_train_data[i][1]))
+    processed_separated_test_data[i] = (np.copy(separated_test_data[i][0]), np.copy(separated_test_data[i][1]))
+
+for i in range(num_classes):
+    for j in range(num_classes):
+        np.random.shuffle(separated_train_data[j][0])
+        split_portion: int = int(len(separated_train_data[j][0]) / num_classes)
+        processed_separated_train_data[i] = (
+            np.append(processed_separated_train_data[i][0], separated_train_data[j][0][0:split_portion], axis=0),
+            np.append(processed_separated_train_data[i][1], np.ones(split_portion).reshape(-1, 1), axis=0)
+        )
+        np.random.shuffle(separated_test_data[j][0])
+        split_portion: int = int(len(separated_test_data[j][0]) / num_classes)
+        processed_separated_test_data[i] = (
+            np.append(processed_separated_test_data[i][0], separated_test_data[j][0][0:split_portion], axis=0),
+            np.append(processed_separated_test_data[i][1], np.ones(split_portion).reshape(-1, 1), axis=0)
+        )
+
+for i in range(num_classes):
+    print("[%s] %i train samples for class #%i" % (LOG_SOURCE, processed_separated_train_data[i][0].shape[0], i))
+    print("[%s] %i test samples for class #%i" % (LOG_SOURCE, processed_separated_test_data[i][0].shape[0], i))
 
 data_path: str = DATA_PATH + "mnist"
 if not os.path.exists(data_path):
     os.makedirs(data_path)
 
-np.savez("%s/mnist_train_split" % data_path, separated_train_data)
-np.savez("%s/mnist_test_split" % data_path, separated_test_data)
+np.savez("%s/mnist_train_split" % data_path, processed_separated_train_data)
+np.savez("%s/mnist_test_split" % data_path, processed_separated_test_data)
 
 print("[%s] saved split data to \"%s\"" % (LOG_SOURCE, data_path))

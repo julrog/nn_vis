@@ -108,17 +108,17 @@ highp float density_estimation(vec3 position, float length, vec3 center)
 }
 
 void apply_density(Node node, highp int index, float scale) {
-    atomicAdd(grid[index].overall_density, int(scale));
-    atomicAdd(grid[index].density_0, int(scale * node.importance_0));
-    atomicAdd(grid[index].density_1, int(scale * node.importance_1));
-    atomicAdd(grid[index].density_2, int(scale * node.importance_2));
-    atomicAdd(grid[index].density_3, int(scale * node.importance_3));
-    atomicAdd(grid[index].density_4, int(scale * node.importance_4));
-    atomicAdd(grid[index].density_5, int(scale * node.importance_5));
-    atomicAdd(grid[index].density_6, int(scale * node.importance_6));
-    atomicAdd(grid[index].density_7, int(scale * node.importance_7));
-    atomicAdd(grid[index].density_8, int(scale * node.importance_8));
-    atomicAdd(grid[index].density_9, int(scale * node.importance_9));
+    atomicAdd(prev_grid[index].overall_density, int(scale));
+    atomicAdd(prev_grid[index].density_0, int(scale * node.importance_0));
+    atomicAdd(prev_grid[index].density_1, int(scale * node.importance_1));
+    atomicAdd(prev_grid[index].density_2, int(scale * node.importance_2));
+    atomicAdd(prev_grid[index].density_3, int(scale * node.importance_3));
+    atomicAdd(prev_grid[index].density_4, int(scale * node.importance_4));
+    atomicAdd(prev_grid[index].density_5, int(scale * node.importance_5));
+    atomicAdd(prev_grid[index].density_6, int(scale * node.importance_6));
+    atomicAdd(prev_grid[index].density_7, int(scale * node.importance_7));
+    atomicAdd(prev_grid[index].density_8, int(scale * node.importance_8));
+    atomicAdd(prev_grid[index].density_9, int(scale * node.importance_9));
 }
 
 void main() {

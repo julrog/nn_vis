@@ -61,6 +61,7 @@ class NetworkModel:
             self.layer_nodes[i] = new_nodes
 
     def generate_edges(self) -> List[Edge]:
+        self.pruned_edges = 0
         edges: List[Edge] = []
         if self.importance_data is None:
             for i in range(len(self.layer) - 1):

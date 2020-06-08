@@ -215,7 +215,7 @@ class GridProcessor:
 
         self.node_advect_compute_shader.set_uniform_data([
             ('advect_strength', current_bandwidth * self.advection_direction, 'float'),
-            ('importance_similarity', math.sqrt(max(importance_similarity, 0.00)), 'float'),
+            ('importance_similarity', math.sqrt(max(importance_similarity * 0.9, 0.00)), 'float'),
             ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
             ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
             ('grid_bounding_max', self.grid.bounding_volume[1], 'vec3'),
