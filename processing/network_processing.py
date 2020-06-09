@@ -51,7 +51,8 @@ class NetworkProcessor:
         print("[%s] Prepare edge processing..." % LOG_SOURCE)
         self.edge_processor: EdgeProcessor = EdgeProcessor(self.sample_length)
         self.edge_processor.set_data(self.network)
-        self.edge_processor.init_sample_edge()
+        if not self.edge_processor.sampled:
+            self.edge_processor.init_sample_edge()
         self.edge_renderer: EdgeRenderer = EdgeRenderer(self.edge_processor, self.grid)
 
         print("[%s] Prepare grid processing..." % LOG_SOURCE)
@@ -185,7 +186,9 @@ class NetworkProcessor:
         edge_data: List[float] = self.edge_processor.read_edges_from_buffer(raw=True)
         sample_data: List[float] = self.edge_processor.read_samples_from_sample_storage(raw=True,
                                                                                         auto_resize_enabled=False)
-        np.savez(file_path, (layer_data, node_data, edge_data, sample_data))
+        max_sample_points: int = self.edge_processor.max_sample_points
+        print(max_sample_points)
+        np.savez(file_path, (layer_data, node_data, edge_data, sample_data, max_sample_points))
 
     def delete(self):
         self.node_processor.delete()

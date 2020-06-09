@@ -15,7 +15,7 @@ class ImportanceDataHandler:
 
 class ProcessedNNHandler:
     def __init__(self, path: str):
-        layer_data, node_data, edge_data, sample_data = np.load(path, allow_pickle=True)['arr_0']
+        layer_data, node_data, edge_data, sample_data, max_sample_points = np.load(path, allow_pickle=True)['arr_0']
         self.layer_data: List[int] = layer_data
 
         self.node_data: List[np.array] = []
@@ -25,5 +25,6 @@ class ProcessedNNHandler:
             self.node_data.append(raw_node_data[node_data_offset:(node_data_offset + nodes)])
             node_data_offset += nodes
 
-        self.edge_data: List[List[List[float]]] = edge_data
-        self.sample_data: List[List[float]] = sample_data
+        self.edge_data: np.array = edge_data.reshape(-1, 28)
+
+        self.sample_data: np.array = sample_data.reshape(-1, max_sample_points * 4)

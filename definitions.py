@@ -14,3 +14,13 @@ def pairwise(it, size: int):
         except StopIteration:
             # no more elements in the iterator
             return
+
+
+def vec4wise(it):
+    it = iter(it)
+    while True:
+        try:
+            yield next(it), next(it), next(it), next(it),
+        except StopIteration:
+            # no more elements in the iterator
+            return

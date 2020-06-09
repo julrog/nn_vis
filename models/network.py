@@ -29,7 +29,9 @@ class NetworkModel:
             [abs(self.bounding_range.x), abs(self.bounding_range.y), abs(self.bounding_range.z)])
 
         self.layer_nodes: List[List[Node]] = []
-        self.edge_data: List[np.array] = []
+        self.edge_data: np.array = []
+        self.sample_data: np.array = []
+        self.edge_importance_only: bool = False
 
         if importance_data is not None:
             self.layer_nodes: List[List[Node]] = create_nodes_with_importance(self.layer, self.bounding_mid,
@@ -41,9 +43,11 @@ class NetworkModel:
                                                                                self.bounding_volume[1].z),
                                                                               importance_data.node_importance_data)
             self.edge_data = importance_data.edge_importance_data
+            self.edge_importance_only = True
         elif processed_nn is not None:
             self.layer_nodes: List[List[Node]] = create_nodes_from_data(self.layer, processed_nn.node_data)
             self.edge_data = processed_nn.edge_data
+            self.sample_data = processed_nn.sample_data
         else:
             self.layer_nodes: List[List[Node]] = create_random_nodes(self.layer, self.bounding_mid,
                                                                      (self.bounding_volume[0].x,
@@ -82,21 +86,29 @@ class NetworkModel:
             for i in range(len(self.layer) - 1):
                 for node_one_i, node_one in enumerate(self.layer_nodes[i]):
                     for node_two_i, node_two in enumerate(self.layer_nodes[i + 1]):
-                        new_edge: Edge = Edge(node_one, node_two)
+                        new_edge: Edge = Edge().random_importance_init(node_one, node_two, i, node_one_i * len(
+                            self.layer_nodes[i + 1]) + node_two_i)
+
                         if new_edge.data[3] * new_edge.data[4] > self.importance_prune_threshold:
                             edges.append(new_edge)
                         else:
                             self.pruned_edges += 1
         else:
             for i in range(len(self.layer) - 1):
-                for node_one_i, node_one in enumerate(self.layer_nodes[i]):
-                    for node_two_i, node_two in enumerate(self.layer_nodes[i + 1]):
-                        new_edge: Edge = Edge(node_one, node_two,
-                                              self.edge_data[i][node_one_i][node_two_i])
-                        if new_edge.data[3] * new_edge.data[6] > self.importance_prune_threshold:
-                            edges.append(new_edge)
-                        else:
-                            self.pruned_edges += 1
+                if self.edge_importance_only:
+                    for node_one_i, node_one in enumerate(self.layer_nodes[i]):
+                        for node_two_i, node_two in enumerate(self.layer_nodes[i + 1]):
+                            new_edge: Edge = Edge().importance_init(node_one, node_two, i, node_one_i * len(
+                                self.layer_nodes[i + 1]) + node_two_i, self.edge_data[i][node_one_i][node_two_i])
+
+                            if new_edge.data[3] * new_edge.data[6] > self.importance_prune_threshold:
+                                edges.append(new_edge)
+                            else:
+                                self.pruned_edges += 1
+                else:
+                    for edge_data, sample_data in zip(self.edge_data, self.sample_data):
+                        new_edge: Edge = Edge().data_init(edge_data, sample_data)
+                        edges.append(new_edge)
         return edges
 
     def generate_max_distance(self) -> float:
@@ -136,7 +148,6 @@ class NetworkModel:
             distance_value_count += len(self.layer_nodes[i]) * (len(self.layer_nodes[i]) - 1)
         for i in range(len(self.layer)):
             layer_distance_sum: float = 0.0
-            nodes: List[Node] = self.layer_nodes[i]
             for node_one in self.layer_nodes[i]:
                 for node_two in self.layer_nodes[i]:
                     layer_distance_sum += math.sqrt(

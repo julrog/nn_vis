@@ -49,13 +49,17 @@ class EdgeProcessor:
         #  estimate a suitable sample size for buffer objects
         max_distance: float = network.generate_max_distance()
         self.max_sample_points = int((max_distance * 2.0) / self.sample_length) + 2
-        self.smooth_radius = (self.max_sample_points * 8.0)/100.0
+        self.smooth_radius = (self.max_sample_points * 8.0) / 100.0
 
         # generate and load initial data for the buffer
         initial_data: List[float] = []
+        if len(self.edges[0].sample_data) > 8:
+            self.sampled = True
+            self.max_sample_points = int(len(self.edges[0].sample_data) / 4)
         for edge in self.edges:
-            initial_data.extend(edge.initial_data)
-            initial_data.extend([0] * (self.max_sample_points * 4 - len(edge.initial_data)))
+            initial_data.extend(edge.sample_data)
+            if self.max_sample_points * 4 - len(edge.sample_data) > 0:
+                initial_data.extend([0] * (self.max_sample_points * 4 - len(edge.sample_data)))
         transfer_data = np.array(initial_data, dtype=np.float32)
         self.sample_buffer.load(transfer_data)
         self.sample_buffer.swap()
@@ -203,4 +207,3 @@ class EdgeProcessor:
         self.sample_buffer.delete()
         self.edge_buffer.delete()
         self.ssbo_handler.delete()
-
