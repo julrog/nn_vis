@@ -18,6 +18,7 @@ out vec3 vs_color;
 
 uniform mat4 view;
 uniform int max_sample_points;
+uniform float importance_threshold = 0;
 
 const vec3 color_0 = vec3(0.133, 0.545, 0.133);
 const vec3 color_1 = vec3(0, 0, 0.545);
@@ -33,7 +34,7 @@ const vec3 color_9 = vec3(0.392, 0.584, 0.929);
 
 void main()
 {
-    if (position.w < 1.0 || next_position.w > 1.0) {
+    if (position.w == 0.0 || position.w == -1.0 || importance_threshold >= edge_data_0.w * edge_data_1.z) {
         vs_discard = 1.0;
     } else {
         vs_discard = 0.0;
@@ -43,7 +44,7 @@ void main()
         vec4 new_normal = view * vec4((position.xyz + vec3(0.0, 1.0, 0.0)), 1.0);
         vs_normal = normalize(vec3(new_normal.xyz - gl_Position.xyz));
 
-        float t = clamp(mod(gl_InstanceID, max_sample_points)/edge_data_0.x, 0.0, 1.0);
+        float t = clamp(mod(gl_InstanceID + 1, max_sample_points)/edge_data_0.x, 0.0, 1.0);
         float importance[10] = float[10](
         (1.0 - t) * (edge_data_2.x / (edge_data_1.z * 10.0)) + t * (edge_data_4.z / (edge_data_1.w * 10.0)),
         (1.0 - t) * (edge_data_2.y / (edge_data_1.z * 10.0)) + t * (edge_data_4.w / (edge_data_1.w * 10.0)),

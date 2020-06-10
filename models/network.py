@@ -14,11 +14,11 @@ LOG_SOURCE: str = "NETWORK_MODEL"
 class NetworkModel:
     def __init__(self, layer: List[int], layer_width: float, layer_distance: float,
                  importance_data: ImportanceDataHandler = None, processed_nn: ProcessedNNHandler = None,
-                 importance_prune_threshold: float = 0.1):
+                 prune_percentage: float = 0.1):
         self.layer: List[int] = layer
         self.layer_width: float = layer_width
         self.layer_distance: float = layer_distance
-        self.importance_prune_threshold: float = importance_prune_threshold
+        self.prune_percentage: float = prune_percentage
 
         self.bounding_volume: Tuple[Vector3, Vector3] = (
             Vector3(
@@ -83,7 +83,20 @@ class NetworkModel:
 
     def generate_edges(self, edge_container_size: int = 1000) -> List[List[List[Edge]]]:
         self.pruned_edges = 0
+        edge_importance_values: List[float] = []
         if len(self.edge_data) == 0:
+            for i in range(len(self.layer) - 1):
+                for node_one_i, node_one in enumerate(self.layer_nodes[i]):
+                    for node_two_i, node_two in enumerate(self.layer_nodes[i + 1]):
+                        new_edge: Edge = Edge().random_importance_init(node_one, node_two, i, node_one_i * len(
+                            self.layer_nodes[i + 1]) + node_two_i)
+                        edge_importance_values.append(new_edge.data[3] * new_edge.data[6])
+
+            min_importance_value: float = -1.0
+            if self.prune_percentage > 0.0:
+                min_importance_value: float = np.sort(np.array(edge_importance_values))[
+                    int(len(edge_importance_values) * self.prune_percentage)]
+
             edges: List[List[Edge]] = []
             for i in range(len(self.layer) - 1):
                 layer_edge: List[Edge] = []
@@ -92,7 +105,7 @@ class NetworkModel:
                         new_edge: Edge = Edge().random_importance_init(node_one, node_two, i, node_one_i * len(
                             self.layer_nodes[i + 1]) + node_two_i)
 
-                        if new_edge.data[3] * new_edge.data[4] > self.importance_prune_threshold:
+                        if new_edge.data[3] * new_edge.data[6] > min_importance_value:
                             layer_edge.append(new_edge)
                         else:
                             self.pruned_edges += 1
@@ -100,6 +113,18 @@ class NetworkModel:
             return split_edges_for_buffer(edges, edge_container_size)
         else:
             if self.edge_importance_only:
+                for i in range(len(self.layer) - 1):
+                    for node_one_i, node_one in enumerate(self.layer_nodes[i]):
+                        for node_two_i, node_two in enumerate(self.layer_nodes[i + 1]):
+                            new_edge: Edge = Edge().importance_init(node_one, node_two, i, node_one_i * len(
+                                self.layer_nodes[i + 1]) + node_two_i, self.edge_data[i][node_one_i][node_two_i])
+                            edge_importance_values.append(new_edge.data[3] * new_edge.data[6])
+
+                min_importance_value: float = -1.0
+                if self.prune_percentage > 0.0:
+                    min_importance_value: float = np.sort(np.array(edge_importance_values))[
+                        int(len(edge_importance_values) * self.prune_percentage)]
+
                 edges: List[List[Edge]] = []
                 for i in range(len(self.layer) - 1):
                     layer_edge: List[Edge] = []
@@ -108,10 +133,11 @@ class NetworkModel:
                             new_edge: Edge = Edge().importance_init(node_one, node_two, i, node_one_i * len(
                                 self.layer_nodes[i + 1]) + node_two_i, self.edge_data[i][node_one_i][node_two_i])
 
-                            if new_edge.data[3] * new_edge.data[6] > self.importance_prune_threshold:
+                            if new_edge.data[3] * new_edge.data[6] > min_importance_value:
                                 layer_edge.append(new_edge)
                             else:
                                 self.pruned_edges += 1
+                    edges.append(layer_edge)
                 return split_edges_for_buffer(edges, edge_container_size)
             else:
                 edges: List[List[List[Edge]]] = []

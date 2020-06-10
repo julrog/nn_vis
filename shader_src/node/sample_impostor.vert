@@ -26,7 +26,7 @@ const vec3 color_9 = vec3(0.392, 0.584, 0.929);
 
 void main()
 {
-    if (position.w == 0.0 || position.w > 1.0) {
+    if (position.w == 0.0 || position.w > 1.0 || node_data_2.w == 0.0) {
         vs_discard = 1.0;
     } else {
         vs_discard = 0.0;

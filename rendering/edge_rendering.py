@@ -39,19 +39,23 @@ class EdgeRenderer:
             range(len(self.edge_processor.sample_buffer[i]))] for i in range(len(self.edge_processor.sample_buffer))]
 
         self.point_render: RenderSetLayered = RenderSetLayered(sample_point_shader, self.data_handler)
+        self.point_render.set_uniform_label([("Importance Threshold", "importance_threshold")])
         self.line_render: RenderSetLayered = RenderSetLayered(sample_line_shader, self.data_handler)
+        self.line_render.set_uniform_label([("Importance Threshold", "importance_threshold")])
         self.sphere_render: RenderSetLayered = RenderSetLayered(sample_sphere_shader, self.data_handler)
-        self.sphere_render.set_uniform_label([("Size", "object_radius")])
+        self.sphere_render.set_uniform_label(
+            [("Size", "object_radius"), ("Importance Threshold", "importance_threshold")])
         self.transparent_render: RenderSetLayered = RenderSetLayered(sample_transparent_shader, self.data_handler)
         self.transparent_render.set_uniform_label(
             [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
              ("Base Density Opacity", "base_shpere_opacity"),
-             ("Density Exponent", "opacity_exponent")])
+             ("Density Exponent", "opacity_exponent"), ("Importance Threshold", "importance_threshold")])
         self.ellipse_render: RenderSetLayered = RenderSetLayered(sample_ellipse_shader, self.data_handler)
         self.ellipse_render.set_uniform_label(
             [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
              ("Base Density Opacity", "base_shpere_opacity"),
-             ("Density Exponent", "opacity_exponent")])
+             ("Density Exponent", "opacity_exponent"), ("Importance Threshold", "importance_threshold")])
+        self.importance_threshold: float = 0.0
 
     @track_time
     def render_point(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
@@ -61,7 +65,8 @@ class EdgeRenderer:
                                             ("view", window.cam.view, "mat4"),
                                             ("screen_width", 1920.0, "float"),
                                             ("screen_height", 1080.0, "float"),
-                                            ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
+                                            ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
+                                            ("importance_threshold", self.importance_threshold, "float")])
         self.point_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -69,7 +74,7 @@ class EdgeRenderer:
             glPointSize(10.0)
             glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
 
-        self.line_render.render(render_function, self.edge_processor.get_buffer_points)
+        self.point_render.render(render_function, self.edge_processor.get_buffer_points)
 
         if swap:
             window.swap()
@@ -80,7 +85,8 @@ class EdgeRenderer:
 
         self.line_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                            ("view", window.cam.view, "mat4"),
-                                           ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
+                                           ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
+                                           ("importance_threshold", self.importance_threshold, "float")])
         self.line_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -101,6 +107,7 @@ class EdgeRenderer:
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                              ("view", window.cam.view, "mat4"),
                                              ("object_radius", sphere_radius, "float"),
+                                             ("importance_threshold", self.importance_threshold, "float"),
                                              ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.sphere_render.set_uniform_labeled_data(options)
 
@@ -124,6 +131,7 @@ class EdgeRenderer:
                                                   ("farthest_point_view_z", far, "float"),
                                                   ("nearest_point_view_z", near, "float"),
                                                   ("object_radius", sphere_radius, "float"),
+                                                  ("importance_threshold", self.importance_threshold, "float"),
                                                   ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.transparent_render.set_uniform_labeled_data(options)
 
@@ -147,6 +155,7 @@ class EdgeRenderer:
                                               ("farthest_point_view_z", far, "float"),
                                               ("nearest_point_view_z", near, "float"),
                                               ("object_radius", self.edge_processor.sample_length * 0.5, "float"),
+                                              ("importance_threshold", self.importance_threshold, "float"),
                                               ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.ellipse_render.set_uniform_labeled_data(options)
 

@@ -72,8 +72,7 @@ def compute_render(name: str):
                                              processed_nn=options.settings["processed_nn"],
                                              layer_width=options.settings["layer_width"],
                                              sampling_rate=options.settings["sampling_rate"],
-                                             importance_prune_threshold=options.settings[
-                                                 "importance_threshold"],
+                                             prune_percentage=options.settings["prune_percentage"],
                                              node_bandwidth_reduction=options.settings[
                                                  "node_bandwidth_reduction"],
                                              edge_bandwidth_reduction=options.settings[
@@ -90,8 +89,7 @@ def compute_render(name: str):
                                                      layer_distance=options.settings["layer_distance"],
                                                      layer_width=options.settings["layer_width"],
                                                      sampling_rate=options.settings["sampling_rate"],
-                                                     importance_prune_threshold=options.settings[
-                                                         "importance_threshold"],
+                                                     prune_percentage=options.settings["prune_percentage"],
                                                      node_bandwidth_reduction=options.settings[
                                                          "node_bandwidth_reduction"],
                                                      edge_bandwidth_reduction=options.settings[

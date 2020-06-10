@@ -16,6 +16,7 @@ flat out vec3 vs_color;
 uniform mat4 projection;
 uniform mat4 view;
 uniform int max_sample_points;
+uniform float importance_threshold = 0;
 
 const vec3 color_0 = vec3(0.133, 0.545, 0.133);
 const vec3 color_1 = vec3(0, 0, 0.545);
@@ -30,14 +31,14 @@ const vec3 color_9 = vec3(0.392, 0.584, 0.929);
 
 void main()
 {
-    if (position.w < 1.0 || next_position.w > 1.0) {
+    if (position.w == 0.0 || position.w == -1.0 || importance_threshold >= edge_data_0.w * edge_data_1.z) {
         vs_discard = 1.0;
     } else {
         vs_discard = 0.0;
     }
     gl_Position = projection * view * vec4(position.xyz, 1.0);
 
-    float t = mod(0, max_sample_points)/edge_data_0.x;
+    float t = mod(gl_InstanceID + 1, max_sample_points)/edge_data_0.x;
     float importance[10];
     importance[0] = (1.0 - t) * (edge_data_2.x / edge_data_1.x) + t * (edge_data_4.z / edge_data_1.y);
     importance[1] = (1.0 - t) * (edge_data_2.y / edge_data_1.x) + t * (edge_data_4.w / edge_data_1.y);

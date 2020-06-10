@@ -236,7 +236,7 @@ class OptionGui:
         self.grid_render_settings: RenderSettings = RenderSettings(self.render_frame, "Grid", self.change_setting,
                                                                    ["None", "Cube", "Point"], 0, row=0, column=0)
         edge_shader_settings: Dict[str, any] = {"Size": 0.05, "Base Opacity": 0.0, "Base Density Opacity": 0.0,
-                                                "Density Exponent": 0.1}
+                                                "Density Exponent": 0.1, "Importance Threshold": 0.01}
         self.edge_render_settings: RenderSettings = RenderSettings(self.render_frame, "Edge", self.change_setting,
                                                                    ["None", "Sphere", "Sphere_Transparent",
                                                                     "Ellipsoid_Transparent", "Line", "Point"],
@@ -276,8 +276,8 @@ class OptionGui:
                                                       variable_type="float")
         self.sampling_rate: SettingEntry = SettingEntry(self.setting_frame, "Sampling rate:", row=2, column=0,
                                                         variable_type="float")
-        self.importance_threshold: SettingEntry = SettingEntry(self.setting_frame, "Importance threshold:", row=3,
-                                                               column=0, variable_type="float")
+        self.prune_percentage: SettingEntry = SettingEntry(self.setting_frame, "Prune percentage:", row=3,
+                                                           column=0, variable_type="float")
         self.node_bandwidth_reduction: SettingEntry = SettingEntry(self.setting_frame, "Node Bandwidth reduction:",
                                                                    row=4,
                                                                    column=0, variable_type="float")
@@ -286,7 +286,7 @@ class OptionGui:
                                                                    column=0, variable_type="float")
 
     def start(self, layer_data: List[int] = None, layer_distance: float = 1.0, node_size: float = 1.0,
-              sampling_rate: float = 10.0, importance_threshold: float = 0.0, node_bandwidth_reduction: float = 0.98,
+              sampling_rate: float = 10.0, prune_percentage: float = 0.0, node_bandwidth_reduction: float = 0.98,
               edge_bandwidth_reduction: float = 0.9):
         if layer_data is None:
             default_layer_data = [4, 9, 4]
@@ -299,7 +299,7 @@ class OptionGui:
         self.layer_distance.set(layer_distance)
         self.layer_width.set(node_size)
         self.sampling_rate.set(sampling_rate)
-        self.importance_threshold.set(importance_threshold)
+        self.prune_percentage.set(prune_percentage)
         self.node_bandwidth_reduction.set(node_bandwidth_reduction)
         self.edge_bandwidth_reduction.set(edge_bandwidth_reduction)
         self.generate()
@@ -364,7 +364,7 @@ class OptionGui:
         self.settings["layer_distance"] = self.layer_distance.get()
         self.settings["layer_width"] = self.layer_width.get()
         self.settings["sampling_rate"] = self.sampling_rate.get()
-        self.settings["importance_threshold"] = self.importance_threshold.get()
+        self.settings["prune_percentage"] = self.prune_percentage.get()
         self.settings["node_bandwidth_reduction"] = self.node_bandwidth_reduction.get()
         self.settings["edge_bandwidth_reduction"] = self.edge_bandwidth_reduction.get()
         self.settings["update_model"] = True

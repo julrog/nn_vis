@@ -24,7 +24,7 @@ class NetworkProcessor:
                  importance_data: ImportanceDataHandler = None,
                  processed_nn: ProcessedNNHandler = None,
                  layer_distance: float = 1.0, layer_width: float = 1.0, sampling_rate: float = 10.0,
-                 importance_prune_threshold: float = 0.1, node_bandwidth_reduction: float = 0.98,
+                 prune_percentage: float = 0.1, node_bandwidth_reduction: float = 0.98,
                  edge_bandwidth_reduction: float = 0.9):
         print("[%s] Prepare network processing for network of size: %s" % (LOG_SOURCE, layer_nodes))
         self.layer_nodes: List[int] = layer_nodes
@@ -33,7 +33,7 @@ class NetworkProcessor:
 
         print("[%s] Create network model..." % LOG_SOURCE)
         self.network: NetworkModel = NetworkModel(self.layer_nodes, self.layer_width, self.layer_distance,
-                                                  importance_data, processed_nn, importance_prune_threshold)
+                                                  importance_data, processed_nn, prune_percentage)
         self.sample_length: float = self.network.layer_width / sampling_rate
         self.grid_cell_size: float = self.sample_length / 3.0
         self.sample_radius: float = self.sample_length * 2.0
