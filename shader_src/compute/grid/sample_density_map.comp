@@ -84,6 +84,7 @@ uniform int max_sample_points;
 uniform int slice_size;
 uniform int slice_count;
 uniform int current_buffer;
+uniform float grid_layer_offset;
 
 uniform float density_strength;
 uniform float bandwidth;
@@ -111,14 +112,14 @@ ivec3 gridIndex(vec3 position)
 {
     return ivec3(int(floor((position.x - grid_bounding_min.x)/grid_cell_size.x)),
     int(floor((position.y - grid_bounding_min.y)/grid_cell_size.y)),
-    int(floor((position.z - grid_bounding_min.z)/grid_cell_size.z)));
+    int(floor((position.z - (grid_bounding_min.z + grid_layer_offset))/grid_cell_size.z)));
 }
 
 vec3 gridPosition(ivec3 gridIndex)
 {
     return vec3(((float(gridIndex.x) + 0.5) * grid_cell_size.x + grid_bounding_min.x),
     ((float(gridIndex.y) + 0.5) * grid_cell_size.y + grid_bounding_min.y),
-    ((float(gridIndex.z) + 0.5) * grid_cell_size.z + grid_bounding_min.z));
+    ((float(gridIndex.z) + 0.5) * grid_cell_size.z + grid_bounding_min.z + grid_layer_offset));
 }
 
 highp float density_estimation(vec3 position, float length, vec3 center, vec3 point_a, vec3 point_b, float min_distance)

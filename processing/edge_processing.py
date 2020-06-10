@@ -110,9 +110,9 @@ class EdgeProcessor:
                 edge_sample_data = edge_sample_data.reshape((self.get_edge_count(i, j), self.max_sample_points * 4))
 
                 buffer_data = []
-                for i in range(self.get_edge_count(i, j)):
-                    edge_points: int = int(edge_sample_data[i][3])
-                    buffer_data.extend(edge_sample_data[i][None:(int(edge_points * 4))])
+                for k in range(self.get_edge_count(i, j)):
+                    edge_points: int = int(edge_sample_data[k][3])
+                    buffer_data.extend(edge_sample_data[k][None:(int(edge_points * 4))])
                     buffer_data.extend([0] * (new_max_samples * 4 - edge_points * 4))
 
                 transfer_data = np.array(buffer_data, dtype=np.float32)

@@ -25,6 +25,12 @@ class ProcessedNNHandler:
             self.node_data.append(raw_node_data[node_data_offset:(node_data_offset + nodes)])
             node_data_offset += nodes
 
-        self.edge_data: np.array = edge_data.reshape(-1, 28)
+        self.edge_data: List[List[np.array]] = edge_data
+        for i, layer_edge_data in enumerate(self.edge_data):
+            for j, container_edge_data in enumerate(layer_edge_data):
+                self.edge_data[i][j] = container_edge_data.reshape(-1, 28)
 
-        self.sample_data: np.array = sample_data.reshape(-1, max_sample_points * 4)
+        self.sample_data: np.array = sample_data
+        for i, layer_sample_data in enumerate(self.sample_data):
+            for j, container_sample_data in enumerate(layer_sample_data):
+                self.sample_data[i][j] = container_sample_data.reshape(-1, max_sample_points * 4)

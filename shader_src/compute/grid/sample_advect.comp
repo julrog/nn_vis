@@ -80,6 +80,7 @@ uniform int max_sample_points;
 uniform int slice_count;
 uniform int slice_size;
 uniform int current_buffer;
+uniform float grid_layer_offset;
 
 uniform float advect_strength;
 uniform float importance_similarity = 0.5;
@@ -96,7 +97,7 @@ ivec3 gridIndex(vec3 position)
 {
     return ivec3(int(floor((position.x - grid_bounding_min.x)/grid_cell_size.x)),
     int(floor((position.y - grid_bounding_min.y)/grid_cell_size.y)),
-    int(floor((position.z - grid_bounding_min.z)/grid_cell_size.z)));
+    int(floor((position.z - (grid_bounding_min.z + grid_layer_offset))/grid_cell_size.z)));
 }
 
 vec3 gridDirection(ivec3 index, vec3 position)
@@ -105,7 +106,7 @@ vec3 gridDirection(ivec3 index, vec3 position)
     if (x == 0.0) x = 1.0;
     float y = sign((position.y - grid_bounding_min.y)/grid_cell_size.x - (float(index.y)) - 0.5);
     if (y == 0.0) y = 1.0;
-    float z = sign((position.z - grid_bounding_min.z)/grid_cell_size.x - (float(index.z)) - 0.5);
+    float z = sign((position.z - (grid_bounding_min.z + grid_layer_offset))/grid_cell_size.x - (float(index.z)) - 0.5);
     if (z == 0.0) z = 1.0;
     return vec3(x, y, z);
 }

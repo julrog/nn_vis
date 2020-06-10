@@ -21,8 +21,10 @@ class NetworkModel:
         self.importance_prune_threshold: float = importance_prune_threshold
 
         self.bounding_volume: Tuple[Vector3, Vector3] = (
-            Vector3([-self.layer_width / 2.0, -self.layer_width / 2.0, -len(self.layer) * self.layer_distance / 2.0]),
-            Vector3([self.layer_width / 2.0, self.layer_width / 2.0, len(self.layer) * self.layer_distance / 2.0]))
+            Vector3(
+                [-self.layer_width / 2.0, -self.layer_width / 2.0, -(len(self.layer) - 1) * self.layer_distance / 2.0]),
+            Vector3(
+                [self.layer_width / 2.0, self.layer_width / 2.0, (len(self.layer) - 1) * self.layer_distance / 2.0]))
         self.bounding_mid: Vector3 = (self.bounding_volume[1] + self.bounding_volume[0]) / 2.0
         self.bounding_range: Vector3 = (self.bounding_volume[1] - self.bounding_volume[0]) / 2.0
         self.bounding_range = Vector3(
@@ -112,11 +114,15 @@ class NetworkModel:
                                 self.pruned_edges += 1
                 return split_edges_for_buffer(edges, edge_container_size)
             else:
-                # TODO add changes for edge data separation
-                edges: List[Edge] = []
-                for edge_data, sample_data in zip(self.edge_data, self.sample_data):
-                    new_edge: Edge = Edge().data_init(edge_data, sample_data)
-                    edges.append(new_edge)
+                edges: List[List[List[Edge]]] = []
+                for layer_edge_data, layer_sample_data in zip(self.edge_data, self.sample_data):
+                    layer_edges: List[List[Edge]] = []
+                    for container_edge_data, container_sample_data in zip(layer_edge_data, layer_sample_data):
+                        container_edges: List[Edge] = []
+                        for edge_data, sample_data in zip(container_edge_data, container_sample_data):
+                            container_edges.append(Edge().data_init(edge_data, sample_data))
+                        layer_edges.append(container_edges)
+                    edges.append(layer_edges)
                 return edges
 
     def generate_max_distance(self) -> float:

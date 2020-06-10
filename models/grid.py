@@ -4,8 +4,10 @@ from pyrr import Vector4, vector4, Matrix44, matrix44, Vector3
 
 
 class Grid:
-    def __init__(self, grid_cell_size: Vector3, bounding_volume: Tuple[Vector3, Vector3], extend_by: int = 1.0):
+    def __init__(self, grid_cell_size: Vector3, bounding_volume: Tuple[Vector3, Vector3], layer_distance: float,
+                 extend_by: int = 1.0):
         self.grid_cell_size: Vector3 = grid_cell_size
+        self.layer_distance: float = layer_distance
 
         self.bounding_volume: Tuple[Vector3, Vector3] = bounding_volume
         if self.bounding_volume[0].x > self.bounding_volume[1].x:
@@ -20,12 +22,13 @@ class Grid:
         else:
             self.bounding_volume[0].y, self.bounding_volume[1].y = bounding_volume[0].y - extend_by, \
                                                                    bounding_volume[1].y + extend_by
+
         if self.bounding_volume[0].z > self.bounding_volume[1].z:
             self.bounding_volume[0].z, self.bounding_volume[1].z = bounding_volume[1].z - extend_by, \
-                                                                   bounding_volume[0].z + extend_by
+                                                                   bounding_volume[1].z + layer_distance + extend_by
         else:
             self.bounding_volume[0].z, self.bounding_volume[1].z = bounding_volume[0].z - extend_by, \
-                                                                   bounding_volume[1].z + extend_by
+                                                                   bounding_volume[0].z + layer_distance + extend_by
 
         self.grid_cell_count: List[int] = [
             int((self.bounding_volume[1].x - self.bounding_volume[0].x) / self.grid_cell_size.x) + 1,
