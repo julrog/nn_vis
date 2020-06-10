@@ -49,9 +49,9 @@ def compute_render(name: str):
                                      options.settings["render_shader_setting_Node"])
 
         if "sample_count" in options.settings:
-            options.settings["sample_count"].set(network_processor.edge_processor.get_buffer_points())
+            options.settings["sample_count"].set(network_processor.edge_processor.point_count)
         if "edge_count" in options.settings:
-            options.settings["edge_count"].set(len(network_processor.edge_processor.edges))
+            options.settings["edge_count"].set(network_processor.edge_processor.get_edge_count())
         if "cell_count" in options.settings:
             options.settings["cell_count"].set(network_processor.grid_processor.grid.grid_cell_count_overall)
         if "pruned_edges" in options.settings:

@@ -116,6 +116,39 @@ class RenderSet:
             self.data_handler.set(True)
 
 
+class RenderSetLayered:
+    def __init__(self, shader: BaseShader, data_handler: List[List[VertexDataHandler]]):
+        self.shader: BaseShader = shader
+        self.data_handler: List[List[VertexDataHandler]] = data_handler
+        self.uniform_label: Dict[str, str] = dict()
+        self.buffer_divisor: List[Tuple[int, int]] = []
+
+    def set_uniform_label(self, data: List[Tuple[str, str]]):
+        for label, uniform_name in data:
+            self.uniform_label[label] = uniform_name
+
+    def set_uniform_data(self, data: List[Tuple[str, any, any]]):
+        if self.shader is not None:
+            self.shader.set_uniform_data(data)
+
+    def set_uniform_labeled_data(self, data: Dict[str, float]):
+        if self.shader is not None and data is not None:
+            uniform_data = []
+            for label, value in data.items():
+                if label in self.uniform_label.keys():
+                    uniform_data.append((self.uniform_label[label], value, "float"))
+            self.shader.set_uniform_data(uniform_data)
+
+    def render(self, render_function, point_count_function):
+        if self.shader is not None:
+            self.shader.use()
+            for i in range(len(self.data_handler)):
+                for j in range(len(self.data_handler[i])):
+                    self.data_handler[i][j].buffer_divisor = self.buffer_divisor
+                    self.data_handler[i][j].set(True)
+                    render_function(point_count_function(i, j))
+
+
 class OverflowingRenderSet:
     def __init__(self, shader: BaseShader, data_handler: OverflowingVertexDataHandler):
         self.shader: BaseShader = shader

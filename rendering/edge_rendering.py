@@ -1,9 +1,10 @@
-from typing import Dict
+from typing import Dict, List
 
 from OpenGL.GL import *
 
 from models.grid import Grid
-from opengl_helper.render_utility import VertexDataHandler, RenderSet, render_setting_0, render_setting_1
+from opengl_helper.render_utility import VertexDataHandler, RenderSet, render_setting_0, render_setting_1, \
+    RenderSetLayered
 from opengl_helper.shader import RenderShaderHandler, RenderShader
 from processing.edge_processing import EdgeProcessor
 from utility.performance import track_time
@@ -33,20 +34,20 @@ class EdgeRenderer:
                                                                     "sample/points_to_ellipsoid_impostor_transparent.frag",
                                                                     "sample/points_to_ellipsoid_impostor.geom")
 
-        self.data_handler: VertexDataHandler = VertexDataHandler(
-            [(self.edge_processor.sample_buffer, 0), (self.edge_processor.edge_buffer, 2)],
-            [])
+        self.data_handler: List[List[VertexDataHandler]] = [[VertexDataHandler(
+            [(self.edge_processor.sample_buffer[i][j], 0), (self.edge_processor.edge_buffer[i][j], 2)], []) for j in
+            range(len(self.edge_processor.sample_buffer[i]))] for i in range(len(self.edge_processor.sample_buffer))]
 
-        self.point_render: RenderSet = RenderSet(sample_point_shader, self.data_handler)
-        self.line_render: RenderSet = RenderSet(sample_line_shader, self.data_handler)
-        self.sphere_render: RenderSet = RenderSet(sample_sphere_shader, self.data_handler)
+        self.point_render: RenderSetLayered = RenderSetLayered(sample_point_shader, self.data_handler)
+        self.line_render: RenderSetLayered = RenderSetLayered(sample_line_shader, self.data_handler)
+        self.sphere_render: RenderSetLayered = RenderSetLayered(sample_sphere_shader, self.data_handler)
         self.sphere_render.set_uniform_label([("Size", "object_radius")])
-        self.transparent_render: RenderSet = RenderSet(sample_transparent_shader, self.data_handler)
+        self.transparent_render: RenderSetLayered = RenderSetLayered(sample_transparent_shader, self.data_handler)
         self.transparent_render.set_uniform_label(
             [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
              ("Base Density Opacity", "base_shpere_opacity"),
              ("Density Exponent", "opacity_exponent")])
-        self.ellipse_render: RenderSet = RenderSet(sample_ellipse_shader, self.data_handler)
+        self.ellipse_render: RenderSetLayered = RenderSetLayered(sample_ellipse_shader, self.data_handler)
         self.ellipse_render.set_uniform_label(
             [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
              ("Base Density Opacity", "base_shpere_opacity"),
@@ -54,8 +55,7 @@ class EdgeRenderer:
 
     @track_time
     def render_point(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
-        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
-        sampled_points: int = self.edge_processor.get_buffer_points()
+        self.point_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                             ("view", window.cam.view, "mat4"),
@@ -64,37 +64,39 @@ class EdgeRenderer:
                                             ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.point_render.set_uniform_labeled_data(options)
 
-        self.point_render.set()
+        def render_function(sample_points: int):
+            render_setting_0(clear)
+            glPointSize(10.0)
+            glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
 
-        render_setting_0(clear)
-        glPointSize(10.0)
-        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
+        self.line_render.render(render_function, self.edge_processor.get_buffer_points)
+
         if swap:
             window.swap()
 
     @track_time
     def render_line(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
-        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
-        sampled_points: int = self.edge_processor.get_buffer_points()
+        self.line_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         self.line_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                            ("view", window.cam.view, "mat4"),
                                            ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.line_render.set_uniform_labeled_data(options)
 
-        self.line_render.set()
+        def render_function(sample_points: int):
+            render_setting_0(clear)
+            glLineWidth(2.0)
+            glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
 
-        render_setting_0(clear)
-        glLineWidth(2.0)
-        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
+        self.line_render.render(render_function, self.edge_processor.get_buffer_points)
+
         if swap:
             window.swap()
 
     @track_time
     def render_sphere(self, window: Window, sphere_radius: float = 0.05, clear: bool = True, swap: bool = False,
                       options: Dict[str, float] = None):
-        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
-        sampled_points: int = self.edge_processor.get_buffer_points()
+        self.sphere_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                              ("view", window.cam.view, "mat4"),
@@ -102,18 +104,19 @@ class EdgeRenderer:
                                              ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.sphere_render.set_uniform_labeled_data(options)
 
-        self.sphere_render.set()
+        def render_function(sample_points: int):
+            render_setting_0(clear)
+            glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
 
-        render_setting_0(clear)
-        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
+        self.sphere_render.render(render_function, self.edge_processor.get_buffer_points)
+
         if swap:
             window.swap()
 
     @track_time
     def render_transparent_sphere(self, window: Window, sphere_radius: float = 0.05, clear: bool = True,
                                   swap: bool = False, options: Dict[str, float] = None):
-        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
-        sampled_points: int = self.edge_processor.get_buffer_points()
+        self.transparent_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         near, far = self.grid.get_near_far_from_view(window.cam.view)
         self.transparent_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
@@ -124,18 +127,19 @@ class EdgeRenderer:
                                                   ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.transparent_render.set_uniform_labeled_data(options)
 
-        self.transparent_render.set()
+        def render_function(sample_points: int):
+            render_setting_1(clear)
+            glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
 
-        render_setting_1(clear)
-        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
+        self.transparent_render.render(render_function, self.edge_processor.get_buffer_points)
+
         if swap:
             window.swap()
 
     @track_time
     def render_ellipsoid_transparent(self, window: Window, clear: bool = True, swap: bool = False,
                                      options: Dict[str, float] = None):
-        self.data_handler.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
-        sampled_points: int = self.edge_processor.get_buffer_points()
+        self.ellipse_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         near, far = self.grid.get_near_far_from_view(window.cam.view)
         self.ellipse_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
@@ -146,12 +150,17 @@ class EdgeRenderer:
                                               ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
         self.ellipse_render.set_uniform_labeled_data(options)
 
-        self.ellipse_render.set()
+        def render_function(sample_points: int):
+            render_setting_1(clear)
+            glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
 
-        render_setting_1(clear)
-        glDrawArraysInstanced(GL_POINTS, 0, 1, sampled_points)
+        self.ellipse_render.render(render_function, self.edge_processor.get_buffer_points)
+
         if swap:
             window.swap()
 
     def delete(self):
-        self.data_handler.delete()
+        for layer_data_handler in self.data_handler:
+            for container_data_handler in layer_data_handler:
+                container_data_handler.delete()
+        self.data_handler = []

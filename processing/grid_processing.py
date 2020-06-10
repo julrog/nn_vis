@@ -1,4 +1,5 @@
 import math
+from typing import List
 
 import numpy as np
 
@@ -64,14 +65,16 @@ class GridProcessor:
             [], [(self.grid_position_buffer, 0)])
         self.node_density_ssbo_handler: OverflowingVertexDataHandler = OverflowingVertexDataHandler(
             [(self.node_processor.node_buffer, 0)], [(self.grid_density_buffer, 2)])
-        self.sample_density_ssbo_handler: OverflowingVertexDataHandler = OverflowingVertexDataHandler(
-            [(self.edge_processor.sample_buffer, 0), (self.edge_processor.edge_buffer, 2)],
-            [(self.grid_density_buffer, 3)])
+        self.sample_density_ssbo_handler: List[List[OverflowingVertexDataHandler]] = [[OverflowingVertexDataHandler(
+            [(self.edge_processor.sample_buffer[i][j], 0), (self.edge_processor.edge_buffer[i][j], 2)],
+            [(self.grid_density_buffer, 3)]) for j in range(len(self.edge_processor.sample_buffer[i]))] for i in range(
+            len(self.edge_processor.sample_buffer))]
         self.node_advect_ssbo_handler: OverflowingVertexDataHandler = OverflowingVertexDataHandler(
             [(self.node_processor.node_buffer, 0)], [(self.grid_density_buffer, 2)])
-        self.sample_advect_ssbo_handler: OverflowingVertexDataHandler = OverflowingVertexDataHandler(
-            [(self.edge_processor.sample_buffer, 0), (self.edge_processor.edge_buffer, 2)],
-            [(self.grid_density_buffer, 3)])
+        self.sample_advect_ssbo_handler: List[List[OverflowingVertexDataHandler]] = [[OverflowingVertexDataHandler(
+            [(self.edge_processor.sample_buffer[i][j], 0), (self.edge_processor.edge_buffer[i][j], 2)],
+            [(self.grid_density_buffer, 3)]) for j in range(len(self.edge_processor.sample_buffer[i]))] for i in range(
+            len(self.edge_processor.sample_buffer))]
         self.density_ssbo_handler: OverflowingVertexDataHandler = OverflowingVertexDataHandler(
             [], [(self.grid_density_buffer, 0)])
 
@@ -118,16 +121,24 @@ class GridProcessor:
         self.node_iteration = 0
         self.edge_iteration = 0
 
-    def set_edge_processor(self, edge_processor: EdgeProcessor):
+    def set_new_edge_processor(self, edge_processor: EdgeProcessor):
         self.edge_processor = edge_processor
-        self.sample_density_ssbo_handler.delete()
-        self.sample_density_ssbo_handler: OverflowingVertexDataHandler = OverflowingVertexDataHandler(
-            [(self.edge_processor.sample_buffer, 0), (self.edge_processor.edge_buffer, 2)],
-            [(self.grid_density_buffer, 3)])
-        self.sample_advect_ssbo_handler.delete()
-        self.sample_advect_ssbo_handler: OverflowingVertexDataHandler = OverflowingVertexDataHandler(
-            [(self.edge_processor.sample_buffer, 0), (self.edge_processor.edge_buffer, 2)],
-            [(self.grid_density_buffer, 3)])
+
+        for layer_ssbo_handler in self.sample_density_ssbo_handler:
+            for container_ssbo_handler in layer_ssbo_handler:
+                container_ssbo_handler.delete()
+        self.sample_density_ssbo_handler = [[OverflowingVertexDataHandler(
+            [(self.edge_processor.sample_buffer[i][j], 0), (self.edge_processor.edge_buffer[i][j], 2)],
+            [(self.grid_density_buffer, 3)]) for j in range(len(self.edge_processor.sample_buffer[i]))] for i in range(
+            len(self.edge_processor.sample_buffer))]
+
+        for layer_ssbo_handler in self.sample_advect_ssbo_handler:
+            for container_ssbo_handler in layer_ssbo_handler:
+                container_ssbo_handler.delete()
+        self.sample_advect_ssbo_handler = [[OverflowingVertexDataHandler(
+            [(self.edge_processor.sample_buffer[i][j], 0), (self.edge_processor.edge_buffer[i][j], 2)],
+            [(self.grid_density_buffer, 3)]) for j in range(len(self.edge_processor.sample_buffer[i]))] for i in range(
+            len(self.edge_processor.sample_buffer))]
         self.edge_iteration = 0
 
     @track_time
@@ -184,8 +195,6 @@ class GridProcessor:
                 self.edge_limit_reached = True
             return
         for i in range(len(self.grid_density_buffer.handle)):
-            self.sample_density_ssbo_handler.set_range(i - 1, 3)
-
             self.sample_density_compute_shader.set_uniform_data([
                 ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                 ('slice_size', self.grid_slice_size, 'int'),
@@ -198,7 +207,11 @@ class GridProcessor:
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
             ])
 
-            self.sample_density_compute_shader.compute(self.edge_processor.get_buffer_points(), barrier=False)
+            for j in range(len(self.edge_processor.sample_buffer)):
+                for k in range(len(self.edge_processor.sample_buffer[j])):
+                    self.sample_density_ssbo_handler[j][k].set_range(i - 1, 3)
+                    self.sample_density_compute_shader.compute(self.edge_processor.get_buffer_points(j, k),
+                                                               barrier=False)
         self.sample_density_compute_shader.barrier()
 
     @track_time
@@ -236,8 +249,6 @@ class GridProcessor:
                 self.edge_limit_reached = True
             return
         for i in range(len(self.grid_density_buffer.handle)):
-            self.sample_advect_ssbo_handler.set(i)
-
             self.sample_advect_compute_shader.set_uniform_data([
                 ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                 ('slice_size', self.grid_slice_size, 'int'),
@@ -249,20 +260,33 @@ class GridProcessor:
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
             ])
 
-            self.sample_advect_compute_shader.compute(self.edge_processor.get_buffer_points())
+            for j in range(len(self.edge_processor.sample_buffer)):
+                for k in range(len(self.edge_processor.sample_buffer[j])):
+                    self.sample_advect_ssbo_handler[j][k].set(i)
+                    self.sample_advect_compute_shader.compute(self.edge_processor.get_buffer_points(j, k))
+                    self.edge_processor.sample_buffer[j][k].swap()
         self.sample_advect_compute_shader.barrier()
-        self.edge_processor.sample_buffer.swap()
         self.edge_iteration += 1
 
     def delete(self):
         self.grid_position_buffer.delete()
+
         self.grid_density_buffer.delete()
 
         self.position_ssbo_handler.delete()
+
         self.node_density_ssbo_handler.delete()
-        self.sample_density_ssbo_handler.delete()
+        for layer_ssbo_handler in self.sample_density_ssbo_handler:
+            for container_ssbo_handler in layer_ssbo_handler:
+                container_ssbo_handler.delete()
+        self.sample_density_ssbo_handler = []
+
         self.density_ssbo_handler.delete()
-        self.sample_advect_ssbo_handler.delete()
+
+        for layer_ssbo_handler in self.sample_advect_ssbo_handler:
+            for container_ssbo_handler in layer_ssbo_handler:
+                container_ssbo_handler.delete()
+        self.sample_advect_ssbo_handler = []
 
     def get_current_edge_bandwidth(self) -> float:
         return self.edge_bandwidth * math.pow(self.edge_bandwidth_reduction, self.edge_iteration)

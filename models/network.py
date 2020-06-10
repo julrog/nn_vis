@@ -5,7 +5,7 @@ from typing import List, Tuple
 from pyrr import Vector3
 
 from gui.data_handler import ImportanceDataHandler, ProcessedNNHandler
-from models.edge import Edge
+from models.edge import Edge, split_edges_for_buffer
 from models.node import Node, create_random_nodes, create_nodes_from_data, create_nodes_with_importance
 
 LOG_SOURCE: str = "NETWORK_MODEL"
@@ -79,37 +79,45 @@ class NetworkModel:
                 read_node_index += 1
             self.layer_nodes[i] = new_nodes
 
-    def generate_edges(self) -> List[Edge]:
+    def generate_edges(self, edge_container_size: int = 1000) -> List[List[List[Edge]]]:
         self.pruned_edges = 0
-        edges: List[Edge] = []
         if len(self.edge_data) == 0:
+            edges: List[List[Edge]] = []
             for i in range(len(self.layer) - 1):
+                layer_edge: List[Edge] = []
                 for node_one_i, node_one in enumerate(self.layer_nodes[i]):
                     for node_two_i, node_two in enumerate(self.layer_nodes[i + 1]):
                         new_edge: Edge = Edge().random_importance_init(node_one, node_two, i, node_one_i * len(
                             self.layer_nodes[i + 1]) + node_two_i)
 
                         if new_edge.data[3] * new_edge.data[4] > self.importance_prune_threshold:
-                            edges.append(new_edge)
+                            layer_edge.append(new_edge)
                         else:
                             self.pruned_edges += 1
+                edges.append(layer_edge)
+            return split_edges_for_buffer(edges, edge_container_size)
         else:
-            for i in range(len(self.layer) - 1):
-                if self.edge_importance_only:
+            if self.edge_importance_only:
+                edges: List[List[Edge]] = []
+                for i in range(len(self.layer) - 1):
+                    layer_edge: List[Edge] = []
                     for node_one_i, node_one in enumerate(self.layer_nodes[i]):
                         for node_two_i, node_two in enumerate(self.layer_nodes[i + 1]):
                             new_edge: Edge = Edge().importance_init(node_one, node_two, i, node_one_i * len(
                                 self.layer_nodes[i + 1]) + node_two_i, self.edge_data[i][node_one_i][node_two_i])
 
                             if new_edge.data[3] * new_edge.data[6] > self.importance_prune_threshold:
-                                edges.append(new_edge)
+                                layer_edge.append(new_edge)
                             else:
                                 self.pruned_edges += 1
-                else:
-                    for edge_data, sample_data in zip(self.edge_data, self.sample_data):
-                        new_edge: Edge = Edge().data_init(edge_data, sample_data)
-                        edges.append(new_edge)
-        return edges
+                return split_edges_for_buffer(edges, edge_container_size)
+            else:
+                # TODO add changes for edge data separation
+                edges: List[Edge] = []
+                for edge_data, sample_data in zip(self.edge_data, self.sample_data):
+                    new_edge: Edge = Edge().data_init(edge_data, sample_data)
+                    edges.append(new_edge)
+                return edges
 
     def generate_max_distance(self) -> float:
         max_distance: float = 0.0

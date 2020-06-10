@@ -77,13 +77,13 @@ class NetworkProcessor:
         self.edge_processor.init_sample_edge()
         self.edge_renderer = EdgeRenderer(self.edge_processor, self.grid)
 
-        self.grid_processor.set_edge_processor(self.edge_processor)
+        self.grid_processor.set_new_edge_processor(self.edge_processor)
         self.grid_processor.reset(self.network.average_node_distance, self.network.average_edge_distance)
 
     def process(self, window: Window, action_mode: int, smoothing: bool = False):
         if self.last_action_mode is not action_mode:
             if action_mode == 0:
-                print("[%s] Resample %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
+                print("[%s] Resample %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                 self.edge_processor.sample_edges()
             else:
                 self.action_finished = False
@@ -91,7 +91,7 @@ class NetworkProcessor:
 
         if action_mode is not 0 and not self.action_finished:
             if action_mode > 3:
-                print("[%s] Resample %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
+                print("[%s] Resample %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                 self.edge_processor.sample_edges()
 
             if action_mode == 1:
@@ -119,7 +119,7 @@ class NetworkProcessor:
                 self.node_processor.node_noise(self.sample_length, 0.5)
             if action_mode == 4:
                 print("[%s] Advect %i edges, iteration %i" % (
-                    LOG_SOURCE, len(self.edge_processor.edges), self.grid_processor.edge_iteration))
+                    LOG_SOURCE, self.edge_processor.get_edge_count(), self.grid_processor.edge_iteration))
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_edge_density()
                 if self.grid_processor.advection_direction < 0:
@@ -129,7 +129,7 @@ class NetworkProcessor:
                     self.action_finished = True
             elif action_mode == 5:
                 print("[%s] Diverge %i edges, iteration %i" % (
-                    LOG_SOURCE, len(self.edge_processor.edges), self.grid_processor.edge_iteration))
+                    LOG_SOURCE, self.edge_processor.get_edge_count(), self.grid_processor.edge_iteration))
                 self.grid_processor.clear_buffer()
                 self.grid_processor.calculate_edge_density()
                 if self.grid_processor.edge_bandwidth > 0:
@@ -138,13 +138,13 @@ class NetworkProcessor:
                 if self.grid_processor.edge_limit_reached:
                     self.action_finished = True
             elif action_mode == 6:
-                print("[%s] Randomize %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
+                print("[%s] Randomize %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                 self.edge_processor.sample_noise(0.5)
                 self.grid_processor.reset()
 
             if action_mode > 3:
                 if smoothing:
-                    print("[%s] Smooth %i edges" % (LOG_SOURCE, len(self.edge_processor.edges)))
+                    print("[%s] Smooth %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                     for i in range(7):
                         self.edge_processor.sample_smooth()
                 self.edge_processor.check_limits(window.cam.view)
@@ -183,11 +183,9 @@ class NetworkProcessor:
     def save_model(self, file_path: str):
         layer_data: List[int] = self.network.layer
         node_data: List[float] = self.node_processor.read_nodes_from_buffer(raw=True)
-        edge_data: List[float] = self.edge_processor.read_edges_from_buffer(raw=True)
-        sample_data: List[float] = self.edge_processor.read_samples_from_sample_storage(raw=True,
-                                                                                        auto_resize_enabled=False)
+        edge_data: List[List[np.array]] = self.edge_processor.read_edges_from_all_buffer()
+        sample_data: List[List[np.array]] = self.edge_processor.read_samples_from_all_buffer()
         max_sample_points: int = self.edge_processor.max_sample_points
-        print(max_sample_points)
         np.savez(file_path, (layer_data, node_data, edge_data, sample_data, max_sample_points))
 
     def delete(self):
