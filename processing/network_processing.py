@@ -25,7 +25,7 @@ class NetworkProcessor:
                  processed_nn: ProcessedNNHandler = None,
                  layer_distance: float = 1.0, layer_width: float = 1.0, sampling_rate: float = 10.0,
                  prune_percentage: float = 0.1, node_bandwidth_reduction: float = 0.98,
-                 edge_bandwidth_reduction: float = 0.9):
+                 edge_bandwidth_reduction: float = 0.9, edge_importance_type: int = 0):
         print("[%s] Prepare network processing for network of size: %s" % (LOG_SOURCE, layer_nodes))
         self.layer_nodes: List[int] = layer_nodes
         self.layer_distance: float = layer_distance
@@ -40,10 +40,11 @@ class NetworkProcessor:
 
         self.node_advection_status: AdvectionProgress = AdvectionProgress(self.network.average_node_distance,
                                                                           node_bandwidth_reduction,
-                                                                          self.grid_cell_size * 3.0)
+                                                                          self.grid_cell_size * 1.0)
         self.edge_advection_status: AdvectionProgress = AdvectionProgress(self.network.average_edge_distance,
                                                                           edge_bandwidth_reduction,
-                                                                          self.grid_cell_size * 3.0)
+                                                                          self.grid_cell_size * 1.0)
+        self.edge_importance_type: int = edge_importance_type
 
         print("[%s] Create grid..." % LOG_SOURCE)
         self.grid: Grid = Grid(Vector3([self.grid_cell_size, self.grid_cell_size, self.grid_cell_size]),
@@ -55,14 +56,15 @@ class NetworkProcessor:
         self.node_renderer: NodeRenderer = NodeRenderer(self.node_processor, self.grid)
 
         print("[%s] Prepare edge processing..." % LOG_SOURCE)
-        self.edge_processor: EdgeProcessor = EdgeProcessor(self.sample_length)
+        self.edge_processor: EdgeProcessor = EdgeProcessor(self.sample_length,
+                                                           edge_importance_type=edge_importance_type)
         self.edge_processor.set_data(self.network)
         if not self.edge_processor.sampled:
             self.edge_processor.init_sample_edge()
         self.edge_renderer: EdgeRenderer = EdgeRenderer(self.edge_processor, self.grid)
 
         print("[%s] Prepare grid processing..." % LOG_SOURCE)
-        self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 100.0)
+        self.grid_processor: GridProcessor = GridProcessor(self.grid, self.node_processor, self.edge_processor, 200.0)
         self.grid_processor.calculate_position()
         self.grid_renderer: GridRenderer = GridRenderer(self.grid_processor)
 
@@ -75,7 +77,7 @@ class NetworkProcessor:
 
         self.node_processor.read_nodes_from_buffer()
         self.network.set_nodes(self.node_processor.nodes)
-        self.edge_processor = EdgeProcessor(self.sample_length)
+        self.edge_processor = EdgeProcessor(self.sample_length, edge_importance_type=self.edge_importance_type)
         self.edge_processor.set_data(self.network)
         self.edge_processor.init_sample_edge()
         self.edge_renderer = EdgeRenderer(self.edge_processor, self.grid)
@@ -164,7 +166,7 @@ class NetworkProcessor:
 
     def render(self, window: Window, edge_render_mode: int, grid_render_mode: int, node_render_mode: int,
                edge_render_options: Dict[str, float] = None, grid_render_options: Dict[str, float] = None,
-               node_render_options: Dict[str, float] = None):
+               node_render_options: Dict[str, float] = None, show_class: int = 0):
 
         clear_screen([1.0, 1.0, 1.0, 1.0])
         if window.gradient and grid_render_mode == 1:
@@ -172,22 +174,29 @@ class NetworkProcessor:
         elif window.gradient and grid_render_mode == 2:
             self.grid_renderer.render_point(window, clear=False, swap=False, options=grid_render_options)
         if edge_render_mode == 5:
-            self.edge_renderer.render_point(window, clear=False, swap=False, options=edge_render_options)
+            self.edge_renderer.render_point(window, clear=False, swap=False, options=edge_render_options,
+                                            show_class=show_class)
         elif edge_render_mode == 4:
-            self.edge_renderer.render_line(window, clear=False, swap=False, options=edge_render_options)
+            self.edge_renderer.render_line(window, clear=False, swap=False, options=edge_render_options,
+                                           show_class=show_class)
         elif edge_render_mode == 3:
             self.edge_renderer.render_ellipsoid_transparent(window, clear=False, swap=False,
-                                                            options=edge_render_options)
+                                                            options=edge_render_options, show_class=show_class)
         elif edge_render_mode == 2:
-            self.edge_renderer.render_transparent_sphere(window, clear=False, swap=False, options=edge_render_options)
+            self.edge_renderer.render_transparent_sphere(window, clear=False, swap=False, options=edge_render_options,
+                                                         show_class=show_class)
         elif edge_render_mode == 1:
-            self.edge_renderer.render_sphere(window, clear=False, swap=False, options=edge_render_options)
+            self.edge_renderer.render_sphere(window, clear=False, swap=False, options=edge_render_options,
+                                             show_class=show_class)
         if node_render_mode == 3:
-            self.node_renderer.render_point(window, clear=False, swap=False, options=node_render_options)
+            self.node_renderer.render_point(window, clear=False, swap=False, options=node_render_options,
+                                            show_class=show_class)
         elif node_render_mode == 2:
-            self.node_renderer.render_transparent(window, clear=False, swap=False, options=node_render_options)
+            self.node_renderer.render_transparent(window, clear=False, swap=False, options=node_render_options,
+                                                  show_class=show_class)
         elif node_render_mode == 1:
-            self.node_renderer.render_sphere(window, clear=False, swap=False, options=node_render_options)
+            self.node_renderer.render_sphere(window, clear=False, swap=False, options=node_render_options,
+                                             show_class=show_class)
 
     def save_model(self, file_path: str):
         layer_data: List[int] = self.network.layer

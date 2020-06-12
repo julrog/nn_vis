@@ -12,9 +12,9 @@ uniform mat4  projection;
 uniform float farthest_point_view_z;
 uniform float nearest_point_view_z;
 
-const float base_opacity = 0.1;
-const float base_shpere_opacity = 0.2;
-const float opacity_exponent = 1.0;
+uniform float base_opacity = 0.1;
+uniform float base_shpere_opacity = 0.2;
+uniform float opacity_exponent = 1.0;
 
 vec2 sphereIntersection(vec3 ray_direction)
 {

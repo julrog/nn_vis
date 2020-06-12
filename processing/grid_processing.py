@@ -168,7 +168,8 @@ class GridProcessor:
                 ('bandwidth', advection_status.current_bandwidth, 'float'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
-                ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
+                ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
+                ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')
             ])
 
             for container in range(len(self.edge_processor.sample_buffer[layer])):
@@ -205,9 +206,11 @@ class GridProcessor:
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
                 ('advect_strength', advection_status.get_advection_strength(), 'float'),
+                # ('importance_similarity', advection_status.importance_similarity, 'float'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
-                ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
+                ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
+                ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')
             ])
 
             for container in range(len(self.edge_processor.sample_buffer[layer])):

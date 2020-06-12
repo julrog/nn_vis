@@ -98,9 +98,11 @@ class SettingEntry:
 
 
 class RadioButtons:
-    def __init__(self, root: LabelFrame, names: List[str], shared_variable: IntVar, command, row: int = 0,
-                 column: int = 0):
+    def __init__(self, root: LabelFrame, names: List[str], shared_variable: IntVar, command, option: str,
+                 sub_option: str, row: int = 0, column: int = 0, width: int = 15, height: int = 1):
         self.names: List[str] = names
+        self.option: str = option
+        self.sub_option: str = sub_option
         self.variable: IntVar = shared_variable
         self.command = command
         self.buttons: List[Button] = []
@@ -111,7 +113,7 @@ class RadioButtons:
 
                 return press_function
 
-            new_button: Button = Button(root, text=name, width=15, command=generate_press_function(i))
+            new_button: Button = Button(root, text=name, width=width, height=height, command=generate_press_function(i))
             new_button.grid(row=row + i, column=column)
             self.buttons.append(new_button)
         self.press(0)
@@ -123,7 +125,7 @@ class RadioButtons:
                 button.config(relief=RAISED)
             else:
                 button.config(relief=SUNKEN)
-        self.command("action", "state", self.variable.get())
+        self.command(self.option, self.sub_option, self.variable.get())
 
     def set(self, value: any):
         self.variable.set(int(value))
@@ -193,9 +195,23 @@ class OptionGui:
 
         self.gui_root.title("NNVIS Options")
 
+        self.stats_frame: LabelFrame = LabelFrame(self.gui_root, text="Statistics", width=60,
+                                                  padx=5, pady=5)
+        self.stats_frame.grid(row=0, column=0, padx=5, pady=5)
+        self.edge_count_setting: SettingField = SettingField(self.stats_frame, "Edges:", row=0, column=0)
+        self.settings["edge_count"] = self.edge_count_setting
+        self.sample_count_setting: SettingField = SettingField(self.stats_frame, "Samples:", row=1, column=0)
+        self.settings["sample_count"] = self.sample_count_setting
+        self.cell_count_setting: SettingField = SettingField(self.stats_frame, "Grid Cells:", row=2, column=0)
+        self.settings["cell_count"] = self.cell_count_setting
+        self.pruned_edges: SettingField = SettingField(self.stats_frame, "Pruned Edges:", row=3, column=0)
+        self.settings["pruned_edges"] = self.pruned_edges
+        self.frame_time: SettingField = SettingField(self.stats_frame, "FPS:", row=4, column=0)
+        self.settings["fps"] = self.frame_time
+
         self.architecture_frame: LabelFrame = LabelFrame(self.gui_root, text="Neural Network Architecture", width=60,
                                                          padx=5, pady=5)
-        self.architecture_frame.grid(row=0, column=0, rowspan=3, padx=5, pady=5)
+        self.architecture_frame.grid(row=1, column=0, rowspan=2, padx=5, pady=5)
         self.save_processed_button: Button = Button(self.architecture_frame, text="Save Processed Network", width=20,
                                                     command=self.save_processed_nn_file)
         self.save_processed_button.grid(row=0, column=0, columnspan=3)
@@ -215,23 +231,9 @@ class OptionGui:
         self.add_layer_button.grid(row=4, column=1)
         self.clear_layer_button.grid(row=4, column=2)
 
-        self.stats_frame: LabelFrame = LabelFrame(self.gui_root, text="Statistics", width=60,
-                                                  padx=5, pady=5)
-        self.stats_frame.grid(row=0, column=1, padx=5, pady=5)
-        self.edge_count_setting: SettingField = SettingField(self.stats_frame, "Edges:", row=0, column=0)
-        self.settings["edge_count"] = self.edge_count_setting
-        self.sample_count_setting: SettingField = SettingField(self.stats_frame, "Samples:", row=1, column=0)
-        self.settings["sample_count"] = self.sample_count_setting
-        self.cell_count_setting: SettingField = SettingField(self.stats_frame, "Grid Cells:", row=2, column=0)
-        self.settings["cell_count"] = self.cell_count_setting
-        self.pruned_edges: SettingField = SettingField(self.stats_frame, "Pruned Edges:", row=3, column=0)
-        self.settings["pruned_edges"] = self.pruned_edges
-        self.frame_time: SettingField = SettingField(self.stats_frame, "FPS:", row=4, column=0)
-        self.settings["fps"] = self.frame_time
-
         self.render_frame: LabelFrame = LabelFrame(self.gui_root, text="Render Settings", width=60,
                                                    padx=5, pady=5)
-        self.render_frame.grid(row=0, column=2, rowspan=2, padx=5, pady=5)
+        self.render_frame.grid(row=0, column=2, columnspan=2, rowspan=3, padx=5, pady=5)
 
         self.grid_render_settings: RenderSettings = RenderSettings(self.render_frame, "Grid", self.change_setting,
                                                                    ["None", "Cube", "Point"], 0, row=0, column=0)
@@ -240,10 +242,22 @@ class OptionGui:
         self.edge_render_settings: RenderSettings = RenderSettings(self.render_frame, "Edge", self.change_setting,
                                                                    ["None", "Sphere", "Sphere_Transparent",
                                                                     "Ellipsoid_Transparent", "Line", "Point"],
-                                                                   4, edge_shader_settings, row=0, column=1)
+                                                                   4, edge_shader_settings, row=1, column=0)
+        node_shader_settings: Dict[str, any] = {"Size": 0.05, "Base Opacity": 0.0, "Base Density Opacity": 0.0,
+                                                "Density Exponent": 0.1, "Importance Threshold": 0.01}
         self.node_render_settings: RenderSettings = RenderSettings(self.render_frame, "Node", self.change_setting,
                                                                    ["None", "Sphere", "Sphere_Transparent", "Point"], 2,
-                                                                   row=0, column=2)
+                                                                   node_shader_settings, row=2, column=0)
+        self.class_setting_frame: LabelFrame = LabelFrame(self.render_frame, text="Class Visibility", width=60,
+                                                          padx=5, pady=5)
+        self.class_setting_frame.grid(row=0, column=1, rowspan=3, padx=5, pady=5)
+        self.class_show: IntVar = IntVar(value=0)
+        self.class_show_options: RadioButtons = RadioButtons(self.class_setting_frame,
+                                                             ["All", "Class 0", "Class 1", "Class 2", "Class 3",
+                                                              "Class 4", "Class 5", "Class 6", "Class 7", "Class 8",
+                                                              "Class 9"], self.class_show, command=self.change_setting,
+                                                             option="show", sub_option="class", row=0, column=0,
+                                                             width=10, height=2)
 
         self.action_frame: LabelFrame = LabelFrame(self.gui_root, text="Actions", width=60,
                                                    padx=5, pady=5)
@@ -255,8 +269,8 @@ class OptionGui:
         self.action_buttons: RadioButtons = RadioButtons(self.action_frame,
                                                          ["Stop Everything", "Node Advect", "Node Diverge",
                                                           "Node Noise", "Edge Advect", "Edge Diverge", "Edge Noise"],
-                                                         self.action_state, command=self.change_setting, row=2,
-                                                         column=0)
+                                                         self.action_state, command=self.change_setting,
+                                                         option="action", sub_option="state", row=2, column=0)
 
         self.smoothing_status: IntVar = IntVar(value=1)
         self.smoothing_checkbox: Checkbutton = Checkbutton(self.action_frame, text="Smoothing",
@@ -269,7 +283,7 @@ class OptionGui:
 
         self.setting_frame: LabelFrame = LabelFrame(self.gui_root, text="Settings", width=60,
                                                     padx=5, pady=5)
-        self.setting_frame.grid(row=2, column=2, padx=5, pady=5)
+        self.setting_frame.grid(row=0, column=1, padx=5, pady=5)
         self.layer_distance: SettingEntry = SettingEntry(self.setting_frame, "Layer distance:", row=0, column=0,
                                                          variable_type="float")
         self.layer_width: SettingEntry = SettingEntry(self.setting_frame, "Layer width:", row=1, column=0,
@@ -279,15 +293,15 @@ class OptionGui:
         self.prune_percentage: SettingEntry = SettingEntry(self.setting_frame, "Prune percentage:", row=3,
                                                            column=0, variable_type="float")
         self.node_bandwidth_reduction: SettingEntry = SettingEntry(self.setting_frame, "Node Bandwidth reduction:",
-                                                                   row=4,
-                                                                   column=0, variable_type="float")
+                                                                   row=4, column=0, variable_type="float")
         self.edge_bandwidth_reduction: SettingEntry = SettingEntry(self.setting_frame, "Edge Bandwidth reduction:",
-                                                                   row=5,
-                                                                   column=0, variable_type="float")
+                                                                   row=5, column=0, variable_type="float")
+        self.edge_importance_type: SettingEntry = SettingEntry(self.setting_frame, "Edge Importance Type:",
+                                                               row=6, column=0, variable_type="int")
 
     def start(self, layer_data: List[int] = None, layer_distance: float = 1.0, node_size: float = 1.0,
               sampling_rate: float = 10.0, prune_percentage: float = 0.0, node_bandwidth_reduction: float = 0.98,
-              edge_bandwidth_reduction: float = 0.9):
+              edge_bandwidth_reduction: float = 0.9, edge_importance_type: int = 0):
         if layer_data is None:
             default_layer_data = [4, 9, 4]
             for nodes in default_layer_data:
@@ -302,6 +316,7 @@ class OptionGui:
         self.prune_percentage.set(prune_percentage)
         self.node_bandwidth_reduction.set(node_bandwidth_reduction)
         self.edge_bandwidth_reduction.set(edge_bandwidth_reduction)
+        self.edge_importance_type.set(edge_importance_type)
         self.generate()
 
         self.gui_root.mainloop()
@@ -367,6 +382,7 @@ class OptionGui:
         self.settings["prune_percentage"] = self.prune_percentage.get()
         self.settings["node_bandwidth_reduction"] = self.node_bandwidth_reduction.get()
         self.settings["edge_bandwidth_reduction"] = self.edge_bandwidth_reduction.get()
+        self.settings["edge_importance_type"] = self.edge_importance_type.get()
         self.settings["update_model"] = True
 
     def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):

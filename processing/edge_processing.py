@@ -14,7 +14,7 @@ LOG_SOURCE: str = "EDGE_PROCESSING"
 
 
 class EdgeProcessor:
-    def __init__(self, sample_length: float, max_edges_per_buffer: int = 1000):
+    def __init__(self, sample_length: float, max_edges_per_buffer: int = 1000, edge_importance_type: int = 0):
         self.init_compute_shader: ComputeShader = ComputeShaderHandler().create("init_edge_sampler",
                                                                                 "edge/initial_edge_sample.comp")
         self.sample_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_sampler",
@@ -42,6 +42,7 @@ class EdgeProcessor:
         self.farthest_view_z: int = 1000000
         self.max_sample_points: int = 0
         self.smooth_radius: float = 0.0
+        self.edge_importance_type: int = edge_importance_type
 
     def set_data(self, network: NetworkModel):
         edges: List[List[List[Edge]]] = network.generate_edges(self.max_edges_per_buffer)

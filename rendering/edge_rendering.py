@@ -58,7 +58,8 @@ class EdgeRenderer:
         self.importance_threshold: float = 0.0
 
     @track_time
-    def render_point(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
+    def render_point(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None,
+                     show_class: int = 0):
         self.point_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
@@ -66,7 +67,9 @@ class EdgeRenderer:
                                             ("screen_width", 1920.0, "float"),
                                             ("screen_height", 1080.0, "float"),
                                             ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
-                                            ("importance_threshold", self.importance_threshold, "float")])
+                                            ("importance_threshold", self.importance_threshold, "float"),
+                                            ('show_class', show_class, 'int'),
+                                            ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')])
         self.point_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -80,13 +83,16 @@ class EdgeRenderer:
             window.swap()
 
     @track_time
-    def render_line(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
+    def render_line(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None,
+                    show_class: int = 0):
         self.line_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         self.line_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                            ("view", window.cam.view, "mat4"),
                                            ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
-                                           ("importance_threshold", self.importance_threshold, "float")])
+                                           ("importance_threshold", self.importance_threshold, "float"),
+                                           ('show_class', show_class, 'int'),
+                                           ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')])
         self.line_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -101,14 +107,16 @@ class EdgeRenderer:
 
     @track_time
     def render_sphere(self, window: Window, sphere_radius: float = 0.05, clear: bool = True, swap: bool = False,
-                      options: Dict[str, float] = None):
+                      options: Dict[str, float] = None, show_class: int = 0):
         self.sphere_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                              ("view", window.cam.view, "mat4"),
                                              ("object_radius", sphere_radius, "float"),
                                              ("importance_threshold", self.importance_threshold, "float"),
-                                             ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
+                                             ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
+                                             ('show_class', show_class, 'int'),
+                                             ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')])
         self.sphere_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -122,7 +130,7 @@ class EdgeRenderer:
 
     @track_time
     def render_transparent_sphere(self, window: Window, sphere_radius: float = 0.05, clear: bool = True,
-                                  swap: bool = False, options: Dict[str, float] = None):
+                                  swap: bool = False, options: Dict[str, float] = None, show_class: int = 0):
         self.transparent_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         near, far = self.grid.get_near_far_from_view(window.cam.view)
@@ -132,7 +140,10 @@ class EdgeRenderer:
                                                   ("nearest_point_view_z", near, "float"),
                                                   ("object_radius", sphere_radius, "float"),
                                                   ("importance_threshold", self.importance_threshold, "float"),
-                                                  ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
+                                                  ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
+                                                  ('show_class', show_class, 'int'),
+                                                  ('edge_importance_type', self.edge_processor.edge_importance_type,
+                                                   'int')])
         self.transparent_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -146,7 +157,7 @@ class EdgeRenderer:
 
     @track_time
     def render_ellipsoid_transparent(self, window: Window, clear: bool = True, swap: bool = False,
-                                     options: Dict[str, float] = None):
+                                     options: Dict[str, float] = None, show_class: int = 0):
         self.ellipse_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         near, far = self.grid.get_near_far_from_view(window.cam.view)
@@ -156,7 +167,10 @@ class EdgeRenderer:
                                               ("nearest_point_view_z", near, "float"),
                                               ("object_radius", self.edge_processor.sample_length * 0.5, "float"),
                                               ("importance_threshold", self.importance_threshold, "float"),
-                                              ('max_sample_points', self.edge_processor.max_sample_points, 'int')])
+                                              ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
+                                              ('show_class', show_class, 'int'),
+                                              ('edge_importance_type', self.edge_processor.edge_importance_type,
+                                               'int')])
         self.ellipse_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):

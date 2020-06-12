@@ -115,7 +115,6 @@ highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to, No
     + density_from.density_8 * density_from.density_8
     + density_from.density_9 * density_from.density_9);
 
-
     drive_towards += (node.importance_0/node.importance_length) * (density_to.density_0/towards_density_overall);
     drive_towards += (node.importance_1/node.importance_length) * (density_to.density_1/towards_density_overall);
     drive_towards += (node.importance_2/node.importance_length) * (density_to.density_2/towards_density_overall);

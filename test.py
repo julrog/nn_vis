@@ -46,7 +46,7 @@ def compute_render(name: str):
             network_processor.render(window, options.settings["render_Edge"], options.settings["render_Grid"],
                                      options.settings["render_Node"], options.settings["render_shader_setting_Edge"],
                                      options.settings["render_shader_setting_Grid"],
-                                     options.settings["render_shader_setting_Node"])
+                                     options.settings["render_shader_setting_Node"], options.settings["show_class"])
 
         if "sample_count" in options.settings:
             options.settings["sample_count"].set(network_processor.edge_processor.point_count)
@@ -76,7 +76,9 @@ def compute_render(name: str):
                                              node_bandwidth_reduction=options.settings[
                                                  "node_bandwidth_reduction"],
                                              edge_bandwidth_reduction=options.settings[
-                                                 "edge_bandwidth_reduction"])
+                                                 "edge_bandwidth_reduction"],
+                                             edge_importance_type=options.settings[
+                                                 "edge_importance_type"])
 
         while window.is_active() and not options.settings["Closed"]:
             if options.settings["update_model"]:
@@ -93,7 +95,9 @@ def compute_render(name: str):
                                                      node_bandwidth_reduction=options.settings[
                                                          "node_bandwidth_reduction"],
                                                      edge_bandwidth_reduction=options.settings[
-                                                         "edge_bandwidth_reduction"])
+                                                         "edge_bandwidth_reduction"],
+                                                     edge_importance_type=options.settings[
+                                                         "edge_importance_type"])
             if start_count < 0:
                 start_count = frame_count
                 start_time = time.perf_counter()

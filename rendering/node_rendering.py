@@ -30,16 +30,23 @@ class NodeRenderer:
 
         self.point_render: RenderSet = RenderSet(node_point_shader, self.data_handler)
         self.sphere_render: RenderSet = RenderSet(node_sphere_shader, self.data_handler)
+
         self.transparent_render: RenderSet = RenderSet(node_transparent_shader, self.data_handler)
+        self.transparent_render.set_uniform_label(
+            [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
+             ("Base Density Opacity", "base_shpere_opacity"),
+             ("Density Exponent", "opacity_exponent"), ("Importance Threshold", "importance_threshold")])
 
     @track_time
-    def render_point(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
+    def render_point(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None,
+                     show_class: int = 0):
         node_count: int = len(self.node_processor.nodes)
 
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                             ("view", window.cam.view, "mat4"),
                                             ("screen_width", 1920.0, "float"),
-                                            ("screen_height", 1080.0, "float")])
+                                            ("screen_height", 1080.0, "float"),
+                                            ('show_class', show_class, 'int')])
         self.point_render.set_uniform_labeled_data(options)
 
         self.point_render.set()
@@ -52,12 +59,13 @@ class NodeRenderer:
 
     @track_time
     def render_sphere(self, window: Window, sphere_radius: float = 0.03, clear: bool = True, swap: bool = False,
-                      options: Dict[str, float] = None):
+                      options: Dict[str, float] = None, show_class: int = 0):
         node_count: int = len(self.node_processor.nodes)
 
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                              ("view", window.cam.view, "mat4"),
-                                             ("object_radius", sphere_radius, "float")])
+                                             ("object_radius", sphere_radius, "float"),
+                                             ('show_class', show_class, 'int')])
         self.sphere_render.set_uniform_labeled_data(options)
 
         self.sphere_render.set()
@@ -69,7 +77,7 @@ class NodeRenderer:
 
     @track_time
     def render_transparent(self, window: Window, sphere_radius: float = 0.03, clear: bool = True, swap: bool = False,
-                           options: Dict[str, float] = None):
+                           options: Dict[str, float] = None, show_class: int = 0):
         node_count: int = len(self.node_processor.nodes)
 
         near, far = self.grid.get_near_far_from_view(window.cam.view)
@@ -77,7 +85,8 @@ class NodeRenderer:
                                                   ("view", window.cam.view, "mat4"),
                                                   ("farthest_point_view_z", far, "float"),
                                                   ("nearest_point_view_z", near, "float"),
-                                                  ("object_radius", sphere_radius, "float")])
+                                                  ("object_radius", sphere_radius, "float"),
+                                                  ('show_class', show_class, 'int')])
         self.transparent_render.set_uniform_labeled_data(options)
 
         self.transparent_render.set()

@@ -17,6 +17,8 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform int max_sample_points;
 uniform float importance_threshold = 0;
+uniform int edge_importance_type = 0;
+uniform int show_class = -1;
 
 const vec3 color_0 = vec3(0.133, 0.545, 0.133);
 const vec3 color_1 = vec3(0, 0, 0.545);
@@ -35,30 +37,98 @@ void main()
         vs_discard = 1.0;
     } else {
         vs_discard = 0.0;
+
+        gl_Position = projection * view * vec4(position.xyz, 1.0);
+
+        float importance[10];
+        importance[0] = (edge_data_2.x / (edge_data_1.z * 10.0));
+        importance[1] = (edge_data_2.y / (edge_data_1.z * 10.0));
+        importance[2] = (edge_data_2.z / (edge_data_1.z * 10.0));
+        importance[3] = (edge_data_2.w / (edge_data_1.z * 10.0));
+        importance[4] = (edge_data_3.x / (edge_data_1.z * 10.0));
+        importance[5] = (edge_data_3.y / (edge_data_1.z * 10.0));
+        importance[6] = (edge_data_3.z / (edge_data_1.z * 10.0));
+        importance[7] = (edge_data_3.w / (edge_data_1.z * 10.0));
+        importance[8] = (edge_data_4.x / (edge_data_1.z * 10.0));
+        importance[9] = (edge_data_4.y / (edge_data_1.z * 10.0));
+
+        if (edge_importance_type == 0) {
+            float t = clamp(mod(gl_InstanceID + 1, max_sample_points)/edge_data_0.x, 0.0, 1.0);
+            importance[0] = (1.0 - t) * edge_data_2.x/(edge_data_1.z * 10.0) + t * edge_data_4.z/(edge_data_1.w * 10.0);
+            importance[1] = (1.0 - t) * edge_data_2.y/(edge_data_1.z * 10.0) + t * edge_data_4.w/(edge_data_1.w * 10.0);
+            importance[2] = (1.0 - t) * edge_data_2.z/(edge_data_1.z * 10.0) + t * edge_data_5.x/(edge_data_1.w * 10.0);
+            importance[3] = (1.0 - t) * edge_data_2.w/(edge_data_1.z * 10.0) + t * edge_data_5.y/(edge_data_1.w * 10.0);
+            importance[4] = (1.0 - t) * edge_data_3.x/(edge_data_1.z * 10.0) + t * edge_data_5.z/(edge_data_1.w * 10.0);
+            importance[5] = (1.0 - t) * edge_data_3.y/(edge_data_1.z * 10.0) + t * edge_data_5.w/(edge_data_1.w * 10.0);
+            importance[6] = (1.0 - t) * edge_data_3.z/(edge_data_1.z * 10.0) + t * edge_data_6.x/(edge_data_1.w * 10.0);
+            importance[7] = (1.0 - t) * edge_data_3.w/(edge_data_1.z * 10.0) + t * edge_data_6.y/(edge_data_1.w * 10.0);
+            importance[8] = (1.0 - t) * edge_data_4.x/(edge_data_1.z * 10.0) + t * edge_data_6.z/(edge_data_1.w * 10.0);
+            importance[9] = (1.0 - t) * edge_data_4.y/(edge_data_1.z * 10.0) + t * edge_data_6.w/(edge_data_1.w * 10.0);
+            //vs_importance =((1.0 - t) * edge_data_1.z + t * edge_data_1.w) * edge_data_0.w;
+        }
+        if (edge_importance_type == 1) {
+            importance[0] = edge_data_2.x/(edge_data_1.z * 10.0);
+            importance[1] = edge_data_2.y/(edge_data_1.z * 10.0);
+            importance[2] = edge_data_2.z/(edge_data_1.z * 10.0);
+            importance[3] = edge_data_2.w/(edge_data_1.z * 10.0);
+            importance[4] = edge_data_3.x/(edge_data_1.z * 10.0);
+            importance[5] = edge_data_3.y/(edge_data_1.z * 10.0);
+            importance[6] = edge_data_3.z/(edge_data_1.z * 10.0);
+            importance[7] = edge_data_3.w/(edge_data_1.z * 10.0);
+            importance[8] = edge_data_4.x/(edge_data_1.z * 10.0);
+            importance[9] = edge_data_4.y/(edge_data_1.z * 10.0);
+            //vs_importance = edge_data_1.z * edge_data_0.w;
+        }
+        if (edge_importance_type == 2) {
+            highp float divisor = (edge_data_1.z * 10.0 + edge_data_1.w * 10.0);
+            importance[0] = (edge_data_2.x + edge_data_4.z)/divisor;
+            importance[1] = (edge_data_2.y + edge_data_4.w)/divisor;
+            importance[2] = (edge_data_2.z + edge_data_5.x)/divisor;
+            importance[3] = (edge_data_2.w + edge_data_5.y)/divisor;
+            importance[4] = (edge_data_3.x + edge_data_5.z)/divisor;
+            importance[5] = (edge_data_3.y + edge_data_5.w)/divisor;
+            importance[6] = (edge_data_3.z + edge_data_6.x)/divisor;
+            importance[7] = (edge_data_3.w + edge_data_6.y)/divisor;
+            importance[8] = (edge_data_4.x + edge_data_6.z)/divisor;
+            importance[9] = (edge_data_4.y + edge_data_6.w)/divisor;
+            //vs_importance = edge_data_1.z * edge_data_1.w * edge_data_0.w;
+        }
+
+        if (edge_importance_type == 3) {
+            importance[0] = edge_data_4.z/(edge_data_1.w * 10.0);
+            importance[1] = edge_data_4.w/(edge_data_1.w * 10.0);
+            importance[2] = edge_data_5.x/(edge_data_1.w * 10.0);
+            importance[3] = edge_data_5.y/(edge_data_1.w * 10.0);
+            importance[4] = edge_data_5.z/(edge_data_1.w * 10.0);
+            importance[5] = edge_data_5.w/(edge_data_1.w * 10.0);
+            importance[6] = edge_data_6.x/(edge_data_1.w * 10.0);
+            importance[7] = edge_data_6.y/(edge_data_1.w * 10.0);
+            importance[8] = edge_data_6.z/(edge_data_1.w * 10.0);
+            importance[9] = edge_data_6.w/(edge_data_1.w * 10.0);
+            //vs_importance = edge_data_1.w * edge_data_0.w;
+        }
+
+        vec3 color_list[10];
+        color_list[0] = color_0;
+        color_list[1] = color_1;
+        color_list[2] = color_2;
+        color_list[3] = color_3;
+        color_list[4] = color_4;
+        color_list[5] = color_5;
+        color_list[6] = color_6;
+        color_list[7] = color_7;
+        color_list[8] = color_8;
+        color_list[9] = color_9;
+
+        vs_color = vec3(0.0, 0.0, 0.0);
+        if (show_class == 0) {
+            for (uint i = 0; i < 10; i++)
+            {
+                vs_color += color_list[i] * importance[i];
+            }
+        } else {
+            vs_color += color_list[show_class - 1] * importance[show_class - 1];
+        }
+
     }
-    gl_Position = projection * view * vec4(position.xyz, 1.0);
-
-    float t = mod(gl_InstanceID + 1, max_sample_points)/edge_data_0.x;
-    float importance[10];
-    importance[0] = (1.0 - t) * (edge_data_2.x / edge_data_1.x) + t * (edge_data_4.z / edge_data_1.y);
-    importance[1] = (1.0 - t) * (edge_data_2.y / edge_data_1.x) + t * (edge_data_4.w / edge_data_1.y);
-    importance[2] = (1.0 - t) * (edge_data_2.z / edge_data_1.x) + t * (edge_data_5.x / edge_data_1.y);
-    importance[3] = (1.0 - t) * (edge_data_2.w / edge_data_1.x) + t * (edge_data_5.y / edge_data_1.y);
-    importance[4] = (1.0 - t) * (edge_data_3.x / edge_data_1.x) + t * (edge_data_5.z / edge_data_1.y);
-    importance[5] = (1.0 - t) * (edge_data_3.y / edge_data_1.x) + t * (edge_data_5.w / edge_data_1.y);
-    importance[6] = (1.0 - t) * (edge_data_3.z / edge_data_1.x) + t * (edge_data_6.x / edge_data_1.y);
-    importance[7] = (1.0 - t) * (edge_data_3.w / edge_data_1.x) + t * (edge_data_6.y / edge_data_1.y);
-    importance[8] = (1.0 - t) * (edge_data_4.x / edge_data_1.x) + t * (edge_data_6.z / edge_data_1.y);
-    importance[9] = (1.0 - t) * (edge_data_4.y / edge_data_1.x) + t * (edge_data_6.w / edge_data_1.y);
-
-    vs_color += color_0 * importance[0];
-    vs_color += color_1 * importance[1];
-    vs_color += color_2 * importance[2];
-    vs_color += color_3 * importance[3];
-    vs_color += color_4 * importance[4];
-    vs_color += color_5 * importance[5];
-    vs_color += color_6 * importance[6];
-    vs_color += color_7 * importance[7];
-    vs_color += color_8 * importance[8];
-    vs_color += color_9 * importance[9];
 }
