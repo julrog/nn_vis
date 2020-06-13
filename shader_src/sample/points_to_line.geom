@@ -4,9 +4,9 @@ layout(points) in;
 in vec3 vs_normal[];
 in float vs_discard[];
 in vec4 vs_next_position[];
-in vec3 vs_color[];
+in vec4 vs_color[];
 
-flat out vec3 gs_color;
+flat out vec4 gs_color;
 
 layout(line_strip, max_vertices = 2) out;
 

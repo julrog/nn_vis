@@ -5,12 +5,15 @@ in vec4 vs_next_position[];
 in vec3 vs_normal[];
 in float vs_discard[];
 in float vs_importance[];
+in vec4 vs_color[];
+
 
 layout(triangle_strip, max_vertices = 14) out;
 flat out mat4 gs_local_ellipsoid_transformation;
 flat out mat4 gs_local_ellipsoid_transformation_inverse;
 flat out vec3 gs_local_ray_origin;
 flat out vec3 gs_ellipsoid_radius;
+flat out vec4 gs_color;
 out vec3 gs_local_cuboid_hit_position;
 
 uniform mat4 projection;
@@ -28,6 +31,8 @@ void draw_vertex(vec3 position, vec3 right, vec3 up, vec3 front, vec3 offset)
 
 void main()
 {
+    gs_color = vs_color[0];
+
     vec3 position_cam_a = gl_in[0].gl_Position.xyz;
     vec3 position_cam_b = vs_next_position[0].xyz;
 

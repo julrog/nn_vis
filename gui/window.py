@@ -253,11 +253,11 @@ class OptionGui:
         self.class_setting_frame.grid(row=0, column=1, rowspan=3, padx=5, pady=5)
         self.class_show: IntVar = IntVar(value=0)
         self.class_show_options: RadioButtons = RadioButtons(self.class_setting_frame,
-                                                             ["All", "Class 0", "Class 1", "Class 2", "Class 3",
-                                                              "Class 4", "Class 5", "Class 6", "Class 7", "Class 8",
-                                                              "Class 9"], self.class_show, command=self.change_setting,
-                                                             option="show", sub_option="class", row=0, column=0,
-                                                             width=10, height=2)
+                                                             ["Independent", "All", "Class 0", "Class 1", "Class 2",
+                                                              "Class 3", "Class 4", "Class 5", "Class 6", "Class 7",
+                                                              "Class 8", "Class 9"], self.class_show,
+                                                             command=self.change_setting, option="show",
+                                                             sub_option="class", row=0, column=0, width=10, height=2)
 
         self.action_frame: LabelFrame = LabelFrame(self.gui_root, text="Actions", width=60,
                                                    padx=5, pady=5)

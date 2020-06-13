@@ -11,7 +11,8 @@ layout(location = 7) in vec4 edge_data_5;
 layout(location = 8) in vec4 edge_data_6;
 
 flat out float vs_discard;
-flat out vec3 vs_color;
+flat out vec4 vs_color;
+out float vs_importance;
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -41,17 +42,6 @@ void main()
         gl_Position = projection * view * vec4(position.xyz, 1.0);
 
         float importance[10];
-        importance[0] = (edge_data_2.x / (edge_data_1.z * 10.0));
-        importance[1] = (edge_data_2.y / (edge_data_1.z * 10.0));
-        importance[2] = (edge_data_2.z / (edge_data_1.z * 10.0));
-        importance[3] = (edge_data_2.w / (edge_data_1.z * 10.0));
-        importance[4] = (edge_data_3.x / (edge_data_1.z * 10.0));
-        importance[5] = (edge_data_3.y / (edge_data_1.z * 10.0));
-        importance[6] = (edge_data_3.z / (edge_data_1.z * 10.0));
-        importance[7] = (edge_data_3.w / (edge_data_1.z * 10.0));
-        importance[8] = (edge_data_4.x / (edge_data_1.z * 10.0));
-        importance[9] = (edge_data_4.y / (edge_data_1.z * 10.0));
-
         if (edge_importance_type == 0) {
             float t = clamp(mod(gl_InstanceID + 1, max_sample_points)/edge_data_0.x, 0.0, 1.0);
             importance[0] = (1.0 - t) * edge_data_2.x/(edge_data_1.z * 10.0) + t * edge_data_4.z/(edge_data_1.w * 10.0);
@@ -64,7 +54,7 @@ void main()
             importance[7] = (1.0 - t) * edge_data_3.w/(edge_data_1.z * 10.0) + t * edge_data_6.y/(edge_data_1.w * 10.0);
             importance[8] = (1.0 - t) * edge_data_4.x/(edge_data_1.z * 10.0) + t * edge_data_6.z/(edge_data_1.w * 10.0);
             importance[9] = (1.0 - t) * edge_data_4.y/(edge_data_1.z * 10.0) + t * edge_data_6.w/(edge_data_1.w * 10.0);
-            //vs_importance =((1.0 - t) * edge_data_1.z + t * edge_data_1.w) * edge_data_0.w;
+            vs_importance =((1.0 - t) * edge_data_1.z + t * edge_data_1.w) * edge_data_0.w;
         }
         if (edge_importance_type == 1) {
             importance[0] = edge_data_2.x/(edge_data_1.z * 10.0);
@@ -77,7 +67,7 @@ void main()
             importance[7] = edge_data_3.w/(edge_data_1.z * 10.0);
             importance[8] = edge_data_4.x/(edge_data_1.z * 10.0);
             importance[9] = edge_data_4.y/(edge_data_1.z * 10.0);
-            //vs_importance = edge_data_1.z * edge_data_0.w;
+            vs_importance = edge_data_1.z * edge_data_0.w;
         }
         if (edge_importance_type == 2) {
             highp float divisor = (edge_data_1.z * 10.0 + edge_data_1.w * 10.0);
@@ -91,7 +81,7 @@ void main()
             importance[7] = (edge_data_3.w + edge_data_6.y)/divisor;
             importance[8] = (edge_data_4.x + edge_data_6.z)/divisor;
             importance[9] = (edge_data_4.y + edge_data_6.w)/divisor;
-            //vs_importance = edge_data_1.z * edge_data_1.w * edge_data_0.w;
+            vs_importance = edge_data_1.z * edge_data_1.w * edge_data_0.w;
         }
 
         if (edge_importance_type == 3) {
@@ -105,7 +95,7 @@ void main()
             importance[7] = edge_data_6.y/(edge_data_1.w * 10.0);
             importance[8] = edge_data_6.z/(edge_data_1.w * 10.0);
             importance[9] = edge_data_6.w/(edge_data_1.w * 10.0);
-            //vs_importance = edge_data_1.w * edge_data_0.w;
+            vs_importance = edge_data_1.w * edge_data_0.w;
         }
 
         vec3 color_list[10];
@@ -120,15 +110,20 @@ void main()
         color_list[8] = color_8;
         color_list[9] = color_9;
 
-        vs_color = vec3(0.0, 0.0, 0.0);
-        if (show_class == 0) {
+        vs_color = vec4(0.0, 0.0, 0.0, 0.0);
+        if (show_class == 1) {
+            vec3 combined_color = vec3(0.0, 0.0, 0.0);
             for (uint i = 0; i < 10; i++)
             {
-                vs_color += color_list[i] * importance[i];
+                combined_color += color_list[i] * importance[i];
             }
+            vs_color = vec4(combined_color, vs_importance);
         } else {
-            vs_color += color_list[show_class - 1] * importance[show_class - 1];
+            if (show_class == 0) {
+                vs_color = vec4(0.0, 0.0, 0.0, vs_importance);
+            } else {
+                vs_color = vec4(color_list[show_class - 2] * importance[show_class - 2], importance[show_class - 2]);
+            }
         }
-
     }
 }

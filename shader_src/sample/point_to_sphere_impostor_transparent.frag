@@ -2,6 +2,7 @@
 
 flat in vec3  gs_sphere_position;
 flat in float gs_sphere_size;
+flat in vec4 gs_color;
 in vec3 gs_cube_hit_position;
 
 out vec4 frag_color;
@@ -28,14 +29,14 @@ vec2 sphereIntersection(vec3 ray_direction)
 
 vec4 calculate_transparency_color(float depth, float density)
 {
-    float overall_opacity = pow(density, opacity_exponent);
+    float overall_opacity = clamp(pow(density, opacity_exponent), 0.0, 1.0);
 
     vec4 real_position_screen_furthest = projection * vec4(0.0, 0.0, farthest_point_view_z, 1.0);
     vec4 real_position_screen_nearest = projection * vec4(0.0, 0.0, nearest_point_view_z, 1.0);
     float relative_depth = (depth - real_position_screen_furthest.z)/(real_position_screen_nearest.z - real_position_screen_furthest.z);
 
-    vec4 color = vec4(0.0, 0.0, 0.0, 1.0);
-    color = vec4(color.x, color.y, color.z, (base_shpere_opacity + relative_depth * (1.0 - base_shpere_opacity)) * (overall_opacity - base_opacity) + base_opacity);
+    vec4 color = gs_color;
+    color = vec4(color.x, color.y, color.z, (base_shpere_opacity + relative_depth * (1.0 - base_shpere_opacity)) * (overall_opacity * (1.0 - base_opacity)) + base_opacity);
     color = vec4(color.x * color.w + (1.0 - color.w), color.y * color.w + (1.0 - color.w), color.z * color.w + (1.0 - color.w), color.w);
     return color;
 }

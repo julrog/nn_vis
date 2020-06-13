@@ -4,12 +4,12 @@ layout(points) in;
 in vec3 vs_normal[];
 in float vs_discard[];
 in float vs_importance[];
-in vec3 vs_color[];
+in vec4 vs_color[];
 
 layout(triangle_strip, max_vertices = 14) out;
 flat out vec3 gs_sphere_position;
 flat out float gs_sphere_size;
-flat out vec3 gs_color;
+flat out vec4 gs_color;
 out vec3 gs_cube_hit_position;
 
 uniform mat4 projection;

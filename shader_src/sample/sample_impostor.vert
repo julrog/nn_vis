@@ -14,7 +14,7 @@ out vec3  vs_normal;
 out float vs_discard;
 out vec4 vs_next_position;
 out float vs_importance;
-out vec3 vs_color;
+out vec4 vs_color;
 
 uniform mat4 view;
 uniform int max_sample_points;
@@ -85,7 +85,7 @@ void main()
             importance[7] = (edge_data_3.w + edge_data_6.y)/divisor;
             importance[8] = (edge_data_4.x + edge_data_6.z)/divisor;
             importance[9] = (edge_data_4.y + edge_data_6.w)/divisor;
-            vs_importance = edge_data_1.z * edge_data_1.w * edge_data_0.w;
+            vs_importance = (edge_data_1.z + edge_data_1.w) * edge_data_0.w;
         }
         if (edge_importance_type == 3) {
             importance[0] = edge_data_4.z/(edge_data_1.w * 10.0);
@@ -113,26 +113,20 @@ void main()
         color_list[8] = color_8;
         color_list[9] = color_9;
 
-        /*uint max_importance_index = 0;
-        float current_max = importance[max_importance_index];
-        for (uint i = 1; i < 10; i++)
-        {
-            float current_value = importance[i];
-            if (current_value >= current_max) {
-                current_max = current_value;
-                max_importance_index = i;
-            }
-        }
-        vs_color += color_list[max_importance_index];*/
-        vs_color = vec3(0.0, 0.0, 0.0);
-        if (show_class == 0) {
+        vs_color = vec4(0.0, 0.0, 0.0, 0.0);
+        if (show_class == 1) {
+            vec3 combined_color = vec3(0.0, 0.0, 0.0);
             for (uint i = 0; i < 10; i++)
             {
-                vs_color += color_list[i] * importance[i];
+                combined_color += color_list[i] * importance[i];
             }
+            vs_color = vec4(combined_color, vs_importance);
         } else {
-            vs_color += color_list[show_class - 1] * importance[show_class - 1];
+            if (show_class == 0) {
+                vs_color = vec4(0.0, 0.0, 0.0, vs_importance);
+            } else {
+                vs_color = vec4(color_list[show_class - 2] * importance[show_class - 2], importance[show_class - 2]);
+            }
         }
-        //if (vs_color.r < 0.1 && vs_color.g < 0.1 && vs_color.b < 0.1) vs_discard = 1.0;
     }
 }
