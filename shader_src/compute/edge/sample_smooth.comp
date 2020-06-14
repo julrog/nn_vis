@@ -34,33 +34,36 @@ void main() {
     highp uint index = gl_WorkGroupID.x + work_group_offset;
 
     float sample_count = read(index - (index % max_sample_points)).w;
-    vec4 sample_data = read(index);
-    if (sample_count > 1.0) {
-        if (sample_data.w == 1.0) {
-            vec3 new_sample = vec3(0.0, 0.0, 0.0);
-            bool reached_end = false;
-            int relative_smoothing_radius = int(max((sample_count * float(smoothing_radius))/100.0 - 1.0, 1.0));
-            int neigbour_count = 0;
-            for (int i = -relative_smoothing_radius; i <= relative_smoothing_radius; i++)
-            {
-                vec4 neighbour_point = read(index + i);
-                if (neighbour_point.w > 1.0 && i < 0.0) {
-                    new_sample = neighbour_point.xyz;
-                    neigbour_count = 1;
+
+    if (index % max_sample_points <= sample_count) {
+        vec4 sample_data = read(index);
+        if (sample_count > 1.0) {
+            if (sample_data.w == 1.0) {
+                vec3 new_sample = vec3(0.0, 0.0, 0.0);
+                bool reached_end = false;
+                int relative_smoothing_radius = int(max((sample_count * float(smoothing_radius))/100.0 - 1.0, 1.0));
+                int neigbour_count = 0;
+                for (int i = -relative_smoothing_radius; i <= relative_smoothing_radius; i++)
+                {
+                    vec4 neighbour_point = read(index + i);
+                    if (neighbour_point.w > 1.0 && i < 0.0) {
+                        new_sample = neighbour_point.xyz;
+                        neigbour_count = 1;
+                    }
+                    if (neighbour_point.w < 0.0 && i > 0.0 && !reached_end) {
+                        new_sample += neighbour_point.xyz;
+                        reached_end = true;
+                        neigbour_count += 1;
+                    }
+                    if (neighbour_point.w == 1.0 && !reached_end) {
+                        new_sample += neighbour_point.xyz;
+                        neigbour_count += 1;
+                    }
                 }
-                if (neighbour_point.w < 0.0 && i > 0.0 && !reached_end) {
-                    new_sample += neighbour_point.xyz;
-                    reached_end = true;
-                    neigbour_count += 1;
-                }
-                if (neighbour_point.w == 1.0 && !reached_end) {
-                    new_sample += neighbour_point.xyz;
-                    neigbour_count += 1;
-                }
+                write(index, vec4(new_sample/float(neigbour_count), 1.0));
+            } else {
+                write(index, sample_data);
             }
-            write(index, vec4(new_sample/float(neigbour_count), 1.0));
-        } else {
-            write(index, sample_data);
         }
     }
 }

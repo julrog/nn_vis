@@ -36,7 +36,8 @@ class ComputeShader(BaseShader):
                 glDispatchCompute(width % self.max_workgroup_size, 1, 1)
             else:
                 glDispatchCompute(self.max_workgroup_size, 1, 1)
-        self.barrier()
+        if barrier:
+            self.barrier()
 
     def barrier(self):
         glMemoryBarrier(GL_ALL_BARRIER_BITS)

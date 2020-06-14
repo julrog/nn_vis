@@ -12,6 +12,7 @@ from processing.advection_process import AdvectionProgress
 from processing.edge_processing import EdgeProcessor
 from processing.node_processing import NodeProcessor
 from utility.performance import track_time
+from OpenGL.GL import *
 
 LOG_SOURCE: str = "GRID_PROCESSING"
 
@@ -158,7 +159,7 @@ class GridProcessor:
         self.node_density_compute_shader.barrier()
 
     @track_time
-    def calculate_edge_density(self, layer: int, advection_status: AdvectionProgress):
+    def calculate_edge_density(self, layer: int, advection_status: AdvectionProgress, wait_for_compute: bool = False):
         for i in range(len(self.grid_density_buffer.handle)):
             self.sample_density_compute_shader.set_uniform_data([
                 ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
@@ -178,6 +179,8 @@ class GridProcessor:
                     [('grid_layer_offset', self.grid.layer_distance * layer, 'float')])
                 self.sample_density_ssbo_handler[layer][container].set_range(i - 1, 3)
                 self.sample_density_compute_shader.compute(self.edge_processor.get_buffer_points(layer, container))
+                if wait_for_compute:
+                    glFinish()
         self.sample_density_compute_shader.barrier()
 
     @track_time
@@ -198,7 +201,7 @@ class GridProcessor:
         self.node_processor.node_buffer.swap()
 
     @track_time
-    def sample_advect(self, layer: int, advection_status: AdvectionProgress):
+    def sample_advect(self, layer: int, advection_status: AdvectionProgress, wait_for_compute: bool = False):
         for i in range(len(self.grid_density_buffer.handle)):
             self.sample_advect_compute_shader.set_uniform_data([
                 ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
@@ -219,6 +222,8 @@ class GridProcessor:
                 self.sample_advect_ssbo_handler[layer][container].set(i)
                 self.sample_advect_compute_shader.compute(self.edge_processor.get_buffer_points(layer, container))
                 self.edge_processor.sample_buffer[layer][container].swap()
+                if wait_for_compute:
+                    glFinish()
 
         self.sample_advect_compute_shader.barrier()
 

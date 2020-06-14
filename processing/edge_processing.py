@@ -9,6 +9,7 @@ from opengl_helper.buffer import SwappingBufferObject, BufferObject
 from opengl_helper.compute_shader import ComputeShader, ComputeShaderHandler
 from utility.performance import track_time
 from opengl_helper.render_utility import VertexDataHandler
+from OpenGL.GL import *
 
 LOG_SOURCE: str = "EDGE_PROCESSING"
 
@@ -183,7 +184,7 @@ class EdgeProcessor:
         self.noise_compute_shader.barrier()
 
     @track_time
-    def sample_smooth(self):
+    def sample_smooth(self, wait_for_compute: bool = False):
         self.smooth_compute_shader.set_uniform_data([
             ('max_sample_points', self.max_sample_points, 'int')
         ])
@@ -193,10 +194,12 @@ class EdgeProcessor:
                 self.ssbo_handler[i][j].set()
                 self.smooth_compute_shader.compute(self.get_buffer_points(i, j))
                 self.sample_buffer[i][j].swap()
+                if wait_for_compute:
+                    glFinish()
         self.smooth_compute_shader.barrier()
 
     @track_time
-    def check_limits(self, check_resize: bool = True):
+    def check_limits(self, check_resize: bool = False):
         self.limit_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
         self.point_count = 0
         max_edge_samples: float = 0

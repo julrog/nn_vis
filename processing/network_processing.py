@@ -17,6 +17,7 @@ from rendering.edge_rendering import EdgeRenderer
 from rendering.grid_rendering import GridRenderer
 from rendering.node_rendering import NodeRenderer
 from utility.window import Window
+from OpenGL.GL import *
 
 LOG_SOURCE: str = "NETWORK_PROCESSING"
 
@@ -124,11 +125,14 @@ class NetworkProcessor:
                 if smoothing:
                     print("[%s] Smooth %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                     for i in range(7):
-                        self.edge_processor.sample_smooth()
+                        glFinish()
+                        self.edge_processor.sample_smooth(True)
+                        glFinish()
         else:
             self.edge_processor.check_limits(False)
 
         self.last_action_mode = action_mode
+        glFinish()
 
     def node_advection(self, reverse: bool = False):
         print("[%s] Advect %i nodes, iteration %i" % (
@@ -159,8 +163,8 @@ class NetworkProcessor:
 
         for layer in range(len(self.network.layer) - 1):
             self.grid_processor.clear_buffer()
-            self.grid_processor.calculate_edge_density(layer, self.edge_advection_status)
-            self.grid_processor.sample_advect(layer, self.edge_advection_status)
+            self.grid_processor.calculate_edge_density(layer, self.edge_advection_status, True)
+            self.grid_processor.sample_advect(layer, self.edge_advection_status, True)
 
         self.edge_advection_status.iterate()
 
@@ -202,10 +206,14 @@ class NetworkProcessor:
 
     def save_model(self, file_path: str):
         layer_data: List[int] = self.network.layer
+        print("Reading nodes from buffer...")
         node_data: List[float] = self.node_processor.read_nodes_from_buffer(raw=True)
+        print("Reading edges from buffer...")
         edge_data: List[List[np.array]] = self.edge_processor.read_edges_from_all_buffer()
+        print("Reading samples from buffer...")
         sample_data: List[List[np.array]] = self.edge_processor.read_samples_from_all_buffer()
         max_sample_points: int = self.edge_processor.max_sample_points
+        print("Saving processed network data...")
         np.savez(file_path, (layer_data, node_data, edge_data, sample_data, max_sample_points))
 
     def delete(self):

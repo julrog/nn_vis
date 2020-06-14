@@ -40,14 +40,14 @@ network_processor: NetworkProcessor = NetworkProcessor(importance_data.layer_dat
                                                        layer_distance=1.0,
                                                        layer_width=1.0,
                                                        sampling_rate=10.0,
-                                                       prune_percentage=0.9,
+                                                       prune_percentage=0.95,
                                                        node_bandwidth_reduction=0.98,
                                                        edge_bandwidth_reduction=0.9,
                                                        edge_importance_type=0)
 
 process_loop(network_processor)
 
-network_processor.save_model(DATA_PATH + "automation_processed/" + "test_4.npz")
+network_processor.save_model(DATA_PATH + "automation_processed/" + "test_6.npz")
 
 network_processor.delete()
 window_handler.destroy()
