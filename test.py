@@ -42,11 +42,12 @@ def compute_render(name: str):
             options.settings["trigger_network_sample"] = 0
 
         if network_processor is not None:
-            network_processor.process(window, options.settings["action_state"], options.settings["edge_smoothing"])
+            network_processor.process(options.settings["action_state"], options.settings["edge_smoothing"])
             network_processor.render(window, options.settings["render_Edge"], options.settings["render_Grid"],
                                      options.settings["render_Node"], options.settings["render_shader_setting_Edge"],
                                      options.settings["render_shader_setting_Grid"],
                                      options.settings["render_shader_setting_Node"], options.settings["show_class"])
+
 
         if "sample_count" in options.settings:
             options.settings["sample_count"].set(network_processor.edge_processor.point_count)

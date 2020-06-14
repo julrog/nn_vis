@@ -54,6 +54,7 @@ class NodeRenderer:
         render_setting_0(clear)
         glPointSize(10.0)
         glDrawArrays(GL_POINTS, 0, node_count)
+        glMemoryBarrier(GL_ALL_BARRIER_BITS)
         if swap:
             window.swap()
 
@@ -72,6 +73,7 @@ class NodeRenderer:
 
         render_setting_0(clear)
         glDrawArrays(GL_POINTS, 0, node_count)
+        glMemoryBarrier(GL_ALL_BARRIER_BITS)
         if swap:
             window.swap()
 
@@ -93,6 +95,7 @@ class NodeRenderer:
 
         render_setting_1(clear)
         glDrawArrays(GL_POINTS, 0, node_count)
+        glMemoryBarrier(GL_ALL_BARRIER_BITS)
         if swap:
             window.swap()
 

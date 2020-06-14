@@ -76,6 +76,7 @@ class EdgeRenderer:
             render_setting_0(clear)
             glPointSize(10.0)
             glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
+            glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
         self.point_render.render(render_function, self.edge_processor.get_buffer_points)
 
@@ -99,6 +100,7 @@ class EdgeRenderer:
             render_setting_0(clear)
             glLineWidth(2.0)
             glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
+            glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
         self.line_render.render(render_function, self.edge_processor.get_buffer_points)
 
@@ -122,6 +124,7 @@ class EdgeRenderer:
         def render_function(sample_points: int):
             render_setting_0(clear)
             glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
+            glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
         self.sphere_render.render(render_function, self.edge_processor.get_buffer_points)
 
@@ -149,6 +152,7 @@ class EdgeRenderer:
         def render_function(sample_points: int):
             render_setting_1(clear)
             glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
+            glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
         self.transparent_render.render(render_function, self.edge_processor.get_buffer_points)
 
@@ -176,6 +180,7 @@ class EdgeRenderer:
         def render_function(sample_points: int):
             render_setting_1(clear)
             glDrawArraysInstanced(GL_POINTS, 0, 1, sample_points)
+            glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
         self.ellipse_render.render(render_function, self.edge_processor.get_buffer_points)
 

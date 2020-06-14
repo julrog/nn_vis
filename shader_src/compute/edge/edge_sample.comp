@@ -52,7 +52,7 @@ void main() {
         is_used = next_point_data.w;
         distance_to_next = distance(last_written_point, next_point);
 
-        while (distance_to_next >= sample_length * 0.99) {
+        while (distance_to_next >= sample_length * 0.99 && current_write_index < max_sample_points - 3) {
             float last_t = sample_length / distance_to_last_checked;
             float t = (sample_length - distance_to_last_checked)/(distance_to_next - distance_to_last_checked);
             t = clamp(t, 0.0, 1.0);
@@ -65,7 +65,7 @@ void main() {
         }
         last_checked_point = next_point;
         distance_to_last_checked = distance_to_next;
-    } while (is_used > 0.0);
+    } while (is_used > 0.0 && current_write_index < max_sample_points - 3);
 
     float distance_to_last = distance(last_written_point, last_point.xyz);
     if (distance_to_last < 0.3 * sample_length) {
@@ -77,7 +77,7 @@ void main() {
     }
 
     // always store last edge point and mark it as last with w-value -1
-    write(current_write_index++, offset, vec4(next_point.xyz, -1.0));
+    write(current_write_index++, offset, vec4(last_point.xyz, -1.0));
 
     // store the first point with sum of all points as w value
     write(0, offset, vec4(first_point.xyz, float(current_write_index)));

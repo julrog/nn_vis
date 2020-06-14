@@ -3,7 +3,7 @@ from tkinter import filedialog
 from typing import List, Dict
 
 from definitions import DATA_PATH
-from gui.data_handler import ImportanceDataHandler, ProcessedNNHandler
+from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 
 
 class LayerSettings:

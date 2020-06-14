@@ -124,19 +124,19 @@ vec3 gridPosition(ivec3 gridIndex)
     ((float(gridIndex.z) + 0.5) * grid_cell_size.z + grid_bounding_min.z + grid_layer_offset));
 }
 
-highp float density_estimation(vec3 position, float length, vec3 center, vec3 point_a, vec3 point_b, float min_distance)
+highp float density_estimation(vec3 position, float cell_length, vec3 center, vec3 point_a, vec3 point_b, float min_distance)
 {
     highp float value = 0.0;
     vec3 direction = normalize(center - position);
-    float start_dis_a = length(point_a - position + direction * length);
-    float start_dis_b = length(point_b - position + direction * length);
-    float end_dis_a = length(point_a - position - direction * length);
-    float end_dis_b = length(point_b - position - direction * length);
+    float start_dis_a = length(point_a - position + direction * cell_length);
+    float start_dis_b = length(point_b - position + direction * cell_length);
+    float end_dis_a = length(point_a - position - direction * cell_length);
+    float end_dis_b = length(point_b - position - direction * cell_length);
     float start_distance = start_dis_a + start_dis_b - min_distance;
     float end_distance = end_dis_a + end_dis_b - min_distance;
     if (start_distance < bandwidth || end_distance < bandwidth)
     {
-        float cross_center = dot(center - (position + direction * length), center - (position - direction * length));
+        float cross_center = dot(center - (position + direction * cell_length), center - (position - direction * cell_length));
         if (start_distance > bandwidth) start_distance = bandwidth;
         if (end_distance > bandwidth) end_distance = bandwidth;
         start_distance = start_distance / bandwidth;

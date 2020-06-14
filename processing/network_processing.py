@@ -1,9 +1,11 @@
+import time
+
 import numpy as np
 from typing import List, Dict
 
 from pyrr import Vector3
 
-from gui.data_handler import ImportanceDataHandler, ProcessedNNHandler
+from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from models.grid import Grid
 from models.network import NetworkModel
 from opengl_helper.render_utility import clear_screen
@@ -86,11 +88,12 @@ class NetworkProcessor:
         self.node_advection_status.reset()
         self.edge_advection_status.reset()
 
-    def process(self, window: Window, action_mode: int, smoothing: bool = False):
+    def process(self, action_mode: int, smoothing: bool = False):
         if self.last_action_mode is not action_mode:
             if action_mode == 0:
                 print("[%s] Resample %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                 self.edge_processor.sample_edges()
+                self.edge_processor.check_limits()
             else:
                 self.action_finished = False
                 self.node_advection_status.reset()
@@ -100,6 +103,7 @@ class NetworkProcessor:
             if action_mode > 3:
                 print("[%s] Resample %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                 self.edge_processor.sample_edges()
+                self.edge_processor.check_limits()
 
             if action_mode == 1:
                 self.node_advection()
@@ -121,9 +125,8 @@ class NetworkProcessor:
                     print("[%s] Smooth %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                     for i in range(7):
                         self.edge_processor.sample_smooth()
-                self.edge_processor.check_limits(window.cam.view)
         else:
-            self.edge_processor.check_limits(window.cam.view, False)
+            self.edge_processor.check_limits(False)
 
         self.last_action_mode = action_mode
 
@@ -167,7 +170,6 @@ class NetworkProcessor:
     def render(self, window: Window, edge_render_mode: int, grid_render_mode: int, node_render_mode: int,
                edge_render_options: Dict[str, float] = None, grid_render_options: Dict[str, float] = None,
                node_render_options: Dict[str, float] = None, show_class: int = 0):
-
         clear_screen([1.0, 1.0, 1.0, 1.0])
         if window.gradient and grid_render_mode == 1:
             self.grid_renderer.render_cube(window, clear=False, swap=False, options=grid_render_options)

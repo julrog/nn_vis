@@ -1,4 +1,5 @@
 import math
+import time
 from typing import List
 
 import numpy as np
@@ -122,7 +123,7 @@ class GridProcessor:
     def clear_buffer(self):
         for i in range(len(self.grid_density_buffer.handle)):
             self.density_ssbo_handler.set(i)
-            self.clear_compute_shader.compute(self.grid_density_buffer.get_objects(i), barrier=False)
+            self.clear_compute_shader.compute(self.grid_density_buffer.get_objects(i))
         self.clear_compute_shader.barrier()
 
     @track_time
@@ -138,7 +139,7 @@ class GridProcessor:
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
             ])
-            self.position_compute_shader.compute(self.grid_position_buffer.get_objects(i), barrier=False)
+            self.position_compute_shader.compute(self.grid_position_buffer.get_objects(i))
         self.position_compute_shader.barrier()
 
     @track_time
@@ -153,7 +154,7 @@ class GridProcessor:
             ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
         ])
 
-        self.node_density_compute_shader.compute(len(self.node_processor.nodes), barrier=False)
+        self.node_density_compute_shader.compute(len(self.node_processor.nodes))
         self.node_density_compute_shader.barrier()
 
     @track_time
@@ -176,8 +177,7 @@ class GridProcessor:
                 self.sample_density_compute_shader.set_uniform_data(
                     [('grid_layer_offset', self.grid.layer_distance * layer, 'float')])
                 self.sample_density_ssbo_handler[layer][container].set_range(i - 1, 3)
-                self.sample_density_compute_shader.compute(self.edge_processor.get_buffer_points(layer, container),
-                                                           barrier=False)
+                self.sample_density_compute_shader.compute(self.edge_processor.get_buffer_points(layer, container))
         self.sample_density_compute_shader.barrier()
 
     @track_time

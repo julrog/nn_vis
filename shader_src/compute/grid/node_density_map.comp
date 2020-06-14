@@ -86,15 +86,15 @@ vec3 gridPosition(ivec3 gridIndex)
     0.0);
 }
 
-highp float density_estimation(vec3 position, float length, vec3 center)
+highp float density_estimation(vec3 position, float cell_length, vec3 center)
 {
     highp float value = 0.0;
     vec3 direction = normalize(center - position);
-    float start_distance = length(center - position + direction * length);
-    float end_distance = length(center - position - direction * length);
+    float start_distance = length(center - position + direction * cell_length);
+    float end_distance = length(center - position - direction * cell_length);
     if (start_distance < bandwidth || end_distance < bandwidth)
     {
-        float cross_center = dot(center - (position + direction * length), center - (position - direction * length));
+        float cross_center = dot(center - (position + direction * cell_length), center - (position - direction * cell_length));
         if (start_distance > bandwidth) start_distance = bandwidth;
         if (end_distance > bandwidth) end_distance = bandwidth;
         start_distance = start_distance / bandwidth;

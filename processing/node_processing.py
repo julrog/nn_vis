@@ -47,7 +47,7 @@ class NodeProcessor:
             ('noise_strength', strength, 'float'),
             ('sample_length', sample_length, 'float')
         ])
-        self.noise_compute_shader.compute(len(self.nodes))
+        self.noise_compute_shader.compute(len(self.nodes), barrier=True)
 
         self.node_buffer.swap()
 

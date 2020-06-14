@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 from pyrr import Vector3
 
-from gui.data_handler import ImportanceDataHandler, ProcessedNNHandler
+from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from models.edge import Edge, split_edges_for_buffer
 from models.node import Node, create_random_nodes, create_nodes_from_data, create_nodes_with_importance
 
@@ -81,7 +81,7 @@ class NetworkModel:
                 read_node_index += 1
             self.layer_nodes[i] = new_nodes
 
-    def generate_edges(self, edge_container_size: int = 1000) -> List[List[List[Edge]]]:
+    def generate_edges(self, edge_container_size: int = 500) -> List[List[List[Edge]]]:
         self.pruned_edges = 0
         edge_importance_values: List[float] = []
         if len(self.edge_data) == 0:
