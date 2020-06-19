@@ -1,12 +1,6 @@
-import threading
-import time
-
 from data.data_handler import ImportanceDataHandler
 from definitions import DATA_PATH
-from gui.window import OptionGui
 from processing.network_processing import NetworkProcessor
-from utility.file import FileHandler
-from utility.performance import track_time
 from OpenGL.GL import *
 
 from utility.window import WindowHandler, Window

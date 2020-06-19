@@ -1,23 +1,36 @@
 import os
 
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
+from sklearn.metrics import classification_report
 from tensorflow import keras
-from tensorflow_core.python.keras import Model, Input
+from tensorflow_core.python.keras import Model, Input, Sequential
 from tensorflow_core.python.keras.layers import BatchNormalization, Dense
+from tensorflow_core.python.keras.regularizers import l1_l2, l1, l2
 from tensorflow_core.python.layers.base import Layer
 
+from automation.create_mnist_model import generate_model_description
+from data.model_data import ModelData
 from definitions import BASE_PATH, DATA_PATH
 
 LOG_SOURCE: str = "NEURAL_NETWORK"
 
 
 def modify_model(model: Model, class_index: int, batch_norm_centering: bool = False,
-                 importance_start_at_one: bool = False) -> Model:
+                 importance_start_at_one: bool = False, regularize_gamma: str = "None") -> Model:
     gamma_initializer: str = "zeros"
     if importance_start_at_one:
         gamma_initializer = "ones"
+
+    gamma_regularizer = None
+    if regularize_gamma == "l1":
+        gamma_regularizer = l1()
+    if regularize_gamma == "l2":
+        gamma_regularizer = l2()
+    if regularize_gamma == "l1l2":
+        gamma_regularizer = l1_l2()
+
     max_layer: int = len(model.layers)
     last_output: Input = None
     network_input: Input = None
@@ -26,7 +39,8 @@ def modify_model(model: Model, class_index: int, batch_norm_centering: bool = Fa
             last_output = layer.output
             network_input = layer.input
         if 0 < i < max_layer:
-            new_layer: Layer = BatchNormalization(center=batch_norm_centering, gamma_initializer=gamma_initializer)
+            new_layer: Layer = BatchNormalization(center=batch_norm_centering, gamma_initializer=gamma_initializer,
+                                                  gamma_regularizer=gamma_regularizer)
             last_output = new_layer(last_output)
         if i == max_layer - 1:
             new_end_layer: Layer = Dense(2, activation='softmax', name="binary_output_layer")
@@ -51,30 +65,35 @@ def modify_model(model: Model, class_index: int, batch_norm_centering: bool = Fa
 
 
 class ProcessedNetwork:
-    def __init__(self, file: str):
+    def __init__(self, model_data: ModelData, store_path: str = None):
+        self.model_data: ModelData = model_data
+        self.name: str = "Undefined"
         self.num_classes: int = -1
-        self.model_path: str = BASE_PATH + '/storage/models/' + file
-        model: Model = keras.models.load_model(self.model_path)
-        print(model.summary())
+        self.path: str = store_path if model_data is None else model_data.get_path()
+        self.original_name: str = None if model_data is None else model_data.name
+
+        self.model_data.reload_model()
         self.architecture_data: List[int] = []
         self.node_importance_value: List[List[np.array]] = []
         self.edge_importance_value: List[np.array] = []
         self.edge_importance_set: bool = False
-        for i, layer in enumerate(model.layers):
+        for i, layer in enumerate(model_data.model.layers):
             self.architecture_data.append(layer.output_shape[1])
             if i is not 0:
                 self.node_importance_value.append([])
                 self.edge_importance_value.append(None)
-            if i is len(model.layers) - 1:
+            if i is len(model_data.model.layers) - 1:
                 self.num_classes = layer.output_shape[1]
 
-        self.batch_norm_centering: bool = False
-        self.importance_start_at_one: bool = False
+        self.centering: bool = False
+        self.gamma_one: bool = True
+        self.regularize_gamma: str = "None"
 
     def get_fine_tuned_model_data(self, class_index: int, train_data: Tuple[np.array, np.array],
-                                  test_data: Tuple[np.array, np.array]) -> Tuple[Model, Model]:
+                                  test_data: Tuple[np.array, np.array]) -> Model:
         batch_size: int = 128
         epochs: int = 20
+        learning_rate: float = 0.001
 
         x_train, y_train = train_data
         x_test, y_test = test_data
@@ -84,30 +103,50 @@ class ProcessedNetwork:
         y_test = keras.utils.to_categorical(y_test, 2)
 
         print('x_train shape:', x_train.shape)
-        print(x_train.shape[0], 'train samples')
-        print(x_test.shape[0], 'test samples')
+        training_samples: int = x_train.shape[0]
+        test_samples: int = x_test.shape[0]
+        print(training_samples, 'train samples')
+        print(test_samples, 'test samples')
 
-        model: Model = keras.models.load_model(self.model_path)
-        modified_model: Model = modify_model(model, class_index, self.batch_norm_centering,
-                                             self.importance_start_at_one)
+        self.model_data.reload_model()
+        modified_model: Model = modify_model(self.model_data.model, class_index, self.centering, self.gamma_one,
+                                             self.regularize_gamma)
 
         for layer in modified_model.layers:
             layer.trainable = False
             if layer.__class__.__name__ == "BatchNormalization":
                 layer.trainable = True
 
-        print(modified_model.summary())
-
         modified_model.compile(loss=keras.losses.categorical_crossentropy,
-                               optimizer=keras.optimizers.Adam(0.005),
+                               optimizer=keras.optimizers.Adam(learning_rate),
                                metrics=['accuracy'])
 
         modified_model.fit(x_train, y_train,
                            batch_size=batch_size,
                            epochs=epochs,
-                           verbose=1,
+                           verbose=0,
                            validation_data=(x_test, y_test))
-        return model, modified_model
+
+        score = modified_model.evaluate(x_test, y_test, verbose=0)
+        print('Test loss:', score[0])
+        print('Test accuracy:', score[1])
+
+        c_y_test = np.argmax(y_test, axis=1)  # Convert one-hot to index
+        prediction_test = np.argmax(modified_model.predict(x_test), axis=1)
+        c_report: any = classification_report(c_y_test, prediction_test, output_dict=True)
+        print(c_report)
+
+        fine_tuned_data: Dict[any, any] = dict()
+        fine_tuned_data['batch_size'] = str(batch_size)
+        fine_tuned_data['learning_rate'] = str(learning_rate)
+        fine_tuned_data['loss'] = str(score[0])
+        fine_tuned_data['accuracy'] = str(score[1])
+        fine_tuned_data['classification_report'] = c_report
+
+        self.model_data.store_data("modified_fine_tuned_performance", self.name, "class_%i" % class_index,
+                                   fine_tuned_data)
+
+        return modified_model
 
     def extract_importance_from_model(self, original_model: Model, fine_tuned_model: Model):
         count: int = 0
@@ -137,8 +176,8 @@ class ProcessedNetwork:
             raise Exception("[%s] Data does not match number of classes %i." % (LOG_SOURCE, self.num_classes))
 
         for i, (class_test_data, class_train_data) in enumerate(zip(test_data, train_data)):
-            original_model, fine_tuned_model = self.get_fine_tuned_model_data(i, class_train_data, class_test_data)
-            self.extract_importance_from_model(original_model, fine_tuned_model)
+            fine_tuned_model = self.get_fine_tuned_model_data(i, class_train_data, class_test_data)
+            self.extract_importance_from_model(self.model_data.model, fine_tuned_model)
 
         result_node_importance: List[np.array] = []
         for importance_values in self.node_importance_value:
@@ -148,52 +187,60 @@ class ProcessedNetwork:
             result_edge_importance.append(importance_values)
         return result_node_importance, result_edge_importance
 
-    def store_importance_data(self, export_path: str, train_data_path: str, test_data_path: str,
-                              normalize: bool = False, batch_norm_centering: bool = False,
-                              importance_start_at_one: bool = False):
-        self.batch_norm_centering: bool = batch_norm_centering
-        self.importance_start_at_one: bool = importance_start_at_one
+    def store_importance_data(self, train_data_path: str, test_data_path: str, centering: bool = False,
+                              gamma_one: bool = True, regularize_gamma: str = "l1l2"):
+        self.centering = centering
+        self.gamma_one = gamma_one
+        self.regularize_gamma = regularize_gamma
+
+        self.name: str = "beta_" if self.centering else "nobeta_"
+        self.name += "gammaone_" if self.gamma_one else "gammazero_"
+        if self.regularize_gamma is not "None":
+            self.name += "l1_" if self.regularize_gamma == "l1" else "l2_" if self.regularize_gamma == "l2" else "l1l2_"
 
         importance_data: Tuple[List[np.array], List[np.array]] = self.generate_importance_for_data(train_data_path,
                                                                                                    test_data_path)
         node_importance_data: List[np.array] = importance_data[0]
         edge_importance_data: List[np.array] = importance_data[1]
-        if normalize:
-            normalized_node_importance_data: List[np.array] = []
-            min_importance: float = 1000000.0
-            max_importance: float = 0.0
-            for layer_importance in node_importance_data:
-                normalized_layer_importance: np.array = np.absolute(layer_importance)
-                for node_importance in normalized_layer_importance:
-                    for node_class_importance in node_importance:
-                        if min_importance > node_class_importance:
-                            min_importance = node_class_importance
-                        if max_importance < node_class_importance:
-                            max_importance = node_class_importance
-                normalized_node_importance_data.append(normalized_layer_importance)
-            for i, normalized_layer_importance in enumerate(normalized_node_importance_data):
-                normalized_node_importance_data[i] = normalized_layer_importance / max_importance
-            node_importance_data = normalized_node_importance_data
-            print("[%s] Node importance - Min: %f, Max: %f" % (LOG_SOURCE, min_importance, max_importance))
 
-            normalized_edge_importance_data: List[np.array] = []
-            min_importance: float = 1000000.0
-            max_importance: float = 0.0
-            for layer_data in edge_importance_data:
-                new_layer_data: List[np.array] = []
-                for i in range(layer_data.shape[0]):
-                    absolute_layer_data: np.array = np.abs(layer_data[i])
-                    input_node_max: float = float(np.max(absolute_layer_data))
-                    input_node_min: float = float(np.min(absolute_layer_data))
-                    if max_importance < input_node_max:
-                        max_importance = input_node_max
-                    if min_importance > input_node_min:
-                        min_importance = input_node_min
-                    absolute_layer_data /= input_node_max
-                    new_layer_data.append(absolute_layer_data)
-                normalized_edge_importance_data.append(np.stack(new_layer_data, axis=0))
-            edge_importance_data = normalized_edge_importance_data
-            print("[%s] Edge importance - Min: %f, Max: %f" % (LOG_SOURCE, min_importance, max_importance))
+        normalized_node_importance_data: List[np.array] = []
+        min_node_importance: float = 1000000.0
+        max_node_importance: float = 0.0
+        for layer_importance in node_importance_data:
+            normalized_layer_importance: np.array = np.absolute(layer_importance)
+            for node_importance in normalized_layer_importance:
+                for node_class_importance in node_importance:
+                    if min_node_importance > node_class_importance:
+                        min_node_importance = node_class_importance
+                    if max_node_importance < node_class_importance:
+                        max_node_importance = node_class_importance
+            normalized_node_importance_data.append(normalized_layer_importance)
+        for i, normalized_layer_importance in enumerate(normalized_node_importance_data):
+            normalized_node_importance_data[i] = normalized_layer_importance / max_node_importance
+        node_importance_data = normalized_node_importance_data
+        print("[%s] Node importance - Min: %f, Max: %f" % (LOG_SOURCE, min_node_importance, max_node_importance))
+
+        min_edge_importance: float = 1000000.0
+        max_edge_importance: float = 0.0
+        for layer_data in edge_importance_data:
+            for i in range(layer_data.shape[0]):
+                absolute_layer_data: np.array = np.abs(layer_data[i])
+                current_edge_max: float = float(np.max(absolute_layer_data))
+                current_edge_min: float = float(np.min(absolute_layer_data))
+                if max_edge_importance < current_edge_max:
+                    max_edge_importance = current_edge_max
+                if min_edge_importance > current_edge_min:
+                    min_edge_importance = current_edge_min
+        normalized_edge_importance_data: List[np.array] = []
+        for layer_data in edge_importance_data:
+            new_layer_data: List[np.array] = []
+            for i in range(layer_data.shape[0]):
+                absolute_layer_data: np.array = np.abs(layer_data[i])
+                absolute_layer_data /= max_edge_importance
+                new_layer_data.append(absolute_layer_data)
+            normalized_edge_importance_data.append(np.stack(new_layer_data, axis=0))
+        edge_importance_data = normalized_edge_importance_data
+        print("[%s] Edge importance - Min: %f, Max: %f" % (LOG_SOURCE, min_edge_importance, max_edge_importance))
 
         last_layer_node_importance = []
         for i in range(self.num_classes):
@@ -202,7 +249,15 @@ class ProcessedNetwork:
             last_layer_node_importance.append(new_node_data)
         node_importance_data.append(last_layer_node_importance)
 
-        data_path: str = DATA_PATH + export_path
+        data_path: str = self.model_data.get_path() + self.name + "_importance_data"
         if not os.path.exists(os.path.dirname(data_path)):
             os.makedirs(os.path.dirname(data_path))
         np.savez(data_path, (node_importance_data, edge_importance_data))
+
+        importance_value_range_data: Dict[str, str] = dict()
+        importance_value_range_data['min_node_importance'] = str(min_node_importance)
+        importance_value_range_data['max_node_importance'] = str(max_node_importance)
+        importance_value_range_data['min_edge_importance'] = str(min_edge_importance)
+        importance_value_range_data['max_edge_importance'] = str(max_edge_importance)
+        self.model_data.store_data("modified_fine_tuned_performance", self.name, "importance_value_range",
+                                   importance_value_range_data)
