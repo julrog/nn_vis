@@ -27,9 +27,10 @@ class Window:
         self.mouse_set: bool = False
         self.freeze: bool = True
         self.gradient: bool = True
-        self.render_method: int = 0
         self.mouse_captured: bool = False
         self.focused: bool = True
+        self.screenshot: bool = False
+        self.screenshot_series: int = 0
 
     def set_position(self, x: float, y: float):
         glfw.set_window_pos(self.window_handle, x, y)
@@ -98,24 +99,31 @@ class Window:
             if key == glfw.KEY_G and action == glfw.RELEASE:
                 self.gradient = not self.gradient
 
+            if key == glfw.KEY_K and action == glfw.RELEASE:
+                self.screenshot = True
+            if key == glfw.KEY_L and action == glfw.RELEASE:
+                self.screenshot_series = 8
+
+            if key == glfw.KEY_0 and action == glfw.RELEASE:
+                self.cam.set_position(0)
             if key == glfw.KEY_1 and action == glfw.RELEASE:
-                self.render_method = 1
+                self.cam.set_position(1)
             if key == glfw.KEY_2 and action == glfw.RELEASE:
-                self.render_method = 2
+                self.cam.set_position(2)
             if key == glfw.KEY_3 and action == glfw.RELEASE:
-                self.render_method = 3
+                self.cam.set_position(3)
             if key == glfw.KEY_4 and action == glfw.RELEASE:
-                self.render_method = 4
+                self.cam.set_position(4)
             if key == glfw.KEY_5 and action == glfw.RELEASE:
-                self.render_method = 5
+                self.cam.set_position(5)
             if key == glfw.KEY_6 and action == glfw.RELEASE:
-                self.render_method = 6
+                self.cam.set_position(6)
             if key == glfw.KEY_7 and action == glfw.RELEASE:
-                self.render_method = 7
+                self.cam.set_position(7)
             if key == glfw.KEY_8 and action == glfw.RELEASE:
-                self.render_method = 8
+                self.cam.set_position(8)
             if key == glfw.KEY_9 and action == glfw.RELEASE:
-                self.render_method = 9
+                self.cam.set_position(9)
 
         glfw.set_window_size_callback(self.window_handle, resize_clb)
         glfw.set_cursor_pos_callback(self.window_handle, mouse_look_clb)

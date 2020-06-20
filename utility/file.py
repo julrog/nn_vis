@@ -72,25 +72,25 @@ class EvaluationFile:
             with open("%s/%s_%s.json" % (self.directory_path, self.name, self.day_key), "r") as stats_file:
                 file_data = stats_file.read()
                 if file_data:
-                    self.data_cache = file_data
+                    self.data_cache = json.loads(file_data)
         except FileNotFoundError:
             with open("%s/%s_%s.json" % (self.directory_path, self.name, self.day_key), 'w+'):
                 pass
 
     def append_main_data(self, key: str, sub_key: str, data: Dict[any, any]):
-        if key not in self.data_cache:
+        if key not in self.data_cache.keys():
             self.data_cache[key] = dict()
-        if sub_key not in self.data_cache[key]:
+        if sub_key not in self.data_cache[key].keys():
             self.data_cache[key][sub_key] = data
         else:
             self.data_cache[key][sub_key].update(data)
 
     def append_data(self, key: str, sub_key: str, sub_sub_key: str, data: Dict[any, any]):
-        if key not in self.data_cache:
+        if key not in self.data_cache.keys():
             self.data_cache[key] = dict()
-        if sub_key not in self.data_cache[key]:
+        if sub_key not in self.data_cache[key].keys():
             self.data_cache[key][sub_key] = dict()
-        if sub_sub_key not in self.data_cache[key][sub_key]:
+        if sub_sub_key not in self.data_cache[key][sub_key].keys():
             self.data_cache[key][sub_key][sub_sub_key] = data
         else:
             self.data_cache[key][sub_key][sub_sub_key].update(data)

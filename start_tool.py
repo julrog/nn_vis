@@ -2,6 +2,7 @@ import threading
 import time
 
 from gui.window import OptionGui
+from opengl_helper.screenshot import create_screenshot
 from processing.network_processing import NetworkProcessor
 from utility.file import FileHandler
 from utility.performance import track_time
@@ -47,7 +48,6 @@ def compute_render(name: str):
                                      options.settings["render_Node"], options.settings["render_shader_setting_Edge"],
                                      options.settings["render_shader_setting_Grid"],
                                      options.settings["render_shader_setting_Node"], options.settings["show_class"])
-
 
         if "sample_count" in options.settings:
             options.settings["sample_count"].set(network_processor.edge_processor.point_count)
@@ -102,7 +102,24 @@ def compute_render(name: str):
             if start_count < 0:
                 start_count = frame_count
                 start_time = time.perf_counter()
+
+            if window.screenshot_series > 0:
+                window.cam.set_position(window.screenshot_series)
             frame()
+            if window.screenshot_series > 0:
+                if 'network_name' in options.settings.keys():
+                    create_screenshot(width, height,
+                                      options.settings['network_name'] + "_" + str(window.screenshot_series))
+                else:
+                    create_screenshot(width, height, "network_" + str(window.screenshot_series))
+                window.screenshot_series -= 1
+            else:
+                if window.screenshot:
+                    if 'network_name' in options.settings.keys():
+                        create_screenshot(width, height, options.settings['network_name'])
+                    else:
+                        create_screenshot(width, height)
+                    window.screenshot = False
             frame_count += 1
             if time.perf_counter() - start_time > 1.0:
                 options.settings["fps"].set(

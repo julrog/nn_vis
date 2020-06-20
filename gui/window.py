@@ -1,3 +1,4 @@
+import ntpath
 from tkinter import *
 from tkinter import filedialog
 from typing import List, Dict
@@ -333,12 +334,14 @@ class OptionGui:
         filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
                                               filetypes=(("processed nn files", "*.npz"),))
         data_loader: ProcessedNNHandler = ProcessedNNHandler(filename)
+        self.settings['network_name'] = ntpath.basename(filename) + "_processed"
         self.update_layer(data_loader.layer_data, processed_nn=data_loader)
 
     def open_importance_file(self):
         filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
                                               filetypes=(("importance files", "*.npz"),))
         data_loader: ImportanceDataHandler = ImportanceDataHandler(filename)
+        self.settings['network_name'] = ntpath.basename(filename) + "_raw"
         self.update_layer(data_loader.layer_data, importance_data=data_loader)
 
     def update_layer(self, layer_data: List[int], importance_data: ImportanceDataHandler = None,
