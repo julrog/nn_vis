@@ -67,14 +67,17 @@ class EvaluationFile:
             datetime.timestamp(datetime.now().replace(tzinfo=timezone.utc).astimezone())).strftime(
             '%Y-%m-%d')
 
-    def read_data(self):
+    def read_data(self, timed_file: bool = True):
+        file_path: str = "%s/%s_%s.json" % (
+            self.directory_path, self.name, self.day_key) if timed_file else "%s/%s.json" % (
+            self.directory_path, self.name)
         try:
-            with open("%s/%s_%s.json" % (self.directory_path, self.name, self.day_key), "r") as stats_file:
+            with open(file_path, "r") as stats_file:
                 file_data = stats_file.read()
                 if file_data:
                     self.data_cache = json.loads(file_data)
         except FileNotFoundError:
-            with open("%s/%s_%s.json" % (self.directory_path, self.name, self.day_key), 'w+'):
+            with open(file_path, 'w+'):
                 pass
 
     def append_main_data(self, key: str, sub_key: str, data: Dict[any, any]):

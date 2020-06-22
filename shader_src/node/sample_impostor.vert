@@ -37,7 +37,7 @@ void main()
         vec4 new_normal = view * vec4((position.xyz + vec3(0.0, 1.0, 0.0)), 1.0);
         vs_normal = normalize(vec3(new_normal.xyz - gl_Position.xyz));
         vs_size = node_data_2.w;
-        vs_importance = node_data_2.w;
+        vs_importance = node_data_2.z;
 
         float importance[10];
         importance[0] = node_data_0.x/(node_data_2.z * 10.0);

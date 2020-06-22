@@ -29,9 +29,12 @@ class ModelData:
         self.data['training_samples'] = training_samples
         self.data['test_samples'] = test_samples
 
-    def set_initial_performance(self, loss: float, accuracy: float, classification_report: any):
-        self.data['loss'] = str(loss)
-        self.data['accuracy'] = str(accuracy)
+    def set_initial_performance(self, test_loss: float, test_accuracy: float, train_loss: float, train_accuracy: float,
+                                classification_report: any):
+        self.data['test_loss'] = str(test_loss)
+        self.data['test_accuracy'] = str(test_accuracy)
+        self.data['train_loss'] = str(train_loss)
+        self.data['train_accuracy'] = str(train_accuracy)
         self.data['classification_report'] = classification_report
 
     def store_model_data(self):

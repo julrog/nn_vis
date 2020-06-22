@@ -32,7 +32,8 @@ def process_train_test_data() -> Tuple[np.array, np.array, np.array, np.array]:
     return x_train, y_train, x_test, y_test
 
 
-def get_added_bn_importance_class(edge_alpha: float, classes_importance: List[float], relevant_classes: List[int]) -> float:
+def get_added_bn_importance_class(edge_alpha: float, classes_importance: List[float],
+                                  relevant_classes: List[int]) -> float:
     edge_sum_class_importance: float = 0.0
     class_count: int = 0
     for class_id, class_importance in enumerate(classes_importance):
@@ -43,7 +44,8 @@ def get_added_bn_importance_class(edge_alpha: float, classes_importance: List[fl
     return edge_sum_class_importance
 
 
-def get_added_bn_importance(edge_alpha: float, classes_importance: List[float], relevant_classes: List[int] = None) -> float:
+def get_added_bn_importance(edge_alpha: float, classes_importance: List[float],
+                            relevant_classes: List[int] = None) -> float:
     if relevant_classes is not None:
         return get_added_bn_importance_class(edge_alpha, classes_importance, relevant_classes)
     edge_sum_class_importance: float = 0.0
@@ -53,16 +55,23 @@ def get_added_bn_importance(edge_alpha: float, classes_importance: List[float], 
     return edge_sum_class_importance
 
 
-def get_only_bn_importance(classes_importance: List[float]) -> float:
+def get_only_bn_importance(classes_importance: List[float], relevant_classes: List[int] = None) -> float:
     edge_sum_class_importance: float = 0.0
-    for class_importance in classes_importance:
-        edge_sum_class_importance += class_importance
-    edge_sum_class_importance = edge_sum_class_importance / float(len(classes_importance))
+    if relevant_classes is not None:
+        for class_index, class_importance in enumerate(classes_importance):
+            if class_index in relevant_classes:
+                edge_sum_class_importance += class_importance
+        edge_sum_class_importance = edge_sum_class_importance / float(len(relevant_classes))
+    else:
+        for class_index, class_importance in enumerate(classes_importance):
+            edge_sum_class_importance += class_importance
+        edge_sum_class_importance = edge_sum_class_importance / float(len(classes_importance))
     return edge_sum_class_importance
 
 
 def prune_model(importance_type: str, importance_prune_percent: str, importance_mode: str, model_data: ModelData,
-                importance_data: ImportanceDataHandler, importance_threshold: float, relevant_classes: List[int] = None):
+                importance_data: ImportanceDataHandler, importance_threshold: float,
+                relevant_classes: List[int] = None):
     data: Dict[any, any] = dict()
 
     pruned_edges: int = 0
@@ -74,13 +83,13 @@ def prune_model(importance_type: str, importance_prune_percent: str, importance_
         for input_node_id, input_node in enumerate(layer):
             for edge_id, edge_alpha in enumerate(input_node):
                 edge_importance: float = 0.0
-                if importance_mode == "bn_node_importance_added":
+                if "bn_node_importance_added" in importance_mode:
                     edge_importance = get_added_bn_importance(edge_alpha,
                                                               importance_data.node_importance_data[layer_id][
                                                                   input_node_id], relevant_classes)
-                elif importance_mode == "bn_node_importance_only":
+                elif "bn_node_importance_only" in importance_mode:
                     edge_importance = get_only_bn_importance(importance_data.node_importance_data[layer_id][
-                                                                 input_node_id])
+                                                                 input_node_id], relevant_classes)
                 else:
                     edge_importance = edge_alpha
                 if edge_importance <= importance_threshold:
@@ -106,8 +115,8 @@ def prune_model(importance_type: str, importance_prune_percent: str, importance_
 
 def test_model(importance_type: str, importance_prune_percent: str, importance_mode: str, model_data: ModelData,
                x_train, y_train, x_test, y_test):
-    train_score = model_data.model.evaluate(x_test, y_test, verbose=1)
-    test_score = model_data.model.evaluate(x_test, y_test, verbose=1)
+    train_score = model_data.model.evaluate(x_test, y_test, verbose=0)
+    test_score = model_data.model.evaluate(x_test, y_test, verbose=0)
 
     print('Train loss: %f, Train accuracy: %f' % (train_score[0], train_score[1]))
     print('Test loss: %f, Test accuracy: %f' % (test_score[0], test_score[1]))
@@ -115,12 +124,28 @@ def test_model(importance_type: str, importance_prune_percent: str, importance_m
     c_y_train = np.argmax(y_train, axis=1)  # Convert one-hot to index
     prediction_train = model_data.model.predict_classes(x_train)
     train_c_report: dict = classification_report(c_y_train, prediction_train, output_dict=True)
-    print(train_c_report)
 
     c_y_test = np.argmax(y_test, axis=1)  # Convert one-hot to index
     prediction_test = model_data.model.predict_classes(x_test)
     test_c_report: dict = classification_report(c_y_test, prediction_test, output_dict=True)
-    print(test_c_report)
+
+    num_classes: int = 10
+
+    train_class_accuracy_report: Dict[str, any] = dict()
+    for i in range(num_classes):
+        true_positives_negatives: int = 0
+        for truth, prediction in zip(c_y_train, prediction_train):
+            if (prediction == i and truth == i) or (prediction != i and truth != i):
+                true_positives_negatives += 1
+        train_class_accuracy_report[str(i)] = float(true_positives_negatives) / float(len(prediction_train))
+
+    test_class_accuracy_report: Dict[str, any] = dict()
+    for i in range(num_classes):
+        true_positives_negatives: int = 0
+        for truth, prediction in zip(c_y_test, prediction_test):
+            if (prediction == i and truth == i) or (prediction != i and truth != i):
+                true_positives_negatives += 1
+        test_class_accuracy_report[str(i)] = float(true_positives_negatives) / float(len(prediction_test))
 
     importance_prune_data: Dict[str, any] = dict()
     importance_prune_data['train_loss'] = str(train_score[0])
@@ -129,12 +154,15 @@ def test_model(importance_type: str, importance_prune_percent: str, importance_m
     importance_prune_data['test_accuracy'] = str(test_score[1])
     importance_prune_data['train_c_report'] = train_c_report
     importance_prune_data['test_c_report'] = test_c_report
+    importance_prune_data['train_class_accuracy'] = train_class_accuracy_report
+    importance_prune_data['test_class_accuracy'] = test_class_accuracy_report
 
     model_data.store_data(importance_type, importance_prune_percent, importance_mode, importance_prune_data)
 
 
 def create_evaluation_data(model_data: ModelData, importance_type: str,
-                           importance_mode: str = "bn_node_importance_added", relevant_classes: List[int] = None):
+                           importance_mode: str = "bn_node_importance_added", step_size: int = 1,
+                           relevant_classes: List[int] = None, start_percentage: int = 0, end_percentage: int = 100):
     x_train, y_train, x_test, y_test = process_train_test_data()
 
     importance_data: ImportanceDataHandler = ImportanceDataHandler(
@@ -145,26 +173,33 @@ def create_evaluation_data(model_data: ModelData, importance_type: str,
         for input_node_id, input_node in enumerate(layer):
             for edge_alpha in input_node:
                 edge_importance: float = 0.0
-                if importance_mode == "bn_node_importance_added":
+                if "bn_node_importance_added" in importance_mode:
                     edge_importance = get_added_bn_importance(edge_alpha,
                                                               importance_data.node_importance_data[layer_id][
                                                                   input_node_id], relevant_classes)
-                elif importance_mode == "bn_node_importance_only":
+                elif "bn_node_importance_only" in importance_mode:
                     edge_importance = get_only_bn_importance(importance_data.node_importance_data[layer_id][
-                                                                 input_node_id])
+                                                                 input_node_id], relevant_classes)
                 else:
                     edge_importance = edge_alpha
                 edge_importance_data.append(edge_importance)
 
     sorted_edge_importance: np.array = np.sort(np.array(edge_importance_data))
 
-    for prune_percentage in range(85, 100, 1):
+    for prune_percentage in range(start_percentage, end_percentage + step_size, step_size):
         importance_threshold: float = 0.0
         if prune_percentage != 0:
-            importance_threshold = sorted_edge_importance[
-                int((prune_percentage * sorted_edge_importance.shape[0]) / 100)]
-        time.sleep(5)
-        prune_model(importance_type, str(prune_percentage), importance_mode, model_data, importance_data,
-                    importance_threshold, relevant_classes)
-        test_model(importance_type, str(prune_percentage), importance_mode, model_data, x_train, y_train, x_test,
-                   y_test)
+            if int((prune_percentage * sorted_edge_importance.shape[0]) / 100) >= len(sorted_edge_importance):
+                importance_threshold = sorted_edge_importance[len(sorted_edge_importance) - 1]
+            else:
+                importance_threshold = sorted_edge_importance[
+                    int((prune_percentage * sorted_edge_importance.shape[0]) / 100)]
+        time.sleep(1)
+
+        imp_mode: str = importance_mode
+        if relevant_classes is not None:
+            imp_mode = importance_mode + "_" + str(relevant_classes)
+        prune_model(importance_type, str(prune_percentage), imp_mode, model_data,
+                    importance_data, importance_threshold, relevant_classes)
+        test_model(importance_type, str(prune_percentage), imp_mode, model_data,
+                   x_train, y_train, x_test, y_test)

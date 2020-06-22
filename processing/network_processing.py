@@ -223,3 +223,8 @@ class NetworkProcessor:
         self.edge_renderer.delete()
         self.grid_processor.delete()
         self.grid_renderer.delete()
+
+    def get_node_mid(self) -> Vector3:
+        self.node_processor.read_nodes_from_buffer()
+        self.network.set_nodes(self.node_processor.nodes)
+        return self.network.get_node_mid()

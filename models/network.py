@@ -196,3 +196,16 @@ class NetworkModel:
                         + (node_one.position.z - node_two.position.z) * (node_one.position.z - node_two.position.z))
             distance_sum += layer_distance_sum / float(distance_value_count)
         return distance_sum
+
+    def get_node_mid(self) -> Vector3:
+        mid_position_x: float = 0.0
+        mid_position_y: float = 0.0
+        position_count: int = 0
+        for i in range(len(self.layer)):
+            position_count += len(self.layer_nodes[i])
+        for i in range(len(self.layer)):
+            for node_one in self.layer_nodes[i]:
+                mid_position_x += node_one.position.x
+                mid_position_y += node_one.position.x
+        return Vector3(
+            [mid_position_x / position_count, mid_position_y / position_count, 0.0])

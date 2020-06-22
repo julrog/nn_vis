@@ -21,7 +21,7 @@ class Window:
         self.width: float = settings["width"]
         self.height: float = settings["height"]
         self.active: bool = False
-        self.cam: Camera = Camera(self.width, self.height)
+        self.cam: Camera = Camera(self.width, self.height, Vector3([0.0, 0.0, 0.0]))
 
         self.last_mouse_pos: Tuple[int, int] = (int(self.width / 2), int(self.height / 2))
         self.mouse_set: bool = False
