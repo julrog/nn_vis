@@ -49,9 +49,6 @@ def compute_render(name: str):
                                      options.settings["render_shader_setting_Grid"],
                                      options.settings["render_shader_setting_Node"], options.settings["show_class"])
 
-            if options.settings["action_state"] == 1 and network_processor.action_finished:
-                window.cam.base = network_processor.get_node_mid()
-
         if "sample_count" in options.settings:
             options.settings["sample_count"].set(network_processor.edge_processor.point_count)
         if "edge_count" in options.settings:
@@ -84,7 +81,7 @@ def compute_render(name: str):
                                              edge_importance_type=options.settings[
                                                  "edge_importance_type"])
         window.cam.base = network_processor.get_node_mid()
-        window.cam.set_position(0)
+        window.cam.set_position(1)
 
         while window.is_active() and not options.settings["Closed"]:
             if options.settings["update_model"]:
@@ -105,7 +102,7 @@ def compute_render(name: str):
                                                      edge_importance_type=options.settings[
                                                          "edge_importance_type"])
                 window.cam.base = network_processor.get_node_mid()
-                window.cam.set_position(0)
+                window.cam.set_position(1)
             if start_count < 0:
                 start_count = frame_count
                 start_time = time.perf_counter()

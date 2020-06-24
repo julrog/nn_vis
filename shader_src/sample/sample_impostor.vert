@@ -15,10 +15,12 @@ out float vs_discard;
 out vec4 vs_next_position;
 out float vs_importance;
 out vec4 vs_color;
+out float vs_edge;
 
 uniform mat4 view;
 uniform int max_sample_points;
 uniform float importance_threshold = 0;
+uniform float importance_max = 1.0;
 uniform int edge_importance_type = 0;
 uniform int show_class = -1;
 
@@ -40,6 +42,12 @@ void main()
         vs_discard = 1.0;
     } else {
         vs_discard = 0.0;
+
+        vs_edge = 0.0;
+        if(next_position.w <= 0.0) vs_edge = 1.0;
+        if(position.w > 1.0) vs_edge = 1.0;
+        if(mod(gl_InstanceID + 1, max_sample_points) >= edge_data_0.x - 2.0) vs_edge = 1.0;
+
         vs_next_position = view * vec4(next_position.xyz, 1.0);
         gl_Position = view * vec4(position.xyz, 1.0);
         vec4 new_normal = view * vec4((position.xyz + vec3(0.0, 1.0, 0.0)), 1.0);
@@ -120,10 +128,10 @@ void main()
             {
                 combined_color += color_list[i] * importance[i];
             }
-            vs_color = vec4(combined_color, vs_importance);
+            vs_color = vec4(combined_color, vs_importance/importance_max);
         } else {
             if (show_class == 0) {
-                vs_color = vec4(0.0, 0.0, 0.0, vs_importance);
+                vs_color = vec4(0.0, 0.0, 0.0, vs_importance/importance_max);
             } else {
                 vs_color = vec4(color_list[show_class - 2] * importance[show_class - 2], importance[show_class - 2]);
             }

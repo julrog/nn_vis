@@ -1,6 +1,7 @@
 import pyrr
 from pyrr import Vector3, Matrix44, vector, vector3
 from math import sin, cos, radians, asin, degrees, acos
+import numpy as np
 
 
 def look_at(position: Vector3, target: Vector3, world_up: Vector3) -> Matrix44:
@@ -79,7 +80,6 @@ class Camera:
 
     def set_size(self, width: float, height: float):
         self.projection = pyrr.matrix44.create_perspective_projection_matrix(45, width / height, 0.1, 100)
-        pass
 
     def move(self, direction: Vector3):
         self.move_vector.x = self.move_vector.x if self.move_vector.x != 0 else direction.x
@@ -92,66 +92,59 @@ class Camera:
         self.move_vector.z = 0 if self.move_vector.z == direction.z else self.move_vector.z
 
     def set_position(self, camera_position_index: int):
+        self.camera_up = Vector3([0.0, 1.0, 0.0])
         if camera_position_index == 2:
             self.camera_pos = Vector3([4.0, 0.0, 0.0])
-            self.camera_front = Vector3(vector.normalise(Vector3([0.0, 0.0, 0.0]) - self.camera_pos))
             self.camera_pos = self.base + self.camera_pos
-            self.camera_up = Vector3([0.0, 1.0, 0.0])
-            self.camera_right = Vector3([0.0, 0.0, -1.0])
-            self.set_yaw_pitch_from_front()
+            self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
+            self.set_yaw_pitch_from_front(False)
         elif camera_position_index == 3:
             self.camera_pos = Vector3([0.0, 0.0, 3.5])
-            self.camera_front = Vector3(vector.normalise(Vector3([0.0, 0.0, 0.0]) - self.camera_pos))
             self.camera_pos = self.base + self.camera_pos
-            self.camera_up = Vector3([0.0, 1.0, 0.0])
-            self.camera_right = Vector3([-1.0, 0.0, 0.0])
+            self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
             self.set_yaw_pitch_from_front(False)
         elif camera_position_index == 4:
             self.camera_pos = Vector3([0.0, 0.0, -3.5])
-            self.camera_front = Vector3(vector.normalise(Vector3([0.0, 0.0, 0.0]) - self.camera_pos))
             self.camera_pos = self.base + self.camera_pos
-            self.camera_up = Vector3([0.0, 1.0, 0.0])
-            self.camera_right = Vector3([1.0, 0.0, 0.0])
+            self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
             self.set_yaw_pitch_from_front(False)
         elif camera_position_index == 5:
             self.camera_pos = Vector3([-3.5, 0.0, -3.5])
-            self.camera_front = Vector3(vector.normalise(Vector3([0.0, 0.0, 0.0]) - self.camera_pos))
             self.camera_pos = self.base + self.camera_pos
-            self.camera_up = Vector3([0.0, 1.0, 0.0])
-            self.camera_right = Vector3([1.0, 0.0, 1.0])
+            self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
             self.set_yaw_pitch_from_front(False)
         elif camera_position_index == 6:
             self.camera_pos = Vector3([-3.5, 0.0, 3.5])
-            self.camera_front = Vector3(vector.normalise(Vector3([0.0, 0.0, 0.0]) - self.camera_pos))
             self.camera_pos = self.base + self.camera_pos
-            self.camera_up = Vector3([0.0, 1.0, 0.0])
-            self.camera_right = Vector3([1.0, 0.0, 1.0])
+            self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
             self.set_yaw_pitch_from_front(False)
         elif camera_position_index == 7:
             self.camera_pos = Vector3([-3.0, 3.0, -3.0])
-            self.camera_front = Vector3(vector.normalise(Vector3([0.0, 0.0, 0.0]) - self.camera_pos))
             self.camera_pos = self.base + self.camera_pos
-            self.camera_up = Vector3([0.0, 1.0, 0.0])
-            self.camera_right = Vector3([1.0, 0.0, 1.0])
+            self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
             self.set_yaw_pitch_from_front(False)
         elif camera_position_index == 8:
             self.camera_pos = Vector3([-3.0, 3.0, 3.0])
-            self.camera_front = Vector3(vector.normalise(Vector3([0.0, 0.0, 0.0]) - self.camera_pos))
             self.camera_pos = self.base + self.camera_pos
-            self.camera_up = Vector3([0.0, 1.0, 0.0])
-            self.camera_right = Vector3([1.0, 0.0, 1.0])
+            self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
             self.set_yaw_pitch_from_front(False)
         else:
             self.camera_pos = Vector3([-4.0, 0.0, 0.0])
-            self.camera_front = Vector3(vector.normalise(Vector3([0.0, 0.0, 0.0]) - self.camera_pos))
             self.camera_pos = self.base + self.camera_pos
-            self.camera_up = Vector3([0.0, 1.0, 0.0])
-            self.camera_right = Vector3([0.0, 0.0, 1.0])
+            self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
             self.set_yaw_pitch_from_front()
+        self.camera_right = Vector3(vector.normalise(np.cross(self.camera_up, self.camera_front)))
 
     def set_yaw_pitch_from_front(self, use_x: bool = True):
-        self.pitch = degrees(asin(self.camera_front.y))
-        if use_x:
-            self.yaw = degrees(acos(self.camera_front.x / cos(radians(self.pitch))))
-        else:
-            self.yaw = degrees(asin(self.camera_front.z / cos(radians(self.pitch))))
+        try:
+            self.pitch = degrees(asin(self.camera_front.y))
+            if use_x:
+                self.yaw = degrees(acos(self.camera_front.x / cos(radians(self.pitch))))
+            else:
+                self.yaw = degrees(asin(self.camera_front.z / cos(radians(self.pitch))))
+        except:
+            self.pitch = degrees(asin(self.camera_front.y))
+            if not use_x:
+                self.yaw = degrees(acos(self.camera_front.x / cos(radians(self.pitch))))
+            else:
+                self.yaw = degrees(asin(self.camera_front.z / cos(radians(self.pitch))))

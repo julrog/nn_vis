@@ -28,3 +28,6 @@ class AdvectionProgress:
 
     def get_advection_strength(self) -> float:
         return self.current_bandwidth * self.advection_direction
+
+    def get_bandwidth_reduction(self):
+        return math.pow(self.bandwidth_reduction, self.iteration)

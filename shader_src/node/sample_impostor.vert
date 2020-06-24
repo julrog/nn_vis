@@ -14,6 +14,7 @@ out float vs_importance;
 uniform mat4 view;
 uniform int show_class = 0;
 uniform float importance_threshold = 0;
+uniform float importance_max = 1.0;
 
 const vec3 color_0 = vec3(0.133, 0.545, 0.133);
 const vec3 color_1 = vec3(0, 0, 0.545);
@@ -70,10 +71,10 @@ void main()
             {
                 combined_color += color_list[i] * importance[i];
             }
-            vs_color = vec4(combined_color, vs_importance);
+            vs_color = vec4(combined_color, vs_importance/importance_max);
         } else {
             if (show_class == 0) {
-                vs_color = vec4(0.0, 0.0, 0.0, vs_importance);
+                vs_color = vec4(0.0, 0.0, 0.0, vs_importance/importance_max);
             } else {
                 vs_color = vec4(color_list[show_class - 2] * importance[show_class - 2], importance[show_class - 2]);
             }

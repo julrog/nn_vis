@@ -27,8 +27,13 @@ class NodeProcessor:
         self.farthest_view_z: int = 1000000
         self.max_sample_points: int = 0
 
+        self.node_min_importance: float = 0.0
+        self.node_max_importance: float = 1.0
+
     def set_data(self, network: NetworkModel):
         self.nodes = network.get_nodes()
+        self.node_min_importance = network.node_min_importance
+        self.node_max_importance = network.node_max_importance
 
         # generate and load initial data for the buffer
         initial_data: List[float] = []

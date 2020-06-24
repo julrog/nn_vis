@@ -48,12 +48,12 @@ class EdgeRenderer:
         self.transparent_render: RenderSetLayered = RenderSetLayered(sample_transparent_shader, self.data_handler)
         self.transparent_render.set_uniform_label(
             [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
-             ("Base Density Opacity", "base_shpere_opacity"),
+             ("Importance Opacity", "base_shpere_opacity"),
              ("Density Exponent", "opacity_exponent"), ("Importance Threshold", "importance_threshold")])
         self.ellipse_render: RenderSetLayered = RenderSetLayered(sample_ellipse_shader, self.data_handler)
         self.ellipse_render.set_uniform_label(
             [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
-             ("Base Density Opacity", "base_shpere_opacity"),
+             ("Importance Opacity", "base_shpere_opacity"),
              ("Density Exponent", "opacity_exponent"), ("Importance Threshold", "importance_threshold")])
         self.importance_threshold: float = 0.0
 
@@ -68,6 +68,7 @@ class EdgeRenderer:
                                             ("screen_height", 1080.0, "float"),
                                             ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                             ("importance_threshold", self.importance_threshold, "float"),
+                                            ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                             ('show_class', show_class, 'int'),
                                             ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')])
         self.point_render.set_uniform_labeled_data(options)
@@ -92,6 +93,7 @@ class EdgeRenderer:
                                            ("view", window.cam.view, "mat4"),
                                            ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                            ("importance_threshold", self.importance_threshold, "float"),
+                                           ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                            ('show_class', show_class, 'int'),
                                            ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')])
         self.line_render.set_uniform_labeled_data(options)
@@ -116,6 +118,7 @@ class EdgeRenderer:
                                              ("view", window.cam.view, "mat4"),
                                              ("object_radius", sphere_radius, "float"),
                                              ("importance_threshold", self.importance_threshold, "float"),
+                                             ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                              ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                              ('show_class', show_class, 'int'),
                                              ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')])
@@ -143,6 +146,7 @@ class EdgeRenderer:
                                                   ("nearest_point_view_z", near, "float"),
                                                   ("object_radius", sphere_radius, "float"),
                                                   ("importance_threshold", self.importance_threshold, "float"),
+                                                  ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                                   ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                                   ('show_class', show_class, 'int'),
                                                   ('edge_importance_type', self.edge_processor.edge_importance_type,
@@ -171,6 +175,7 @@ class EdgeRenderer:
                                               ("nearest_point_view_z", near, "float"),
                                               ("object_radius", self.edge_processor.sample_length * 0.5, "float"),
                                               ("importance_threshold", self.importance_threshold, "float"),
+                                              ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                               ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                               ('show_class', show_class, 'int'),
                                               ('edge_importance_type', self.edge_processor.edge_importance_type,

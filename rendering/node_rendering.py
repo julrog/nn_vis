@@ -30,11 +30,13 @@ class NodeRenderer:
 
         self.point_render: RenderSet = RenderSet(node_point_shader, self.data_handler)
         self.sphere_render: RenderSet = RenderSet(node_sphere_shader, self.data_handler)
+        self.sphere_render.set_uniform_label(
+            [("Size", "object_radius"), ("Importance Threshold", "importance_threshold")])
 
         self.transparent_render: RenderSet = RenderSet(node_transparent_shader, self.data_handler)
         self.transparent_render.set_uniform_label(
             [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
-             ("Base Density Opacity", "base_shpere_opacity"),
+             ("Importance Opacity", "base_shpere_opacity"),
              ("Density Exponent", "opacity_exponent"), ("Importance Threshold", "importance_threshold")])
 
     @track_time
@@ -45,8 +47,7 @@ class NodeRenderer:
         self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                             ("view", window.cam.view, "mat4"),
                                             ("screen_width", 1920.0, "float"),
-                                            ("screen_height", 1080.0, "float"),
-                                            ('show_class', show_class, 'int')])
+                                            ("screen_height", 1080.0, "float")])
         self.point_render.set_uniform_labeled_data(options)
 
         self.point_render.set()
@@ -66,6 +67,7 @@ class NodeRenderer:
         self.sphere_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
                                              ("view", window.cam.view, "mat4"),
                                              ("object_radius", sphere_radius, "float"),
+                                             ("importance_max", self.node_processor.node_max_importance, "float"),
                                              ('show_class', show_class, 'int')])
         self.sphere_render.set_uniform_labeled_data(options)
 
@@ -88,6 +90,7 @@ class NodeRenderer:
                                                   ("farthest_point_view_z", far, "float"),
                                                   ("nearest_point_view_z", near, "float"),
                                                   ("object_radius", sphere_radius, "float"),
+                                                  ("importance_max", self.node_processor.node_max_importance, "float"),
                                                   ('show_class', show_class, 'int')])
         self.transparent_render.set_uniform_labeled_data(options)
 

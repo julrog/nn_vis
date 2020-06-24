@@ -16,7 +16,7 @@ def process_loop(processor: NetworkProcessor):
         processor.process(4, True)
 
 
-def process_network(network_name: str, importance_type: str, prune_rate: float = 0.9):
+def process_network(network_name: str, importance_type: str, prune_rate: float = 0.9, edge_importance_type: int = 0):
     window_handler: WindowHandler = WindowHandler()
     window: Window = window_handler.create_window("Testing", 1, 1, 1)
     window.set_position(0, 0)
@@ -38,11 +38,12 @@ def process_network(network_name: str, importance_type: str, prune_rate: float =
                                                            prune_percentage=prune_rate,
                                                            node_bandwidth_reduction=0.98,
                                                            edge_bandwidth_reduction=0.9,
-                                                           edge_importance_type=0)
+                                                           edge_importance_type=edge_importance_type)
 
     process_loop(network_processor)
 
-    network_processor.save_model(DATA_PATH + "model/%s/%s_processed.npz" % (network_name, importance_type))
+    network_processor.save_model(
+        DATA_PATH + "model/%s/%s_processed_eit%i.npz" % (network_name, importance_type, edge_importance_type))
 
     network_processor.delete()
     window_handler.destroy()

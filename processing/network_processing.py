@@ -126,7 +126,7 @@ class NetworkProcessor:
                     print("[%s] Smooth %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                     for i in range(7):
                         glFinish()
-                        self.edge_processor.sample_smooth(True)
+                        self.edge_processor.sample_smooth(self.edge_advection_status, True)
                         glFinish()
         else:
             self.edge_processor.check_limits(False)

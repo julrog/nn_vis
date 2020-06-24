@@ -7,6 +7,7 @@ from models.edge import Edge
 from models.network import NetworkModel
 from opengl_helper.buffer import SwappingBufferObject, BufferObject
 from opengl_helper.compute_shader import ComputeShader, ComputeShaderHandler
+from processing.advection_process import AdvectionProgress
 from utility.performance import track_time
 from opengl_helper.render_utility import VertexDataHandler
 from OpenGL.GL import *
@@ -44,9 +45,14 @@ class EdgeProcessor:
         self.max_sample_points: int = 0
         self.smooth_radius: float = 0.0
         self.edge_importance_type: int = edge_importance_type
+        self.edge_min_importance: float = 0.0
+        self.edge_max_importance: float = 1.0
 
     def set_data(self, network: NetworkModel):
-        edges: List[List[List[Edge]]] = network.generate_edges(self.max_edges_per_buffer)
+        edges: List[List[List[Edge]]] = network.generate_filtered_edges(self.max_edges_per_buffer)
+        self.edge_min_importance = network.edge_min_importance
+        self.edge_max_importance = network.edge_max_importance
+
         self.layer_edge_count = [len(layer) for layer in edges]
         self.layer_container_edge_count = [[len(container) for container in layer] for layer in edges]
         self.edge_count = sum([sum(layer) for layer in self.layer_container_edge_count])
@@ -184,9 +190,10 @@ class EdgeProcessor:
         self.noise_compute_shader.barrier()
 
     @track_time
-    def sample_smooth(self, wait_for_compute: bool = False):
+    def sample_smooth(self, advection_status: AdvectionProgress, wait_for_compute: bool = False):
         self.smooth_compute_shader.set_uniform_data([
-            ('max_sample_points', self.max_sample_points, 'int')
+            ('max_sample_points', self.max_sample_points, 'int'),
+            ('bandwidth_reduction', advection_status.get_bandwidth_reduction(), 'float')
         ])
 
         for i in range(len(self.sample_buffer)):

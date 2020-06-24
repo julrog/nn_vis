@@ -28,6 +28,7 @@ void write(highp uint index, vec4 pos)
 }
 
 uniform int max_sample_points;
+uniform float bandwidth_reduction = 1.0;
 const int smoothing_radius = 8;
 
 void main() {
@@ -41,7 +42,7 @@ void main() {
             if (sample_data.w == 1.0) {
                 vec3 new_sample = vec3(0.0, 0.0, 0.0);
                 bool reached_end = false;
-                int relative_smoothing_radius = int(max((sample_count * float(smoothing_radius))/100.0 - 1.0, 1.0));
+                int relative_smoothing_radius = int(max((sample_count * float(smoothing_radius) * bandwidth_reduction)/100.0 - 1.0, 1.0));
                 int neigbour_count = 0;
                 for (int i = -relative_smoothing_radius; i <= relative_smoothing_radius; i++)
                 {

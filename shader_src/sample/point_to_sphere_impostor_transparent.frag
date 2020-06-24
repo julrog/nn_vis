@@ -36,7 +36,7 @@ vec4 calculate_transparency_color(float depth, float density)
     float relative_depth = (depth - real_position_screen_furthest.z)/(real_position_screen_nearest.z - real_position_screen_furthest.z);
 
     vec4 color = gs_color;
-    color = vec4(color.x, color.y, color.z, (base_shpere_opacity + relative_depth * (1.0 - base_shpere_opacity)) * (overall_opacity * (1.0 - base_opacity)) + base_opacity);
+    color = vec4(color.x, color.y, color.z, (base_shpere_opacity * color.w + relative_depth * (1.0 - base_shpere_opacity)) * (overall_opacity - base_opacity) + base_opacity);
     color = vec4(color.x * color.w + (1.0 - color.w), color.y * color.w + (1.0 - color.w), color.z * color.w + (1.0 - color.w), color.w);
     return color;
 }
