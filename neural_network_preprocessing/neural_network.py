@@ -102,12 +102,6 @@ class ProcessedNetwork:
         y_train = keras.utils.to_categorical(y_train, 2)
         y_test = keras.utils.to_categorical(y_test, 2)
 
-        print('x_train shape:', x_train.shape)
-        training_samples: int = x_train.shape[0]
-        test_samples: int = x_test.shape[0]
-        print(training_samples, 'train samples')
-        print(test_samples, 'test samples')
-
         self.model_data.reload_model()
         modified_model: Model = modify_model(self.model_data.model, class_index, self.centering, self.gamma_one,
                                              self.regularize_gamma)
@@ -127,20 +121,22 @@ class ProcessedNetwork:
                            verbose=0,
                            validation_data=(x_test, y_test))
 
-        score = modified_model.evaluate(x_test, y_test, verbose=0)
-        print('Test loss:', score[0])
-        print('Test accuracy:', score[1])
+        train_score = modified_model.evaluate(x_train, y_train, verbose=0)
+        test_score = modified_model.evaluate(x_test, y_test, verbose=0)
+        print('[%s] Class %i: Train loss: %f, Train accuracy: %f, Test loss: %f, Test accuracy: %f' % (
+            LOG_SOURCE, class_index, train_score[0], train_score[1], test_score[0], test_score[1]))
 
         c_y_test = np.argmax(y_test, axis=1)  # Convert one-hot to index
         prediction_test = np.argmax(modified_model.predict(x_test), axis=1)
         c_report: any = classification_report(c_y_test, prediction_test, output_dict=True)
-        print(c_report)
 
         fine_tuned_data: Dict[any, any] = dict()
         fine_tuned_data['batch_size'] = str(batch_size)
         fine_tuned_data['learning_rate'] = str(learning_rate)
-        fine_tuned_data['loss'] = str(score[0])
-        fine_tuned_data['accuracy'] = str(score[1])
+        fine_tuned_data['train_loss'] = str(train_score[0])
+        fine_tuned_data['train_accuracy'] = str(train_score[1])
+        fine_tuned_data['test_loss'] = str(test_score[0])
+        fine_tuned_data['test_accuracy'] = str(test_score[1])
         fine_tuned_data['classification_report'] = c_report
 
         self.model_data.store_data("modified_fine_tuned_performance", self.name, "class_%i" % class_index,
@@ -188,7 +184,7 @@ class ProcessedNetwork:
         return result_node_importance, result_edge_importance
 
     def store_importance_data(self, train_data_path: str, test_data_path: str, centering: bool = False,
-                              gamma_one: bool = True, regularize_gamma: str = "l1l2"):
+                              gamma_one: bool = True, regularize_gamma: str = "l1"):
         self.centering = centering
         self.gamma_one = gamma_one
         self.regularize_gamma = regularize_gamma

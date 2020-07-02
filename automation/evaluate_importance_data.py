@@ -115,7 +115,7 @@ def prune_model(importance_type: str, importance_prune_percent: str, importance_
 
 def test_model(importance_type: str, importance_prune_percent: str, importance_mode: str, model_data: ModelData,
                x_train, y_train, x_test, y_test):
-    train_score = model_data.model.evaluate(x_test, y_test, verbose=0)
+    train_score = model_data.model.evaluate(x_train, y_train, verbose=0)
     test_score = model_data.model.evaluate(x_test, y_test, verbose=0)
 
     print('Train loss: %f, Train accuracy: %f' % (train_score[0], train_score[1]))
@@ -123,37 +123,61 @@ def test_model(importance_type: str, importance_prune_percent: str, importance_m
 
     c_y_train = np.argmax(y_train, axis=1)  # Convert one-hot to index
     prediction_train = model_data.model.predict_classes(x_train)
-    train_c_report: dict = classification_report(c_y_train, prediction_train, output_dict=True)
+    # train_c_report: dict = classification_report(c_y_train, prediction_train, output_dict=True)
 
     c_y_test = np.argmax(y_test, axis=1)  # Convert one-hot to index
     prediction_test = model_data.model.predict_classes(x_test)
-    test_c_report: dict = classification_report(c_y_test, prediction_test, output_dict=True)
+    # test_c_report: dict = classification_report(c_y_test, prediction_test, output_dict=True)
 
     num_classes: int = 10
 
     train_class_accuracy_report: Dict[str, any] = dict()
     for i in range(num_classes):
-        true_positives_negatives: int = 0
+        true_positives: int = 0
+        true_negatives: int = 0
+        false_positives: int = 0
+        false_negatives: int = 0
         for truth, prediction in zip(c_y_train, prediction_train):
-            if (prediction == i and truth == i) or (prediction != i and truth != i):
-                true_positives_negatives += 1
-        train_class_accuracy_report[str(i)] = float(true_positives_negatives) / float(len(prediction_train))
+            if prediction == i and truth == i:
+                true_positives += 1
+            if prediction != i and truth != i:
+                true_negatives += 1
+            if prediction == i and truth != i:
+                false_positives += 1
+            if prediction != i and truth == i:
+                false_negatives += 1
+
+        true_positive_rate: float = float(true_positives) / (float(true_positives + false_negatives))
+        true_negative_rate: float = float(true_negatives) / (float(true_negatives + false_positives))
+        train_class_accuracy_report[str(i)] = (true_positive_rate + true_negative_rate) / 2.0
 
     test_class_accuracy_report: Dict[str, any] = dict()
     for i in range(num_classes):
-        true_positives_negatives: int = 0
+        true_positives: int = 0
+        true_negatives: int = 0
+        false_positives: int = 0
+        false_negatives: int = 0
         for truth, prediction in zip(c_y_test, prediction_test):
-            if (prediction == i and truth == i) or (prediction != i and truth != i):
-                true_positives_negatives += 1
-        test_class_accuracy_report[str(i)] = float(true_positives_negatives) / float(len(prediction_test))
+            if prediction == i and truth == i:
+                true_positives += 1
+            if prediction != i and truth != i:
+                true_negatives += 1
+            if prediction == i and truth != i:
+                false_positives += 1
+            if prediction != i and truth == i:
+                false_negatives += 1
+
+        true_positive_rate: float = float(true_positives) / (float(true_positives + false_negatives))
+        true_negative_rate: float = float(true_negatives) / (float(true_negatives + false_positives))
+        test_class_accuracy_report[str(i)] = (true_positive_rate + true_negative_rate) / 2.0
 
     importance_prune_data: Dict[str, any] = dict()
     importance_prune_data['train_loss'] = str(train_score[0])
     importance_prune_data['train_accuracy'] = str(train_score[1])
     importance_prune_data['test_loss'] = str(test_score[0])
     importance_prune_data['test_accuracy'] = str(test_score[1])
-    importance_prune_data['train_c_report'] = train_c_report
-    importance_prune_data['test_c_report'] = test_c_report
+    # importance_prune_data['train_c_report'] = train_c_report
+    # importance_prune_data['test_c_report'] = test_c_report
     importance_prune_data['train_class_accuracy'] = train_class_accuracy_report
     importance_prune_data['test_class_accuracy'] = test_class_accuracy_report
 
@@ -187,8 +211,8 @@ def create_evaluation_data(model_data: ModelData, importance_type: str,
     sorted_edge_importance: np.array = np.sort(np.array(edge_importance_data))
 
     for prune_percentage in range(start_percentage, end_percentage + step_size, step_size):
-        importance_threshold: float = 0.0
-        if prune_percentage != 0:
+        importance_threshold: float = -1.0
+        if prune_percentage > 0:
             if int((prune_percentage * sorted_edge_importance.shape[0]) / 100) >= len(sorted_edge_importance):
                 importance_threshold = sorted_edge_importance[len(sorted_edge_importance) - 1]
             else:

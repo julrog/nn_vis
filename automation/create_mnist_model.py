@@ -67,9 +67,8 @@ def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learn
 
     train_score = model.evaluate(x_train, y_train, verbose=0)
     test_score = model.evaluate(x_test, y_test, verbose=0)
-
-    print('Train loss: %f, Train accuracy: %f' % (train_score[0], train_score[1]))
-    print('Test loss: %f, Test accuracy: %f' % (test_score[0], test_score[1]))
+    print('Train loss: %f, Train accuracy: %f, Test loss: %f, Test accuracy: %f' % (
+        train_score[0], train_score[1], test_score[0], test_score[1]))
 
     c_y_test = np.argmax(y_test, axis=1)  # Convert one-hot to index
     prediction_test = model.predict_classes(x_test)

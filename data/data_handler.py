@@ -34,3 +34,11 @@ class ProcessedNNHandler:
         for i, layer_sample_data in enumerate(self.sample_data):
             for j, container_sample_data in enumerate(layer_sample_data):
                 self.sample_data[i][j] = container_sample_data.reshape(-1, max_sample_points * 4)
+
+    def get_all_samples(self) -> np.array:
+        samples: np.array = np.array([])
+        for layer_edges in self.sample_data:
+            for container_edges in layer_edges:
+                for edge_samples in container_edges:
+                    samples = np.append(samples, edge_samples[:int(edge_samples[3] * 4)])
+        return samples.reshape(-1, 4)
