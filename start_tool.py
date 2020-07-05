@@ -44,7 +44,7 @@ def compute_render(name: str):
 
         if network_processor is not None:
             network_processor.process(options.settings["action_state"], options.settings["edge_smoothing"])
-            network_processor.render(window, options.settings["render_Edge"], options.settings["render_Grid"],
+            network_processor.render(window.cam, options.settings["render_Edge"], options.settings["render_Grid"],
                                      options.settings["render_Node"], options.settings["render_shader_setting_Edge"],
                                      options.settings["render_shader_setting_Grid"],
                                      options.settings["render_shader_setting_Node"], options.settings["show_class"])

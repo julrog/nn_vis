@@ -239,8 +239,8 @@ class NetworkModel:
                 node_position_max_x = node_one.position.x if node_one.position.x > node_position_max_x else node_position_max_x
                 node_position_max_y = node_one.position.y if node_one.position.y > node_position_max_y else node_position_max_y
         return Vector3(
-            [(node_position_min_x + node_position_max_x) * 0.5,
-             (node_position_min_y + node_position_max_y) * 0.5,
+            [(node_position_min_x + node_position_max_x) * 0.25 + 0.5 * mid_position_x/position_count,
+             (node_position_min_y + node_position_max_y) * 0.25 + 0.5 * mid_position_y/position_count,
              0.0])
 
     def read_node_min_importance(self) -> float:

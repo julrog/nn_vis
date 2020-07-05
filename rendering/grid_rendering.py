@@ -5,6 +5,7 @@ from opengl_helper.render_utility import RenderSet, VertexDataHandler, render_se
     OverflowingRenderSet
 from opengl_helper.shader import RenderShaderHandler, RenderShader
 from processing.grid_processing import GridProcessor
+from utility.camera import Camera
 from utility.performance import track_time
 from utility.window import Window
 
@@ -27,9 +28,9 @@ class GridRenderer:
         self.cube_render: OverflowingRenderSet = OverflowingRenderSet(cube_shader, self.data_handler)
 
     @track_time
-    def render_point(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
-        self.point_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                            ("view", window.cam.view, "mat4"),
+    def render_point(self, cam: Camera, options: Dict[str, float] = None):
+        self.point_render.set_uniform_data([("projection", cam.projection, "mat4"),
+                                            ("view", cam.view, "mat4"),
                                             ("screen_width", 1920.0, "float"),
                                             ("screen_height", 1080.0, "float")])
         self.point_render.set_uniform_labeled_data(options)
@@ -39,17 +40,15 @@ class GridRenderer:
 
             self.point_render.set(i)
 
-            render_setting_0(clear)
+            render_setting_0(False)
             glPointSize(10.0)
             glDrawArrays(GL_POINTS, 0, grid_count)
             glMemoryBarrier(GL_ALL_BARRIER_BITS)
-        if swap:
-            window.swap()
 
     @track_time
-    def render_cube(self, window: Window, clear: bool = True, swap: bool = False, options: Dict[str, float] = None):
-        self.cube_render.set_uniform_data([("projection", window.cam.projection, "mat4"),
-                                           ("view", window.cam.view, "mat4"),
+    def render_cube(self, cam: Camera, options: Dict[str, float] = None):
+        self.cube_render.set_uniform_data([("projection", cam.projection, "mat4"),
+                                           ("view", cam.view, "mat4"),
                                            ("screen_width", 1920.0, "float"),
                                            ("screen_height", 1080.0, "float")])
         self.cube_render.set_uniform_labeled_data(options)
@@ -59,12 +58,10 @@ class GridRenderer:
 
             self.cube_render.set(i)
 
-            render_setting_0(clear)
+            render_setting_0(False)
 
             glDrawArrays(GL_POINTS, 0, grid_count)
             glMemoryBarrier(GL_ALL_BARRIER_BITS)
-        if swap:
-            window.swap()
 
     def delete(self):
         self.data_handler.delete()

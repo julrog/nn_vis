@@ -2,18 +2,18 @@
 
 struct DensityGrid
 {
-    int overall_density;
-    int density_0;
-    int density_1;
-    int density_2;
-    int density_3;
-    int density_4;
-    int density_5;
-    int density_6;
-    int density_7;
-    int density_8;
-    int density_9;
-    int fill;
+    uint overall_density;
+    uint density_0;
+    uint density_1;
+    uint density_2;
+    uint density_3;
+    uint density_4;
+    uint density_5;
+    uint density_6;
+    uint density_7;
+    uint density_8;
+    uint density_9;
+    uint fill;
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;

@@ -7,18 +7,18 @@ struct SamplePoint
 
 struct DensityGrid
 {
-    int overall_density;
-    int density_0;
-    int density_1;
-    int density_2;
-    int density_3;
-    int density_4;
-    int density_5;
-    int density_6;
-    int density_7;
-    int density_8;
-    int density_9;
-    int fill;
+    uint overall_density;
+    uint density_0;
+    uint density_1;
+    uint density_2;
+    uint density_3;
+    uint density_4;
+    uint density_5;
+    uint density_6;
+    uint density_7;
+    uint density_8;
+    uint density_9;
+    uint fill;
 };
 
 struct EdgeData
@@ -83,7 +83,7 @@ uniform int current_buffer;
 uniform float grid_layer_offset;
 
 uniform float advect_strength;
-uniform float importance_similarity = 0.6;
+uniform float importance_similarity = 0.8;
 uniform int edge_importance_type = 0;
 
 uniform ivec3 grid_cell_count;
@@ -138,7 +138,7 @@ highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to)
     highp float drive_towards = 0.0;
     highp float drive_from = 0.0;
 
-    float towards_density_overall = sqrt(density_to.density_0 * density_to.density_0
+    highp float towards_density_overall = sqrt(density_to.density_0 * density_to.density_0
     + density_to.density_1 * density_to.density_1
     + density_to.density_2 * density_to.density_2
     + density_to.density_3 * density_to.density_3
@@ -148,7 +148,7 @@ highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to)
     + density_to.density_7 * density_to.density_7
     + density_to.density_8 * density_to.density_8
     + density_to.density_9 * density_to.density_9);
-    float from_density_overall = sqrt(density_from.density_0 * density_from.density_0
+    highp float from_density_overall = sqrt(density_from.density_0 * density_from.density_0
     + density_from.density_1 * density_from.density_1
     + density_from.density_2 * density_from.density_2
     + density_from.density_3 * density_from.density_3
@@ -181,7 +181,7 @@ highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to)
     drive_from += importance[8] * (density_from.density_8/from_density_overall);
     drive_from += importance[9] * (density_from.density_9/from_density_overall);
 
-    return towards_density_overall * (drive_towards - importance_similarity) - from_density_overall * (drive_from - importance_similarity);
+    return float(towards_density_overall * (drive_towards - importance_similarity) - from_density_overall * (drive_from - importance_similarity));
 }
 
 vec4 getGradient(ivec3 grid_index, vec3 grid_direction)
@@ -196,9 +196,6 @@ vec4 getGradient(ivec3 grid_index, vec3 grid_direction)
     float gradient_z = getGradientAxis(current_density, z_diff_density) * grid_direction.z;
     vec3 calc_gradient = vec3(gradient_x, gradient_y, gradient_z);
     float strength = length(calc_gradient);
-
-    strength = max(strength, 0.00001);
-    calc_gradient = calc_gradient / strength;
     return vec4(calc_gradient, strength);
 }
 
@@ -270,10 +267,10 @@ void main() {
             highp float overall_strength = 0.0;
 
             vec4 gradient = getGradient(grid_index, gridDirection(grid_index, sample_data.xyz));
-            gradient_direction = gradient.xyz;
+            gradient_direction = normalize(gradient.xyz);
             overall_strength = gradient.w;
 
-            if (overall_strength >= 1.0) {
+            if (overall_strength >= 0.0) {
                 sample_data = vec4(sample_data.x + gradient_direction.x * advect_strength, sample_data.y + gradient_direction.y * advect_strength, sample_data.z + gradient_direction.z * advect_strength, sample_data.w);
             }
             write(index, sample_data);

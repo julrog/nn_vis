@@ -209,7 +209,7 @@ class GridProcessor:
                 ('slice_count', self.density_buffer_slice_count, 'int'),
                 ('current_buffer', i, 'int'),
                 ('advect_strength', advection_status.get_advection_strength(), 'float'),
-                # ('importance_similarity', advection_status.importance_similarity, 'float'),
+                ('importance_similarity', advection_status.importance_similarity, 'float'),
                 ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
                 ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
                 ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
