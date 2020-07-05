@@ -303,7 +303,7 @@ class OptionGui:
                                                                row=6, column=0, variable_type="int")
 
     def start(self, layer_data: List[int] = None, layer_distance: float = 1.0, node_size: float = 1.0,
-              sampling_rate: float = 10.0, prune_percentage: float = 0.0, node_bandwidth_reduction: float = 0.95,
+              sampling_rate: float = 10.0, prune_percentage: float = 0.0, node_bandwidth_reduction: float = 0.98,
               edge_bandwidth_reduction: float = 0.9, edge_importance_type: int = 0):
         if layer_data is None:
             default_layer_data = [4, 9, 4]

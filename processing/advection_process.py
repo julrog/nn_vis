@@ -21,7 +21,7 @@ class AdvectionProgress:
         self.current_bandwidth = self.bandwidth * math.pow(self.bandwidth_reduction, self.iteration)
 
         self.importance_similarity = 1.0 - (self.current_bandwidth - self.limit) / (self.bandwidth - self.limit)
-        self.importance_similarity = math.sqrt(max(self.importance_similarity * 1.0, 0.00))
+        self.importance_similarity = math.sqrt(max(self.importance_similarity, 0.00))
 
         if self.current_bandwidth < self.limit:
             self.limit_reached = True

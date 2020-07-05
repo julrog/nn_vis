@@ -36,7 +36,7 @@ void main() {
     vec4 first_point = read(current_read_index++, offset);
     vec3 before_last_written_point = first_point.xyz;
     vec3 last_written_point = first_point.xyz;
-    vec4 last_point = read(int(first_point.w), offset);
+    vec4 last_point = read(int(first_point.w) - 1, offset);
     vec3 last_checked_point = last_written_point;
 
 
@@ -82,7 +82,7 @@ void main() {
     // store the first point with sum of all points as w value
     write(0, offset, vec4(first_point.xyz, float(current_write_index)));
 
-    while (current_write_index <= first_point.w) {
+    while (current_write_index < first_point.w) {
         write(current_write_index++, offset, vec4(0.0, 0.0, 0.0, 0.0));
     }
 }

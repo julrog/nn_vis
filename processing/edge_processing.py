@@ -27,6 +27,8 @@ class EdgeProcessor:
                                                                                   "edge/sample_smooth.comp")
         self.limit_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_limits",
                                                                                  "edge/edge_limits.comp")
+        self.sample_copy_compute_shader: ComputeShader = ComputeShaderHandler().create("sample_copy",
+                                                                                       "edge/sample_copy.comp")
 
         self.max_edges_per_buffer: int = max_edges_per_buffer
         self.sample_buffer: List[List[SwappingBufferObject]] = []
@@ -93,6 +95,7 @@ class EdgeProcessor:
                 new_sample_buffer.load(transfer_data)
                 new_sample_buffer.swap()
                 new_sample_buffer.load(transfer_data)
+                new_sample_buffer.swap()
 
                 initial_data: List[float] = []
                 for edge in edge_container:
@@ -120,7 +123,6 @@ class EdgeProcessor:
                 buffer_data = []
                 for k in range(self.get_edge_count(i, j)):
                     edge_points: int = int(edge_sample_data[k][3])
-                    print(edge_points, self.max_sample_points, new_max_samples)
                     buffer_data.extend(edge_sample_data[k][None:(int(edge_points * 4))])
                     buffer_data.extend([0] * (new_max_samples * 4 - edge_points * 4))
 
@@ -148,7 +150,11 @@ class EdgeProcessor:
                 self.ssbo_handler[i][j].set()
                 self.init_compute_shader.compute(self.get_edge_count(i, j))
                 self.sample_buffer[i][j].swap()
-        self.init_compute_shader.barrier()
+                self.init_compute_shader.barrier()
+                self.ssbo_handler[i][j].set()
+                self.sample_copy_compute_shader.compute(self.get_buffer_points(i, j))
+                self.sample_buffer[i][j].swap()
+                self.sample_copy_compute_shader.barrier()
 
         self.sampled = True
 
@@ -167,9 +173,11 @@ class EdgeProcessor:
                 self.ssbo_handler[i][j].set()
                 self.sample_compute_shader.compute(self.get_edge_count(i, j))
                 self.sample_buffer[i][j].swap()
-                self.sample_compute_shader.compute(self.get_edge_count(i, j))
+                self.sample_compute_shader.barrier()
+                self.ssbo_handler[i][j].set()
+                self.sample_copy_compute_shader.compute(self.get_buffer_points(i, j))
                 self.sample_buffer[i][j].swap()
-        self.sample_compute_shader.barrier()
+                self.sample_copy_compute_shader.barrier()
 
         self.sampled = True
 
@@ -223,8 +231,8 @@ class EdgeProcessor:
                         if samples > max_edge_samples:
                             max_edge_samples = samples
         if check_resize:
-            if max_edge_samples * 2.0 >= (self.max_sample_points - 1):
-                self.resize_sample_storage(int(max_edge_samples * 2))
+            if max_edge_samples * 1.1 >= (self.max_sample_points - 1):
+                self.resize_sample_storage(int(max_edge_samples * 1.1))
 
     @track_time
     def read_edges_from_buffer(self, layer: int, container: int) -> np.array:

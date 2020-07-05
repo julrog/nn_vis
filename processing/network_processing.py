@@ -46,10 +46,10 @@ class NetworkProcessor:
 
         self.node_advection_status: AdvectionProgress = AdvectionProgress(self.network.average_node_distance,
                                                                           node_bandwidth_reduction,
-                                                                          self.grid_cell_size * 1.0)
+                                                                          self.grid_cell_size * 2.0)
         self.edge_advection_status: AdvectionProgress = AdvectionProgress(self.network.average_edge_distance,
                                                                           edge_bandwidth_reduction,
-                                                                          self.grid_cell_size * 1.0)
+                                                                          self.grid_cell_size * 2.0)
         self.edge_importance_type: int = edge_importance_type
 
         print("[%s] Create grid..." % LOG_SOURCE)
@@ -130,12 +130,12 @@ class NetworkProcessor:
             if action_mode > 3:
                 if smoothing:
                     print("[%s] Smooth %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
-                    for i in range(7):
+                    for i in range(8):
                         glFinish()
                         self.edge_processor.sample_smooth(self.edge_advection_status, True)
                         glFinish()
         else:
-            self.edge_processor.check_limits(False)
+            self.edge_processor.check_limits()
 
         self.last_action_mode = action_mode
         glFinish()

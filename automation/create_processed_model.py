@@ -33,6 +33,8 @@ def process_loop(processor: NetworkProcessor):
     processor.process(4, True)
     while not processor.action_finished:
         processor.process(4, True)
+    processor.edge_processor.sample_edges()
+    processor.edge_processor.check_limits()
 
 
 def viewed_process_loop(processor: NetworkProcessor, screenshot_name: str, width: int, height: int,
@@ -85,19 +87,21 @@ def viewed_process_loop(processor: NetworkProcessor, screenshot_name: str, width
             if show_edge:
                 generate_images(cam, screenshot_name, frame_buffer, processor, cam_poses, show_classes, True, False)
 
+    processor.edge_processor.sample_edges()
+    processor.edge_processor.check_limits()
     generate_images(cam, screenshot_name, frame_buffer, processor, cam_poses, show_classes, True, False)
 
 
 def render(cam: Camera, processor: NetworkProcessor, show_class: int = 0, show_edge: bool = True,
            node_phong: bool = False):
-    edge_options: Dict[str, any] = {"Size": 0.2, "Opacity": 0.0, "Importance Opacity": 1.1, "Depth Opacity": 0.0,
+    edge_options: Dict[str, any] = {"Size": 0.2, "Opacity": 0.0, "Importance Opacity": 1.1, "Depth Opacity": 0.5,
                                     "Density Exponent": 0.5, "Importance Threshold": 0.01}
     grid_options: Dict[str, any] = {}
-    node_options: Dict[str, any] = {"Size": 0.05, "Opacity": 0.2, "Importance Opacity": 1.0, "Depth Opacity": 0.0,
+    node_options: Dict[str, any] = {"Size": 0.05, "Opacity": 0.2, "Importance Opacity": 1.0, "Depth Opacity": 0.5,
                                     "Density Exponent": 0.5, "Importance Threshold": 0.01}
 
     if show_class > 1:
-        node_options: Dict[str, any] = {"Size": 0.05, "Opacity": 0.0, "Importance Opacity": 1.1, "Depth Opacity": 0.0,
+        node_options: Dict[str, any] = {"Size": 0.05, "Opacity": 0.0, "Importance Opacity": 1.1, "Depth Opacity": 0.5,
                                         "Density Exponent": 0.5, "Importance Threshold": 0.01}
 
     edge_render_mode: int = 3 if show_edge else 0
@@ -131,7 +135,7 @@ def process_network(network_name: str, importance_type: str, prune_rate: float =
                                                            layer_width=1.0,
                                                            sampling_rate=10.0,
                                                            prune_percentage=prune_rate,
-                                                           node_bandwidth_reduction=0.98,
+                                                           node_bandwidth_reduction=0.95,
                                                            edge_bandwidth_reduction=0.9,
                                                            edge_importance_type=edge_importance_type,
                                                            frame_buffer=frame_buffer)

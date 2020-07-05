@@ -63,8 +63,8 @@ class NetworkModel:
         for i in range(len(self.layer) - 1):
             self.edge_count += len(self.layer_nodes[i]) * len(self.layer_nodes[i + 1])
         self.pruned_edges: int = 0
-        self.average_node_distance: float = layer_width / 2.0  # self.get_average_node_distance()
-        self.average_edge_distance: float = layer_width / 2.0  # self.get_average_edge_distance()
+        self.average_node_distance: float = layer_width * 0.75  # self.get_average_node_distance()
+        self.average_edge_distance: float = layer_width * 0.5  # self.get_average_edge_distance()
 
         self.node_min_importance: float = self.read_node_min_importance()
         self.node_max_importance: float = self.read_node_max_importance()
