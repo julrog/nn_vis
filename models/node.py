@@ -50,12 +50,12 @@ class Node:
         position_max_0: int = int(random.random() * 10)
         for i in range(10):
             if i == position_max_0:
-                random_value: float = random.random()
+                random_value: float = 1.0  # random.random()
                 importance_sum += random_value
                 importance_squared_sum += random_value * random_value
                 self.data.append(random_value)
             else:
-                random_value: float = random.random() / 5.0
+                random_value: float = 0.0  # random.random() / 5.0
                 importance_sum += random_value
                 importance_squared_sum += random_value * random_value
                 self.data.append(random_value)

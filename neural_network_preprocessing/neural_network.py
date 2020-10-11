@@ -257,3 +257,74 @@ class ProcessedNetwork:
         importance_value_range_data['max_edge_importance'] = str(max_edge_importance)
         self.model_data.store_data("modified_fine_tuned_performance", self.name, "importance_value_range",
                                    importance_value_range_data)
+
+    def store_importance_data_layer_normalized(self, train_data_path: str, test_data_path: str, centering: bool = False,
+                              gamma_one: bool = True, regularize_gamma: str = "l1"):
+        self.centering = centering
+        self.gamma_one = gamma_one
+        self.regularize_gamma = regularize_gamma
+
+        self.name: str = "beta_" if self.centering else "nobeta_"
+        self.name += "gammaone_" if self.gamma_one else "gammazero_"
+        if self.regularize_gamma is not "None":
+            self.name += "l1_" if self.regularize_gamma == "l1" else "l2_" if self.regularize_gamma == "l2" else "l1l2_"
+
+        importance_data: Tuple[List[np.array], List[np.array]] = self.generate_importance_for_data(train_data_path,
+                                                                                                   test_data_path)
+        node_importance_data: List[np.array] = importance_data[0]
+        edge_importance_data: List[np.array] = importance_data[1]
+
+        normalized_node_importance_data: List[np.array] = []
+        for layer_importance in node_importance_data:
+            min_node_importance: float = 1000000.0
+            max_node_importance: float = 0.0
+            normalized_layer_importance: np.array = np.absolute(layer_importance)
+            for node_importance in normalized_layer_importance:
+                for node_class_importance in node_importance:
+                    if min_node_importance > node_class_importance:
+                        min_node_importance = node_class_importance
+                    if max_node_importance < node_class_importance:
+                        max_node_importance = node_class_importance
+            normalized_node_importance_data.append(normalized_layer_importance / max_node_importance)
+            print("[%s] Node importance - Min: %f, Max: %f" % (LOG_SOURCE, min_node_importance, max_node_importance))
+        node_importance_data = normalized_node_importance_data
+        # print("[%s] Node importance - Min: %f, Max: %f" % (LOG_SOURCE, min_node_importance, max_node_importance))
+
+        normalized_edge_importance_data: List[np.array] = []
+        for layer_data in edge_importance_data:
+            min_edge_importance: float = 1000000.0
+            max_edge_importance: float = 0.0
+            new_layer_data: List[np.array] = []
+            for i in range(layer_data.shape[0]):
+                absolute_layer_data: np.array = np.abs(layer_data[i])
+                current_edge_max: float = float(np.max(absolute_layer_data))
+                current_edge_min: float = float(np.min(absolute_layer_data))
+                if max_edge_importance < current_edge_max:
+                    max_edge_importance = current_edge_max
+                if min_edge_importance > current_edge_min:
+                    min_edge_importance = current_edge_min
+                absolute_layer_data /= max_edge_importance
+                new_layer_data.append(absolute_layer_data)
+            print("[%s] Edge importance - Min: %f, Max: %f" % (LOG_SOURCE, min_edge_importance, max_edge_importance))
+            normalized_edge_importance_data.append(np.stack(new_layer_data, axis=0))
+        edge_importance_data = normalized_edge_importance_data
+
+        last_layer_node_importance = []
+        for i in range(self.num_classes):
+            new_node_data = np.zeros(self.num_classes, dtype=np.float32)
+            new_node_data[i] = 1.0
+            last_layer_node_importance.append(new_node_data)
+        node_importance_data.append(last_layer_node_importance)
+
+        data_path: str = self.model_data.get_path() + self.name + "_importance_data"
+        if not os.path.exists(os.path.dirname(data_path)):
+            os.makedirs(os.path.dirname(data_path))
+        np.savez(data_path, (node_importance_data, edge_importance_data))
+
+        importance_value_range_data: Dict[str, str] = dict()
+        '''importance_value_range_data['min_node_importance'] = str(min_node_importance)
+        importance_value_range_data['max_node_importance'] = str(max_node_importance)
+        importance_value_range_data['min_edge_importance'] = str(min_edge_importance)
+        importance_value_range_data['max_edge_importance'] = str(max_edge_importance)'''
+        self.model_data.store_data("modified_fine_tuned_performance", self.name, "importance_value_range",
+                                   importance_value_range_data)

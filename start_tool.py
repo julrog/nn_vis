@@ -16,7 +16,7 @@ options = OptionGui()
 def compute_render(name: str):
     global options
 
-    width, height = 1920, 1170
+    width, height = 1920, 1200
 
     FileHandler().read_statistics()
 
@@ -124,6 +124,12 @@ def compute_render(name: str):
                     else:
                         create_screenshot(width, height)
                     window.screenshot = False
+                elif window.record:
+                    window.frame_id += 1
+                    if 'network_name' in options.settings.keys():
+                        create_screenshot(width, height, options.settings['network_name'], frame_id=window.frame_id)
+                    else:
+                        create_screenshot(width, height, frame_id=window.frame_id)
             frame_count += 1
             if time.perf_counter() - start_time > 1.0:
                 options.settings["fps"].set(

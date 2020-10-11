@@ -31,6 +31,8 @@ class Window:
         self.focused: bool = True
         self.screenshot: bool = False
         self.screenshot_series: int = 0
+        self.record: bool = False
+        self.frame_id: int = 0
 
     def set_position(self, x: float, y: float):
         glfw.set_window_pos(self.window_handle, x, y)
@@ -103,6 +105,8 @@ class Window:
                 self.screenshot = True
             if key == glfw.KEY_L and action == glfw.RELEASE:
                 self.screenshot_series = 8
+            if key == glfw.KEY_R and action == glfw.RELEASE:
+                self.record = not self.record
 
             if key == glfw.KEY_0 and action == glfw.RELEASE:
                 self.cam.set_position(0)

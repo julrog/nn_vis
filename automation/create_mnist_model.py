@@ -22,7 +22,8 @@ def generate_model_description(batch_size: int, epochs: int, layers: List[Layer]
     return name
 
 
-def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learning_rate: float = 0.001) -> ModelData:
+def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learning_rate: float = 0.001,
+           regularized: bool = False) -> ModelData:
     num_classes: int = 10
 
     # input image dimensions
@@ -51,9 +52,14 @@ def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learn
 
     model = Sequential()
     model.add(Flatten(input_shape=input_shape))
-    for nodes in layer_data:
-        model.add(Dense(nodes, activation='relu'))
-    model.add(Dense(num_classes, activation='softmax'))
+    if regularized:
+        for nodes in layer_data:
+            model.add(Dense(nodes, activation='relu', kernel_regularizer=keras.regularizers.l1(0.001)))
+        model.add(Dense(num_classes, activation='softmax', kernel_regularizer=keras.regularizers.l1(0.001)))
+    else:
+        for nodes in layer_data:
+            model.add(Dense(nodes, activation='relu'))
+        model.add(Dense(num_classes, activation='softmax'))
 
     model.compile(loss=keras.losses.categorical_crossentropy,
                   optimizer=keras.optimizers.Adam(learning_rate),

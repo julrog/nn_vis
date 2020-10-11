@@ -70,7 +70,7 @@ class EdgeRenderer:
                                             ("importance_threshold", self.importance_threshold, "float"),
                                             ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                             ('show_class', show_class, 'int'),
-                                            ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')])
+                                            ('edge_importance_type', 0, 'int')])
         self.point_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -92,7 +92,7 @@ class EdgeRenderer:
                                            ("importance_threshold", self.importance_threshold, "float"),
                                            ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                            ('show_class', show_class, 'int'),
-                                           ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')])
+                                           ('edge_importance_type', 0, 'int')])
         self.line_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -115,7 +115,7 @@ class EdgeRenderer:
                                              ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                              ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                              ('show_class', show_class, 'int'),
-                                             ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')])
+                                             ('edge_importance_type', 0, 'int')])
         self.sphere_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -140,8 +140,7 @@ class EdgeRenderer:
                                                   ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                                   ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                                   ('show_class', show_class, 'int'),
-                                                  ('edge_importance_type', self.edge_processor.edge_importance_type,
-                                                   'int')])
+                                                  ('edge_importance_type', 0, 'int')])
         self.transparent_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):
@@ -166,8 +165,7 @@ class EdgeRenderer:
                                               ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                               ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                               ('show_class', show_class, 'int'),
-                                              ('edge_importance_type', self.edge_processor.edge_importance_type,
-                                               'int')])
+                                              ('edge_importance_type', 0, 'int')])
         self.ellipse_render.set_uniform_labeled_data(options)
 
         def render_function(sample_points: int):

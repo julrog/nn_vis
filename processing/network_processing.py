@@ -125,7 +125,7 @@ class NetworkProcessor:
                 self.edge_advection(True)
             elif action_mode == 6:
                 print("[%s] Randomize %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
-                self.edge_processor.sample_noise(0.5)
+                self.edge_processor.sample_noise(3.0)
 
             if action_mode > 3:
                 if smoothing:
