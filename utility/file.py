@@ -101,3 +101,34 @@ class EvaluationFile:
     def write_data(self):
         with open("%s/%s_%s.json" % (self.directory_path, self.name, self.day_key), 'w') as stats_file:
             json.dump(self.data_cache, stats_file, sort_keys=True, indent=4)
+
+
+class DictFile:
+    def __init__(self, name: str, sub_path: str):
+        self.directory_path: str = os.path.join(BASE_PATH, sub_path)
+        if not os.path.exists(self.directory_path):
+            os.makedirs(self.directory_path)
+        self.name = name
+        self.file_path: str = "%s/%s.json" % (self.directory_path, self.name)
+
+    def read_data(self, data: Dict):
+        read_data = dict()
+        try:
+            with open(self.file_path, "r") as stats_file:
+                file_data = stats_file.read()
+                if file_data:
+                    read_data = json.loads(file_data)
+        except FileNotFoundError:
+            with open(self.file_path, 'w+'):
+                pass
+        for key in read_data.keys():
+            data[key] = read_data[key]
+        return data
+
+    def write_data(self, data: Dict):
+        try:
+            with open(self.file_path, 'w+') as file_data:
+                json.dump(data, file_data, sort_keys=True, indent=4)
+        except FileNotFoundError:
+            with open(self.file_path, 'w+') as file_data:
+                json.dump(data, file_data, sort_keys=True, indent=4)
