@@ -1,12 +1,13 @@
-from typing import Dict, List
+from typing import List
 
 from OpenGL.GL import *
 
 from models.grid import Grid
-from opengl_helper.render_utility import VertexDataHandler, RenderSet, render_setting_0, render_setting_1, \
+from opengl_helper.render_utility import VertexDataHandler, render_setting_0, render_setting_1, \
     RenderSetLayered
 from opengl_helper.shader import RenderShaderHandler, RenderShader
 from processing.edge_processing import EdgeProcessor
+from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.performance import track_time
 
@@ -39,27 +40,23 @@ class EdgeRenderer:
             range(len(self.edge_processor.sample_buffer[i]))] for i in range(len(self.edge_processor.sample_buffer))]
 
         self.point_render: RenderSetLayered = RenderSetLayered(sample_point_shader, self.data_handler)
-        self.point_render.set_uniform_label([("Importance Threshold", "importance_threshold")])
+        self.point_render.set_uniform_label(["edge_importance_threshold"])
         self.line_render: RenderSetLayered = RenderSetLayered(sample_line_shader, self.data_handler)
-        self.line_render.set_uniform_label([("Importance Threshold", "importance_threshold")])
+        self.line_render.set_uniform_label(["edge_importance_threshold"])
         self.sphere_render: RenderSetLayered = RenderSetLayered(sample_sphere_shader, self.data_handler)
-        self.sphere_render.set_uniform_label(
-            [("Size", "object_radius"), ("Importance Threshold", "importance_threshold")])
+        self.sphere_render.set_uniform_label(["edge_object_radius", "edge_importance_threshold"])
         self.transparent_render: RenderSetLayered = RenderSetLayered(sample_transparent_shader, self.data_handler)
         self.transparent_render.set_uniform_label(
-            [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
-             ("Importance Opacity", "importance_opacity"), ("Depth Opacity", "depth_opacity"),
-             ("Density Exponent", "opacity_exponent"), ("Importance Threshold", "importance_threshold")])
+            ["edge_object_radius", "edge_base_opacity", "edge_importance_opacity", "edge_depth_opacity",
+             "edge_opacity_exponent", "edge_importance_threshold"])
         self.ellipse_render: RenderSetLayered = RenderSetLayered(sample_ellipse_shader, self.data_handler)
         self.ellipse_render.set_uniform_label(
-            [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
-             ("Importance Opacity", "importance_opacity"), ("Depth Opacity", "depth_opacity"),
-             ("Density Exponent", "opacity_exponent"), ("Importance Threshold", "importance_threshold")])
+            ["edge_object_radius", "edge_base_opacity", "edge_importance_opacity", "edge_depth_opacity",
+             "edge_opacity_exponent", "edge_importance_threshold"])
         self.importance_threshold: float = 0.0
 
     @track_time
-    def render_point(self, cam: Camera, options: Dict[str, float] = None,
-                     show_class: int = 0):
+    def render_point(self, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
         self.point_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         self.point_render.set_uniform_data([("projection", cam.projection, "mat4"),
@@ -71,7 +68,7 @@ class EdgeRenderer:
                                             ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                             ('show_class', show_class, 'int'),
                                             ('edge_importance_type', 0, 'int')])
-        self.point_render.set_uniform_labeled_data(options)
+        self.point_render.set_uniform_labeled_data(config)
 
         def render_function(sample_points: int):
             render_setting_0(False)
@@ -82,7 +79,7 @@ class EdgeRenderer:
         self.point_render.render(render_function, self.edge_processor.get_buffer_points)
 
     @track_time
-    def render_line(self, cam: Camera, options: Dict[str, float] = None,
+    def render_line(self, cam: Camera, config: RenderingConfig = None,
                     show_class: int = 0):
         self.line_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
@@ -93,7 +90,7 @@ class EdgeRenderer:
                                            ("importance_max", self.edge_processor.edge_max_importance, "float"),
                                            ('show_class', show_class, 'int'),
                                            ('edge_importance_type', 0, 'int')])
-        self.line_render.set_uniform_labeled_data(options)
+        self.line_render.set_uniform_labeled_data(config)
 
         def render_function(sample_points: int):
             render_setting_0(False)
@@ -104,7 +101,7 @@ class EdgeRenderer:
         self.line_render.render(render_function, self.edge_processor.get_buffer_points)
 
     @track_time
-    def render_sphere(self, cam: Camera, sphere_radius: float = 0.05, options: Dict[str, float] = None,
+    def render_sphere(self, cam: Camera, sphere_radius: float = 0.05, config: RenderingConfig = None,
                       show_class: int = 0):
         self.sphere_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
@@ -116,7 +113,7 @@ class EdgeRenderer:
                                              ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                              ('show_class', show_class, 'int'),
                                              ('edge_importance_type', 0, 'int')])
-        self.sphere_render.set_uniform_labeled_data(options)
+        self.sphere_render.set_uniform_labeled_data(config)
 
         def render_function(sample_points: int):
             render_setting_0(False)
@@ -126,7 +123,7 @@ class EdgeRenderer:
         self.sphere_render.render(render_function, self.edge_processor.get_buffer_points)
 
     @track_time
-    def render_transparent_sphere(self, cam: Camera, sphere_radius: float = 0.05, options: Dict[str, float] = None,
+    def render_transparent_sphere(self, cam: Camera, sphere_radius: float = 0.05, config: RenderingConfig = None,
                                   show_class: int = 0):
         self.transparent_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
@@ -141,7 +138,7 @@ class EdgeRenderer:
                                                   ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                                   ('show_class', show_class, 'int'),
                                                   ('edge_importance_type', 0, 'int')])
-        self.transparent_render.set_uniform_labeled_data(options)
+        self.transparent_render.set_uniform_labeled_data(config)
 
         def render_function(sample_points: int):
             render_setting_1(False)
@@ -151,8 +148,7 @@ class EdgeRenderer:
         self.transparent_render.render(render_function, self.edge_processor.get_buffer_points)
 
     @track_time
-    def render_ellipsoid_transparent(self, cam: Camera,
-                                     options: Dict[str, float] = None, show_class: int = 0):
+    def render_ellipsoid_transparent(self, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
         self.ellipse_render.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
 
         near, far = self.grid.get_near_far_from_view(cam.view)
@@ -166,7 +162,7 @@ class EdgeRenderer:
                                               ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
                                               ('show_class', show_class, 'int'),
                                               ('edge_importance_type', 0, 'int')])
-        self.ellipse_render.set_uniform_labeled_data(options)
+        self.ellipse_render.set_uniform_labeled_data(config)
 
         def render_function(sample_points: int):
             render_setting_1(False)

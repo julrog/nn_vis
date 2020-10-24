@@ -1,14 +1,12 @@
-from typing import Dict
-
 from OpenGL.GL import *
 
 from models.grid import Grid
 from opengl_helper.render_utility import VertexDataHandler, RenderSet, render_setting_0, render_setting_1
 from opengl_helper.shader import RenderShaderHandler, RenderShader
 from processing.node_processing import NodeProcessor
+from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.performance import track_time
-from utility.window import Window
 
 
 class NodeRenderer:
@@ -31,24 +29,21 @@ class NodeRenderer:
 
         self.point_render: RenderSet = RenderSet(node_point_shader, self.data_handler)
         self.sphere_render: RenderSet = RenderSet(node_sphere_shader, self.data_handler)
-        self.sphere_render.set_uniform_label(
-            [("Size", "object_radius"), ("Importance Threshold", "importance_threshold")])
-
+        self.sphere_render.set_uniform_label(["node_object_radius", "node_importance_threshold"])
         self.transparent_render: RenderSet = RenderSet(node_transparent_shader, self.data_handler)
         self.transparent_render.set_uniform_label(
-            [("Size", "object_radius"), ("Base Opacity", "base_opacity"),
-             ("Importance Opacity", "importance_opacity"), ("Depth Opacity", "depth_opacity"),
-             ("Density Exponent", "opacity_exponent"), ("Importance Threshold", "importance_threshold")])
+            ["node_object_radius", "node_base_opacity", "node_importance_opacity", "node_depth_opacity",
+             "node_opacity_exponent", "node_importance_threshold"])
 
     @track_time
-    def render_point(self, cam: Camera, options: Dict[str, float] = None, show_class: int = 0):
+    def render_point(self, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
         node_count: int = len(self.node_processor.nodes)
 
         self.point_render.set_uniform_data([("projection", cam.projection, "mat4"),
                                             ("view", cam.view, "mat4"),
                                             ("screen_width", 1920.0, "float"),
                                             ("screen_height", 1080.0, "float")])
-        self.point_render.set_uniform_labeled_data(options)
+        self.point_render.set_uniform_labeled_data(config)
 
         self.point_render.set()
 
@@ -58,7 +53,7 @@ class NodeRenderer:
         glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
     @track_time
-    def render_sphere(self, cam: Camera, sphere_radius: float = 0.03, options: Dict[str, float] = None,
+    def render_sphere(self, cam: Camera, sphere_radius: float = 0.03, config: RenderingConfig = None,
                       show_class: int = 0):
         node_count: int = len(self.node_processor.nodes)
 
@@ -67,7 +62,7 @@ class NodeRenderer:
                                              ("object_radius", sphere_radius, "float"),
                                              ("importance_max", self.node_processor.node_max_importance, "float"),
                                              ('show_class', show_class, 'int')])
-        self.sphere_render.set_uniform_labeled_data(options)
+        self.sphere_render.set_uniform_labeled_data(config)
 
         self.sphere_render.set()
 
@@ -76,7 +71,7 @@ class NodeRenderer:
         glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
     @track_time
-    def render_transparent(self, cam: Camera, sphere_radius: float = 0.03, options: Dict[str, float] = None,
+    def render_transparent(self, cam: Camera, sphere_radius: float = 0.03, config: RenderingConfig = None,
                            show_class: int = 0):
         node_count: int = len(self.node_processor.nodes)
 
@@ -88,7 +83,7 @@ class NodeRenderer:
                                                   ("object_radius", sphere_radius, "float"),
                                                   ("importance_max", self.node_processor.node_max_importance, "float"),
                                                   ('show_class', show_class, 'int')])
-        self.transparent_render.set_uniform_labeled_data(options)
+        self.transparent_render.set_uniform_labeled_data(config)
 
         self.transparent_render.set()
 

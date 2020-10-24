@@ -156,8 +156,14 @@ class NetworkModel:
 
         importance_prune_threshold: float = -1.0
         if self.prune_percentage > 0.0:
-            importance_prune_threshold: float = np.sort(np.array(edge_importance_values))[
-                int(len(edge_importance_values) * self.prune_percentage)]
+            sorted_importance_list = np.sort(np.array(edge_importance_values))
+            lowest_importance: float = sorted_importance_list[0]
+            highest_importance: float = sorted_importance_list[sorted_importance_list.shape[0] - 1]
+            if not lowest_importance == highest_importance:
+                importance_prune_threshold: float = sorted_importance_list[
+                    int(len(edge_importance_values) * self.prune_percentage)]
+            else:
+                print("[NETWORK] Pruning ignored, because all importance values are equal.")
 
         filtered_edges: List[List[Edge]] = []
         for layer_edge in edges:
@@ -239,8 +245,8 @@ class NetworkModel:
                 node_position_max_x = node_one.position.x if node_one.position.x > node_position_max_x else node_position_max_x
                 node_position_max_y = node_one.position.y if node_one.position.y > node_position_max_y else node_position_max_y
         return Vector3(
-            [(node_position_min_x + node_position_max_x) * 0.25 + 0.5 * mid_position_x/position_count,
-             (node_position_min_y + node_position_max_y) * 0.25 + 0.5 * mid_position_y/position_count,
+            [(node_position_min_x + node_position_max_x) * 0.25 + 0.5 * mid_position_x / position_count,
+             (node_position_min_y + node_position_max_y) * 0.25 + 0.5 * mid_position_y / position_count,
              0.0])
 
     def read_node_min_importance(self) -> float:

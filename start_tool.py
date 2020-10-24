@@ -44,10 +44,7 @@ def compute_render(name: str):
 
         if network_processor is not None:
             network_processor.process(options.settings["action_state"], options.settings["edge_smoothing"])
-            network_processor.render(window.cam, options.settings["render_Edge"], options.settings["render_Grid"],
-                                     options.settings["render_Node"], options.settings["render_shader_setting_Edge"],
-                                     options.settings["render_shader_setting_Grid"],
-                                     options.settings["render_shader_setting_Node"], options.settings["show_class"])
+            network_processor.render(window.cam, options.render_config, options.settings["show_class"])
 
         if "sample_count" in options.settings:
             options.settings["sample_count"].set(network_processor.edge_processor.point_count)
@@ -67,19 +64,9 @@ def compute_render(name: str):
     if not options.settings["Closed"]:
         print("Start building network: " + str(options.settings["current_layer_data"]))
         network_processor = NetworkProcessor(options.settings["current_layer_data"],
+                                             options.processing_config,
                                              importance_data=options.settings["importance_data"],
-                                             layer_distance=options.settings[
-                                                 "layer_distance"],
-                                             processed_nn=options.settings["processed_nn"],
-                                             layer_width=options.settings["layer_width"],
-                                             sampling_rate=options.settings["sampling_rate"],
-                                             prune_percentage=options.settings["prune_percentage"],
-                                             node_bandwidth_reduction=options.settings[
-                                                 "node_bandwidth_reduction"],
-                                             edge_bandwidth_reduction=options.settings[
-                                                 "edge_bandwidth_reduction"],
-                                             edge_importance_type=options.settings[
-                                                 "edge_importance_type"])
+                                             processed_nn=options.settings["processed_nn"])
         window.cam.base = network_processor.get_node_mid()
         window.cam.set_position(1)
 
@@ -89,18 +76,9 @@ def compute_render(name: str):
                 network_processor.delete()
                 print("Rebuilding network: " + str(options.settings["current_layer_data"]))
                 network_processor = NetworkProcessor(options.settings["current_layer_data"],
+                                                     options.processing_config,
                                                      importance_data=options.settings["importance_data"],
-                                                     processed_nn=options.settings["processed_nn"],
-                                                     layer_distance=options.settings["layer_distance"],
-                                                     layer_width=options.settings["layer_width"],
-                                                     sampling_rate=options.settings["sampling_rate"],
-                                                     prune_percentage=options.settings["prune_percentage"],
-                                                     node_bandwidth_reduction=options.settings[
-                                                         "node_bandwidth_reduction"],
-                                                     edge_bandwidth_reduction=options.settings[
-                                                         "edge_bandwidth_reduction"],
-                                                     edge_importance_type=options.settings[
-                                                         "edge_importance_type"])
+                                                     processed_nn=options.settings["processed_nn"])
                 window.cam.base = network_processor.get_node_mid()
                 window.cam.set_position(1)
             if start_count < 0:

@@ -3,6 +3,7 @@ from OpenGL.GL import *
 
 from opengl_helper.buffer import BufferObject, OverflowingBufferObject
 from opengl_helper.shader import BaseShader
+from rendering.rendering_config import RenderingConfig
 
 LOG_SOURCE = "RENDER_UTILITY"
 
@@ -92,22 +93,22 @@ class RenderSet:
     def __init__(self, shader: BaseShader, data_handler: VertexDataHandler):
         self.shader: BaseShader = shader
         self.data_handler: VertexDataHandler = data_handler
-        self.uniform_label: Dict[str, str] = dict()
+        self.uniform_settings: List[str] = []
 
-    def set_uniform_label(self, data: List[Tuple[str, str]]):
-        for label, uniform_name in data:
-            self.uniform_label[label] = uniform_name
+    def set_uniform_label(self, data: List[str]):
+        for setting in data:
+            self.uniform_settings.append(setting)
 
     def set_uniform_data(self, data: List[Tuple[str, any, any]]):
         if self.shader is not None:
             self.shader.set_uniform_data(data)
 
-    def set_uniform_labeled_data(self, data: Dict[str, float]):
-        if self.shader is not None and data is not None:
+    def set_uniform_labeled_data(self, config: RenderingConfig):
+        if self.shader is not None and config is not None:
             uniform_data = []
-            for label, value in data.items():
-                if label in self.uniform_label.keys():
-                    uniform_data.append((self.uniform_label[label], value, "float"))
+            for setting, shader_name in config.shader_name.items():
+                if setting in self.uniform_settings:
+                    uniform_data.append((shader_name, config[setting], "float"))
             self.shader.set_uniform_data(uniform_data)
 
     def set(self):
@@ -120,23 +121,23 @@ class RenderSetLayered:
     def __init__(self, shader: BaseShader, data_handler: List[List[VertexDataHandler]]):
         self.shader: BaseShader = shader
         self.data_handler: List[List[VertexDataHandler]] = data_handler
-        self.uniform_label: Dict[str, str] = dict()
+        self.uniform_settings: List[str] = []
         self.buffer_divisor: List[Tuple[int, int]] = []
 
-    def set_uniform_label(self, data: List[Tuple[str, str]]):
-        for label, uniform_name in data:
-            self.uniform_label[label] = uniform_name
+    def set_uniform_label(self, data: List[str]):
+        for setting in data:
+            self.uniform_settings.append(setting)
 
     def set_uniform_data(self, data: List[Tuple[str, any, any]]):
         if self.shader is not None:
             self.shader.set_uniform_data(data)
 
-    def set_uniform_labeled_data(self, data: Dict[str, float]):
-        if self.shader is not None and data is not None:
+    def set_uniform_labeled_data(self, config: RenderingConfig):
+        if self.shader is not None and config is not None:
             uniform_data = []
-            for label, value in data.items():
-                if label in self.uniform_label.keys():
-                    uniform_data.append((self.uniform_label[label], value, "float"))
+            for setting, shader_name in config.shader_name.items():
+                if setting in self.uniform_settings:
+                    uniform_data.append((shader_name, config[setting], "float"))
             self.shader.set_uniform_data(uniform_data)
 
     def render(self, render_function, point_count_function):
