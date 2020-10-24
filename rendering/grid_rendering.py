@@ -1,13 +1,11 @@
-from typing import Dict
-
 from OpenGL.GL import *
-from opengl_helper.render_utility import RenderSet, VertexDataHandler, render_setting_0, OverflowingVertexDataHandler, \
+from opengl_helper.render_utility import render_setting_0, OverflowingVertexDataHandler, \
     OverflowingRenderSet
 from opengl_helper.shader import RenderShaderHandler, RenderShader
 from processing.grid_processing import GridProcessor
+from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.performance import track_time
-from utility.window import Window
 
 
 class GridRenderer:
@@ -28,12 +26,12 @@ class GridRenderer:
         self.cube_render: OverflowingRenderSet = OverflowingRenderSet(cube_shader, self.data_handler)
 
     @track_time
-    def render_point(self, cam: Camera, options: Dict[str, float] = None):
+    def render_point(self, cam: Camera, config: RenderingConfig = None):
         self.point_render.set_uniform_data([("projection", cam.projection, "mat4"),
                                             ("view", cam.view, "mat4"),
                                             ("screen_width", 1920.0, "float"),
                                             ("screen_height", 1080.0, "float")])
-        self.point_render.set_uniform_labeled_data(options)
+        self.point_render.set_uniform_labeled_data(config)
 
         for i in range(len(self.grid_processor.grid_density_buffer.handle)):
             grid_count: int = self.grid_processor.grid_density_buffer.get_objects() - self.grid_processor.grid_slice_size
@@ -46,12 +44,12 @@ class GridRenderer:
             glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
     @track_time
-    def render_cube(self, cam: Camera, options: Dict[str, float] = None):
+    def render_cube(self, cam: Camera, config: RenderingConfig = None):
         self.cube_render.set_uniform_data([("projection", cam.projection, "mat4"),
                                            ("view", cam.view, "mat4"),
                                            ("screen_width", 1920.0, "float"),
                                            ("screen_height", 1080.0, "float")])
-        self.cube_render.set_uniform_labeled_data(options)
+        self.cube_render.set_uniform_labeled_data(config)
 
         for i in range(len(self.grid_processor.grid_density_buffer.handle)):
             grid_count: int = self.grid_processor.grid_density_buffer.get_objects() - self.grid_processor.grid_slice_size

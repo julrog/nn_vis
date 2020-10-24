@@ -14,9 +14,11 @@ from processing.advection_process import AdvectionProgress
 from processing.edge_processing import EdgeProcessor
 from processing.grid_processing import GridProcessor
 from processing.node_processing import NodeProcessor
+from processing.processing_config import ProcessingConfig
 from rendering.edge_rendering import EdgeRenderer
 from rendering.grid_rendering import GridRenderer
 from rendering.node_rendering import NodeRenderer
+from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.window import Window
 from OpenGL.GL import *
@@ -26,31 +28,29 @@ LOG_SOURCE: str = "NETWORK_PROCESSING"
 
 class NetworkProcessor:
     def __init__(self, layer_nodes: List[int],
+                 processing_config: ProcessingConfig,
                  importance_data: ImportanceDataHandler = None,
                  processed_nn: ProcessedNNHandler = None,
-                 layer_distance: float = 1.0, layer_width: float = 1.0, sampling_rate: float = 10.0,
-                 prune_percentage: float = 0.1, node_bandwidth_reduction: float = 0.95,
-                 edge_bandwidth_reduction: float = 0.9, edge_importance_type: int = 0,
                  frame_buffer: FrameBufferObject = None):
         print("[%s] Prepare network processing for network of size: %s" % (LOG_SOURCE, layer_nodes))
         self.layer_nodes: List[int] = layer_nodes
-        self.layer_distance: float = layer_distance
-        self.layer_width: float = layer_width
+        self.layer_distance: float = processing_config["layer_distance"]
+        self.layer_width: float = processing_config["layer_width"]
 
         print("[%s] Create network model..." % LOG_SOURCE)
         self.network: NetworkModel = NetworkModel(self.layer_nodes, self.layer_width, self.layer_distance,
-                                                  importance_data, processed_nn, prune_percentage)
-        self.sample_length: float = self.network.layer_width / sampling_rate
+                                                  importance_data, processed_nn, processing_config["prune_percentage"])
+        self.sample_length: float = self.network.layer_width / processing_config["sampling_rate"]
         self.grid_cell_size: float = self.sample_length / 3.0
         self.sample_radius: float = self.sample_length * 2.0
 
         self.node_advection_status: AdvectionProgress = AdvectionProgress(self.network.average_node_distance,
-                                                                          node_bandwidth_reduction,
+                                                                          processing_config["node_bandwidth_reduction"],
                                                                           self.grid_cell_size * 2.0)
         self.edge_advection_status: AdvectionProgress = AdvectionProgress(self.network.average_edge_distance,
-                                                                          edge_bandwidth_reduction,
+                                                                          processing_config["edge_bandwidth_reduction"],
                                                                           self.grid_cell_size * 2.0)
-        self.edge_importance_type: int = edge_importance_type
+        self.edge_importance_type: int = processing_config["edge_importance_type"]
 
         print("[%s] Create grid..." % LOG_SOURCE)
         self.grid: Grid = Grid(Vector3([self.grid_cell_size, self.grid_cell_size, self.grid_cell_size]),
@@ -63,7 +63,7 @@ class NetworkProcessor:
 
         print("[%s] Prepare edge processing..." % LOG_SOURCE)
         self.edge_processor: EdgeProcessor = EdgeProcessor(self.sample_length,
-                                                           edge_importance_type=edge_importance_type)
+                                                           edge_importance_type=self.edge_importance_type)
         self.edge_processor.set_data(self.network)
         if not self.edge_processor.sampled:
             self.edge_processor.init_sample_edge()
@@ -182,30 +182,28 @@ class NetworkProcessor:
         if self.edge_advection_status.limit_reached:
             self.action_finished = True
 
-    def render(self, cam: Camera, edge_render_mode: int, grid_render_mode: int, node_render_mode: int,
-               edge_render_options: Dict[str, float] = None, grid_render_options: Dict[str, float] = None,
-               node_render_options: Dict[str, float] = None, show_class: int = 0):
+    def render(self, cam: Camera, config: RenderingConfig, show_class: int = 0):
         clear_screen([1.0, 1.0, 1.0, 1.0])
-        if grid_render_mode == 1:
-            self.grid_renderer.render_cube(cam, options=grid_render_options)
-        elif grid_render_mode == 2:
-            self.grid_renderer.render_point(cam, options=grid_render_options)
-        if edge_render_mode == 5:
-            self.edge_renderer.render_point(cam, options=edge_render_options, show_class=show_class)
-        elif edge_render_mode == 4:
-            self.edge_renderer.render_line(cam, options=edge_render_options, show_class=show_class)
-        elif edge_render_mode == 3:
-            self.edge_renderer.render_ellipsoid_transparent(cam, options=edge_render_options, show_class=show_class)
-        elif edge_render_mode == 2:
-            self.edge_renderer.render_transparent_sphere(cam, options=edge_render_options, show_class=show_class)
-        elif edge_render_mode == 1:
-            self.edge_renderer.render_sphere(cam, options=edge_render_options, show_class=show_class)
-        if node_render_mode == 3:
-            self.node_renderer.render_point(cam, options=node_render_options, show_class=show_class)
-        elif node_render_mode == 2:
-            self.node_renderer.render_transparent(cam, options=node_render_options, show_class=show_class)
-        elif node_render_mode == 1:
-            self.node_renderer.render_sphere(cam, options=node_render_options, show_class=show_class)
+        if config["grid_render_mode"] == 1:
+            self.grid_renderer.render_cube(cam, config=config)
+        elif config["grid_render_mode"] == 2:
+            self.grid_renderer.render_point(cam, config=config)
+        if config["edge_render_mode"] == 5:
+            self.edge_renderer.render_point(cam, config=config, show_class=show_class)
+        elif config["edge_render_mode"] == 4:
+            self.edge_renderer.render_line(cam, config=config, show_class=show_class)
+        elif config["edge_render_mode"] == 3:
+            self.edge_renderer.render_ellipsoid_transparent(cam, config=config, show_class=show_class)
+        elif config["edge_render_mode"] == 2:
+            self.edge_renderer.render_transparent_sphere(cam, config=config, show_class=show_class)
+        elif config["edge_render_mode"] == 1:
+            self.edge_renderer.render_sphere(cam, config=config, show_class=show_class)
+        if config["node_render_mode"] == 3:
+            self.node_renderer.render_point(cam, config=config, show_class=show_class)
+        elif config["node_render_mode"] == 2:
+            self.node_renderer.render_transparent(cam, config=config, show_class=show_class)
+        elif config["node_render_mode"] == 1:
+            self.node_renderer.render_sphere(cam, config=config, show_class=show_class)
 
     def save_model(self, file_path: str):
         layer_data: List[int] = self.network.layer

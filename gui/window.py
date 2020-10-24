@@ -7,7 +7,10 @@ from definitions import DATA_PATH
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from gui.general_setting import SettingField, SettingEntry, RadioButtons
 from gui.neural_network_setting import LayerSettings
+from gui.processing_setting import ProcessingSetting
 from gui.render_setting import RenderSettings
+from processing.processing_config import ProcessingConfig
+from rendering.rendering_config import RenderingConfig
 
 
 class OptionGui:
@@ -17,6 +20,8 @@ class OptionGui:
         self.gui_root: Tk = Tk()
         self.layer_settings: List[LayerSettings] = []
         self.settings: Dict[str, any] = {"Closed": False, "current_layer_data": []}
+        self.render_config: RenderingConfig = RenderingConfig()
+        self.processing_config: ProcessingConfig = ProcessingConfig()
 
         self.gui_root.title("NNVIS Options")
 
@@ -62,21 +67,38 @@ class OptionGui:
                                                    padx=5, pady=5)
         self.render_frame.grid(row=0, column=3, columnspan=2, rowspan=3, padx=5, pady=5)
 
-        self.grid_render_settings: RenderSettings = RenderSettings(self.render_frame, "Grid", self.change_setting,
-                                                                   ["None", "Cube", "Point"], 0, row=0, column=0)
-        edge_shader_settings: Dict[str, any] = {"Size": 0.2, "Base Opacity": 0.0, "Importance Opacity": 1.1,
-                                                "Depth Opacity": 0.5, "Density Exponent": 0.5,
-                                                "Importance Threshold": 0.01}
-        self.edge_render_settings: RenderSettings = RenderSettings(self.render_frame, "Edge", self.change_setting,
-                                                                   ["None", "Sphere", "Sphere_Transparent",
-                                                                    "Ellipsoid_Transparent", "Line", "Point"],
-                                                                   3, edge_shader_settings, row=1, column=0)
-        node_shader_settings: Dict[str, any] = {"Size": 0.05, "Base Opacity": 0.0, "Importance Opacity": 1.0,
-                                                "Depth Opacity": 0.5, "Density Exponent": 0.5,
-                                                "Importance Threshold": 0.01}
-        self.node_render_settings: RenderSettings = RenderSettings(self.render_frame, "Node", self.change_setting,
-                                                                   ["None", "Sphere", "Sphere_Transparent", "Point"], 2,
-                                                                   node_shader_settings, row=2, column=0)
+        self.grid_render_settings: RenderSettings = \
+            RenderSettings(self.render_frame,
+                           "Grid",
+                           self.change_render_config,
+                           self.render_config,
+                           "grid_render_mode",
+                           None,
+                           row=0,
+                           column=0)
+        edge_shader_settings: List[str] = ["edge_object_radius", "edge_base_opacity", "edge_importance_opacity",
+                                           "edge_depth_opacity", "edge_opacity_exponent", "edge_importance_threshold"]
+        self.edge_render_settings: RenderSettings = \
+            RenderSettings(self.render_frame,
+                           "Edge",
+                           self.change_render_config,
+                           self.render_config,
+                           "edge_render_mode",
+                           edge_shader_settings,
+                           row=1,
+                           column=0)
+        node_shader_settings: List[str] = ["node_object_radius", "node_base_opacity", "node_importance_opacity",
+                                           "node_depth_opacity", "node_opacity_exponent", "node_importance_threshold"]
+        self.node_render_settings: RenderSettings = \
+            RenderSettings(self.render_frame,
+                           "Node",
+                           self.change_render_config,
+                           self.render_config,
+                           "node_render_mode",
+                           node_shader_settings,
+                           row=2,
+                           column=0)
+
         self.class_setting_frame: LabelFrame = LabelFrame(self.render_frame, text="Class Visibility", width=60,
                                                           padx=5, pady=5)
         self.class_setting_frame.grid(row=0, column=1, rowspan=3, padx=5, pady=5)
@@ -118,25 +140,11 @@ class OptionGui:
         self.setting_frame: LabelFrame = LabelFrame(self.processing_frame, text="Settings", width=60,
                                                     padx=5, pady=5)
         self.setting_frame.grid(row=0, column=0, padx=5, pady=5)
-        self.layer_distance: SettingEntry = SettingEntry(self.setting_frame, "Layer distance:", row=0, column=0,
-                                                         variable_type="float")
-        self.layer_width: SettingEntry = SettingEntry(self.setting_frame, "Layer width:", row=1, column=0,
-                                                      variable_type="float")
-        self.sampling_rate: SettingEntry = SettingEntry(self.setting_frame, "Sampling rate:", row=2, column=0,
-                                                        variable_type="float")
-        self.prune_percentage: SettingEntry = SettingEntry(self.setting_frame, "Prune percentage:", row=3,
-                                                           column=0, variable_type="float")
-        self.node_bandwidth_reduction: SettingEntry = SettingEntry(self.setting_frame, "Node Bandwidth reduction:",
-                                                                   row=4, column=0, variable_type="float")
-        self.edge_bandwidth_reduction: SettingEntry = SettingEntry(self.setting_frame, "Edge Bandwidth reduction:",
-                                                                   row=5, column=0, variable_type="float")
-        self.edge_importance_type: SettingEntry = SettingEntry(self.setting_frame, "Edge Importance Type:",
-                                                               row=6, column=0, variable_type="int")
+        self.processing_setting: ProcessingSetting = ProcessingSetting(self.processing_config, self.setting_frame)
+
         # ------------------------------------------------------------------------------------------------------------ #
 
-    def start(self, layer_data: List[int] = None, layer_distance: float = 1.0, node_size: float = 1.0,
-              sampling_rate: float = 10.0, prune_percentage: float = 0.0, node_bandwidth_reduction: float = 0.95,
-              edge_bandwidth_reduction: float = 0.9, edge_importance_type: int = 1):
+    def start(self, layer_data: List[int] = None):
         if layer_data is None:
             default_layer_data = [4, 9, 4]
             for nodes in default_layer_data:
@@ -145,13 +153,7 @@ class OptionGui:
             for nodes in layer_data:
                 self.add_layer(nodes)
 
-        self.layer_distance.set(layer_distance)
-        self.layer_width.set(node_size)
-        self.sampling_rate.set(sampling_rate)
-        self.prune_percentage.set(prune_percentage)
-        self.node_bandwidth_reduction.set(node_bandwidth_reduction)
-        self.edge_bandwidth_reduction.set(edge_bandwidth_reduction)
-        self.edge_importance_type.set(edge_importance_type)
+        self.processing_setting.set()
         self.generate()
 
         self.gui_root.mainloop()
@@ -213,16 +215,17 @@ class OptionGui:
         self.settings["current_layer_data"] = layer_data
         self.settings["importance_data"] = importance_data
         self.settings["processed_nn"] = processed_nn
-        self.settings["layer_distance"] = self.layer_distance.get()
-        self.settings["layer_width"] = self.layer_width.get()
-        self.settings["sampling_rate"] = self.sampling_rate.get()
-        self.settings["prune_percentage"] = self.prune_percentage.get()
-        self.settings["node_bandwidth_reduction"] = self.node_bandwidth_reduction.get()
-        self.settings["edge_bandwidth_reduction"] = self.edge_bandwidth_reduction.get()
-        self.settings["edge_importance_type"] = self.edge_importance_type.get()
+        self.processing_setting.update_config()
         self.settings["update_model"] = True
+        self.processing_config.store()
 
     def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):
         if stop_action:
             self.action_buttons.press(0)
         self.settings[setting_type + "_" + sub_type] = value
+
+    def change_render_config(self, name: str, value: int, stop_action: bool = False):
+        if stop_action:
+            self.action_buttons.press(0)
+        self.render_config[name] = value
+        self.render_config.store()
