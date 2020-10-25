@@ -1,6 +1,6 @@
 import ntpath
 from tkinter import *
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from typing import List, Dict
 
 from definitions import DATA_PATH
@@ -144,6 +144,8 @@ class OptionGui:
 
         # ------------------------------------------------------------------------------------------------------------ #
 
+        self.gui_root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
     def start(self, layer_data: List[int] = None):
         if layer_data is None:
             default_layer_data = [4, 9, 4]
@@ -229,3 +231,10 @@ class OptionGui:
             self.action_buttons.press(0)
         self.render_config[name] = value
         self.render_config.store()
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.settings["Closed"] = True
+
+    def destroy(self):
+        self.gui_root.destroy()

@@ -121,9 +121,11 @@ def compute_render(name: str):
 
     FileHandler().write_statistics()
     window_handler.destroy()
+    options.destroy()
 
 
 compute_render_thread: threading.Thread = threading.Thread(target=compute_render, args=(1,))
+compute_render_thread.setDaemon(True)
 compute_render_thread.start()
 
 options.start()
