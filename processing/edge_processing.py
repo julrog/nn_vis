@@ -1,7 +1,5 @@
 from typing import List
-from pyrr import Matrix44
 import numpy as np
-
 from definitions import pairwise
 from models.edge import Edge
 from models.network import NetworkModel
@@ -11,6 +9,7 @@ from processing.advection_process import AdvectionProgress
 from utility.performance import track_time
 from opengl_helper.render_utility import VertexDataHandler
 from OpenGL.GL import *
+
 
 LOG_SOURCE: str = "EDGE_PROCESSING"
 

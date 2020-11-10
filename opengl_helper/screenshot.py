@@ -1,10 +1,8 @@
 import os
 import numpy as np
 from datetime import datetime, timezone
-
 from OpenGL.GL import *
 from PIL import Image
-
 from definitions import SCREENSHOT_PATH
 from opengl_helper.frame_buffer import FrameBufferObject
 

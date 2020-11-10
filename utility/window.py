@@ -2,7 +2,6 @@ from typing import Dict, Tuple
 import glfw
 from OpenGL.GL import *
 from pyrr import Vector3
-
 from utility.camera import Camera
 from utility.singleton import Singleton
 

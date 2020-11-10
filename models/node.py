@@ -1,9 +1,7 @@
 import math
 import random
-
 import numpy as np
 from typing import List, Tuple
-
 from pyrr import Vector3
 
 

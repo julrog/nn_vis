@@ -1,11 +1,8 @@
 import math
 import os
-import time
 from typing import Dict, Tuple, List
-
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
-
 from definitions import BASE_PATH
 from opengl_helper.shader import BaseShader
 from utility.singleton import Singleton

@@ -1,5 +1,6 @@
 from OpenGL.GL import *
 
+
 LOG_SOURCE: str = "TEXTURE"
 
 

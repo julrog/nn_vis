@@ -4,9 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import transforms
 from matplotlib.axes import Axes
-
 from definitions import BASE_PATH
 from utility.file import EvaluationFile
+
 
 plt.rc('font', size=14)  # controls default text sizes
 plt.rc('axes', titlesize=14)  # fontsize of the axes title

@@ -4,6 +4,7 @@ import numpy as np
 from tensorflow_core.python.keras.datasets import mnist
 from definitions import DATA_PATH
 
+
 LOG_SOURCE: str = "DATA_SPLIT"
 num_classes: int = 10
 img_size: int = 28 * 28

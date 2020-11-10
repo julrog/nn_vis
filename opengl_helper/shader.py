@@ -1,12 +1,11 @@
 import os
 from typing import List, Tuple, Dict
-
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
-
 from definitions import BASE_PATH
 from utility.singleton import Singleton
 from opengl_helper.texture import Texture
+
 
 LOG_SOURCE: str = "SHADER"
 

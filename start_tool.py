@@ -1,6 +1,5 @@
 import threading
 import time
-
 from gui.window import OptionGui
 from opengl_helper.screenshot import create_screenshot
 from processing.network_processing import NetworkProcessor
@@ -8,6 +7,7 @@ from utility.file import FileHandler
 from utility.performance import track_time
 from utility.window import WindowHandler, Window
 from OpenGL.GL import *
+
 
 global options
 options = OptionGui()

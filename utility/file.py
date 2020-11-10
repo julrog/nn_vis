@@ -1,7 +1,7 @@
 import json
 import os
 from functools import reduce
-from typing import Dict, List
+from typing import Dict
 from datetime import datetime, timezone
 
 from definitions import BASE_PATH

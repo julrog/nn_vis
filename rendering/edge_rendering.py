@@ -1,7 +1,5 @@
 from typing import List
-
 from OpenGL.GL import *
-
 from models.grid import Grid
 from opengl_helper.render_utility import VertexDataHandler, render_setting_0, render_setting_1, \
     RenderSetLayered

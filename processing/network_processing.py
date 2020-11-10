@@ -1,10 +1,6 @@
-import time
-
 import numpy as np
-from typing import List, Dict
-
+from typing import List
 from pyrr import Vector3
-
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from models.grid import Grid
 from models.network import NetworkModel
@@ -20,8 +16,8 @@ from rendering.grid_rendering import GridRenderer
 from rendering.node_rendering import NodeRenderer
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
-from utility.window import Window
 from OpenGL.GL import *
+
 
 LOG_SOURCE: str = "NETWORK_PROCESSING"
 

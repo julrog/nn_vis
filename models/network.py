@@ -1,13 +1,12 @@
 import math
 import numpy as np
 from typing import List, Tuple
-
 from pyrr import Vector3
-
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from models.edge import Edge, split_edges_for_buffer, create_edges_processed, create_edges_random, \
     create_edges_importance
 from models.node import Node, create_random_nodes, create_nodes_from_data, create_nodes_with_importance
+
 
 LOG_SOURCE: str = "NETWORK_MODEL"
 

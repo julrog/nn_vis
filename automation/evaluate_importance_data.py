@@ -1,14 +1,10 @@
-import os
 import time
+import numpy as np
 from typing import Tuple, Dict, List
-
-from sklearn.metrics import classification_report
 from tensorflow_core.python.keras.datasets import mnist
-
 from data.data_handler import ImportanceDataHandler
 from data.model_data import ModelData
 from tensorflow import keras
-import numpy as np
 
 
 def process_train_test_data() -> Tuple[np.array, np.array, np.array, np.array]:

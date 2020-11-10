@@ -1,14 +1,12 @@
 import os
 import numpy as np
 from typing import List
-
 from tensorflow import keras
 from tensorflow_core.python.keras import Sequential
 from tensorflow_core.python.keras.datasets import mnist
 from tensorflow_core.python.keras.layers import Flatten, Dense
 from tensorflow_core.python.layers.base import Layer
 from sklearn.metrics import classification_report
-
 from data.model_data import ModelData
 
 

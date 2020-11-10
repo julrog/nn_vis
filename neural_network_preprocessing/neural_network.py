@@ -1,18 +1,15 @@
 import os
-
 import numpy as np
 from typing import List, Tuple, Dict
-
 from sklearn.metrics import classification_report
 from tensorflow import keras
-from tensorflow_core.python.keras import Model, Input, Sequential
+from tensorflow_core.python.keras import Model, Input
 from tensorflow_core.python.keras.layers import BatchNormalization, Dense
 from tensorflow_core.python.keras.regularizers import l1_l2, l1, l2
 from tensorflow_core.python.layers.base import Layer
-
-from automation.create_mnist_model import generate_model_description
 from data.model_data import ModelData
-from definitions import BASE_PATH, DATA_PATH
+from definitions import DATA_PATH
+
 
 LOG_SOURCE: str = "NEURAL_NETWORK"
 

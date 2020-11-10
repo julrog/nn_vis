@@ -1,5 +1,4 @@
 from OpenGL.GL import *
-
 from models.grid import Grid
 from opengl_helper.render_utility import VertexDataHandler, RenderSet, render_setting_0, render_setting_1
 from opengl_helper.shader import RenderShaderHandler, RenderShader

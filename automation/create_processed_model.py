@@ -1,14 +1,11 @@
 from typing import Dict, List
-
 from pyrr import Vector3
-
 from data.data_handler import ImportanceDataHandler
 from definitions import DATA_PATH
 from opengl_helper.frame_buffer import FrameBufferObject
 from opengl_helper.screenshot import create_screenshot
 from processing.network_processing import NetworkProcessor
 from OpenGL.GL import *
-
 from utility.camera import Camera
 from utility.window import WindowHandler, Window
 

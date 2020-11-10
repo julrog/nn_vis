@@ -1,6 +1,5 @@
 from tkinter import LabelFrame, IntVar, Radiobutton, Button
 from typing import List, Dict
-
 from gui.general_setting import SettingEntry
 from rendering.rendering_config import RenderingConfig
 

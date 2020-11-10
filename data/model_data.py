@@ -1,9 +1,7 @@
 import os
 from typing import List, Dict
-
 from tensorflow_core.python.keras.models import Model
 from tensorflow import keras
-
 from definitions import DATA_PATH
 from utility.file import EvaluationFile
 

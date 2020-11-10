@@ -1,8 +1,8 @@
 import math
 from typing import List
-
 import numpy as np
 from OpenGL.GL import *
+
 
 LOG_SOURCE: str = "BUFFER"
 

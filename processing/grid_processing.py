@@ -1,9 +1,6 @@
 import math
-import time
 from typing import List
-
 import numpy as np
-
 from models.grid import Grid
 from opengl_helper.buffer import OverflowingBufferObject
 from opengl_helper.compute_shader import ComputeShader, ComputeShaderHandler
@@ -13,6 +10,7 @@ from processing.edge_processing import EdgeProcessor
 from processing.node_processing import NodeProcessor
 from utility.performance import track_time
 from OpenGL.GL import *
+
 
 LOG_SOURCE: str = "GRID_PROCESSING"
 

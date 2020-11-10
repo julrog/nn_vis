@@ -1,9 +1,9 @@
 from typing import List, Tuple, Dict
 from OpenGL.GL import *
-
 from opengl_helper.buffer import BufferObject, OverflowingBufferObject
 from opengl_helper.shader import BaseShader
 from rendering.rendering_config import RenderingConfig
+
 
 LOG_SOURCE = "RENDER_UTILITY"
 

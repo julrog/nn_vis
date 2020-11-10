@@ -3,8 +3,9 @@ from tensorflow import keras
 from tensorflow_core.python.keras import Model, Sequential
 from tensorflow_core.python.keras.datasets import mnist
 from tensorflow_core.python.keras.layers import BatchNormalization
-
 from definitions import BASE_PATH
+import tensorflow as tf
+
 
 model_path: str = BASE_PATH + '/storage/models/' + "dense_784_128_10"
 model: Model = keras.models.load_model(model_path)
