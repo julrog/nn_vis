@@ -43,7 +43,7 @@ def compute_render(name: str):
             options.settings["trigger_network_sample"] = 0
 
         if network_processor is not None:
-            network_processor.process(options.settings["action_state"], options.settings["edge_smoothing"])
+            network_processor.process(options.settings["action_state"])
             network_processor.render(window.cam, options.render_config, options.settings["show_class"])
 
         if "sample_count" in options.settings:

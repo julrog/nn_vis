@@ -10,8 +10,12 @@ class RenderConfigType(Enum):
 
 
 class RenderingConfig(BaseConfig):
-    def __init__(self):
-        super().__init__("rendering")
+    def __init__(self, name: str = None):
+        if name is None:
+            super().__init__("rendering")
+        else:
+            super().__init__("rendering", name)
+
         self.shader_label: Dict[str, str] = dict()
         self.shader_name: Dict[str, str] = dict()
         self.selection_labels: Dict[str, List[str]] = dict()

@@ -3,8 +3,12 @@ from utility.config import BaseConfig
 
 
 class ProcessingConfig(BaseConfig):
-    def __init__(self):
-        super().__init__("processing")
+    def __init__(self, name: str = None):
+        if name is None:
+            super().__init__("processing")
+        else:
+            super().__init__("processing", name)
+
         self.label: Dict[str, str] = dict()
         self.value_type: Dict[str, str] = dict()
         self.set_defaults()
@@ -22,4 +26,11 @@ class ProcessingConfig(BaseConfig):
         for key, label, valueType, value in setting_items:
             self.label[key] = label
             self.value_type[key] = valueType
+            self.setdefault(key, value)
+
+        phase_setting_items: List[Tuple[str, any]] = []
+        phase_setting_items.extend([("smoothing", True),
+                                    ("smoothing_iterations", 8)])
+
+        for key, value in phase_setting_items:
             self.setdefault(key, value)
