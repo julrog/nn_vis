@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 import pyrr
 from pyrr import Vector3, Matrix44, vector, vector3
@@ -30,7 +30,7 @@ def look_at(position: Vector3, target: Vector3, world_up: Vector3) -> Matrix44:
     return rotation * translation
 
 
-class CameraPose(Enum):
+class CameraPose(IntEnum):
     FRONT = 2
     RIGHT = 3
     LEFT = 4

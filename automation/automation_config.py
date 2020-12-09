@@ -1,18 +1,15 @@
-from enum import IntEnum
+from enum import auto, IntFlag
 from typing import List, Tuple
 
 from utility.camera import CameraPose
 from utility.config import BaseConfig
 
 
-class ProcessRenderMode(IntEnum):
-    NONE = 0
-    FINAL = 1
-    NODE_ITERATIONS = 10
-    EDGE_ITERATIONS = 11
-    NODE_EDGE_ITERATIONS = 12
-    EDGE_ITERATIONS_SMOOTHING = 21
-    NODE_EDGE_ITERATIONS_SMOOTHING = 22
+class ProcessRenderMode(IntFlag):
+    FINAL = auto()
+    NODE_ITERATIONS = auto()
+    EDGE_ITERATIONS = auto()
+    SMOOTHING = auto()
 
 
 class AutomationConfig(BaseConfig):
@@ -28,7 +25,7 @@ class AutomationConfig(BaseConfig):
         render_setting_items: List[Tuple[str, any]] = []
         render_setting_items.extend([("screenshot_width", 1600),
                                      ("screenshot_height", 900),
-                                     ("screenshot_mode", ProcessRenderMode.EDGE_ITERATIONS_SMOOTHING),
+                                     ("screenshot_mode", ProcessRenderMode.FINAL | ProcessRenderMode.NODE_ITERATIONS),
                                      ("camera_pose_final", CameraPose.UPPER_BACK_RIGHT),
                                      ("camera_pose_list", [CameraPose.UPPER_BACK_RIGHT]),
                                      ("camera_rotation", True),
@@ -37,3 +34,4 @@ class AutomationConfig(BaseConfig):
 
         for key, value in render_setting_items:
             self.setdefault(key, value)
+        self.store()

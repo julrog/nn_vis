@@ -23,7 +23,7 @@ def generate_images(cam: Camera, screenshot_name: str, frame_buffer: FrameBuffer
             cam.update()
             render(cam, processor, show_class)
             create_screenshot(frame_buffer.width, frame_buffer.height,
-                              screenshot_name + "_class_" + str(show_class) + "_cam_" + str(cam_pos.value),
+                              screenshot_name + "_class_" + str(show_class) + "_cam_" + str(cam_pos),
                               frame_buffer=frame_buffer)
 
 
@@ -52,16 +52,12 @@ def viewed_process_loop(processor: NetworkProcessor, screenshot_name: str, frame
     cam.update_base(processor.get_node_mid())
 
     generate_images(cam, screenshot_name, frame_buffer, processor, automation_config)
-    if automation_config["screenshot_mode"] is ProcessRenderMode.NODE_ITERATIONS \
-            or automation_config["screenshot_mode"] is ProcessRenderMode.NODE_EDGE_ITERATIONS \
-            or automation_config["screenshot_mode"] is ProcessRenderMode.NODE_EDGE_ITERATIONS_SMOOTHING:
+    if automation_config["screenshot_mode"] & ProcessRenderMode.NODE_ITERATIONS:
         generate_images(cam, screenshot_name, frame_buffer, processor, automation_config)
 
     while not processor.action_finished:
         processor.process(NetworkProcess.NODE_ADVECT)
-        if automation_config["screenshot_mode"] is ProcessRenderMode.NODE_ITERATIONS \
-                or automation_config["screenshot_mode"] is ProcessRenderMode.NODE_EDGE_ITERATIONS \
-                or automation_config["screenshot_mode"] is ProcessRenderMode.NODE_EDGE_ITERATIONS_SMOOTHING:
+        if automation_config["screenshot_mode"] & ProcessRenderMode.NODE_ITERATIONS:
             cam.update_base(processor.get_node_mid())
             generate_images(cam, screenshot_name, frame_buffer, processor, automation_config)
 
@@ -69,8 +65,7 @@ def viewed_process_loop(processor: NetworkProcessor, screenshot_name: str, frame
     generate_images(cam, screenshot_name, frame_buffer, processor, automation_config)
 
     cam.rotate_around_base = automation_config["camera_rotation"]
-    if automation_config["screenshot_mode"] is ProcessRenderMode.EDGE_ITERATIONS_SMOOTHING \
-            or automation_config["screenshot_mode"] is ProcessRenderMode.NODE_EDGE_ITERATIONS_SMOOTHING:
+    if automation_config["screenshot_mode"] & (ProcessRenderMode.SMOOTHING | ProcessRenderMode.EDGE_ITERATIONS):
         edge_smoothing: bool = processor.edge_smoothing
         if edge_smoothing:
             processor.edge_smoothing = False
@@ -84,13 +79,11 @@ def viewed_process_loop(processor: NetworkProcessor, screenshot_name: str, frame
 
     else:
         processor.process(NetworkProcess.EDGE_ADVECT)
-        if automation_config["screenshot_mode"] is ProcessRenderMode.EDGE_ITERATIONS \
-                or automation_config["screenshot_mode"] is ProcessRenderMode.NODE_EDGE_ITERATIONS:
+        if automation_config["screenshot_mode"] & ProcessRenderMode.EDGE_ITERATIONS:
             generate_images(cam, screenshot_name, frame_buffer, processor, automation_config)
 
     while not processor.action_finished:
-        if automation_config["screenshot_mode"] is ProcessRenderMode.EDGE_ITERATIONS_SMOOTHING \
-                or automation_config["screenshot_mode"] is ProcessRenderMode.NODE_EDGE_ITERATIONS_SMOOTHING:
+        if automation_config["screenshot_mode"] & (ProcessRenderMode.SMOOTHING | ProcessRenderMode.EDGE_ITERATIONS):
             edge_smoothing: bool = processor.edge_smoothing
             if edge_smoothing:
                 processor.edge_smoothing = False
@@ -104,8 +97,7 @@ def viewed_process_loop(processor: NetworkProcessor, screenshot_name: str, frame
 
         else:
             processor.process(NetworkProcess.EDGE_ADVECT)
-            if automation_config["screenshot_mode"] is ProcessRenderMode.EDGE_ITERATIONS \
-                    or automation_config["screenshot_mode"] is ProcessRenderMode.NODE_EDGE_ITERATIONS:
+            if automation_config["screenshot_mode"] & ProcessRenderMode.EDGE_ITERATIONS:
                 generate_images(cam, screenshot_name, frame_buffer, processor, automation_config)
 
     processor.edge_processor.sample_edges()
@@ -126,7 +118,7 @@ def process_network(network_name: str, importance_type: str, automation_config: 
     window.activate()
 
     frame_buffer: FrameBufferObject or None = None
-    if automation_config["screenshot_mode"] != ProcessRenderMode.NONE:
+    if automation_config["screenshot_mode"]:
         frame_buffer = FrameBufferObject(automation_config["screenshot_width"], automation_config["screenshot_height"])
 
     print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
@@ -143,8 +135,7 @@ def process_network(network_name: str, importance_type: str, automation_config: 
                                                            frame_buffer=frame_buffer)
 
     network_processor.reset_edges()
-    if automation_config["screenshot_mode"] is ProcessRenderMode.FINAL \
-            or automation_config["screenshot_mode"] is ProcessRenderMode.NONE:
+    if not automation_config["screenshot_mode"] or automation_config["screenshot_mode"] is ProcessRenderMode.FINAL:
         process_loop(network_processor)
     else:
         frame_buffer.bind()
@@ -156,7 +147,7 @@ def process_network(network_name: str, importance_type: str, automation_config: 
     network_processor.save_model(
         DATA_PATH + "model/%s/processed.npz" % network_name)
 
-    if automation_config["screenshot_mode"] is not ProcessRenderMode.NONE:
+    if automation_config["screenshot_mode"]:
         if frame_buffer is not None:
             frame_buffer.bind()
             cam: Camera = Camera(automation_config["screenshot_width"], automation_config["screenshot_height"],
