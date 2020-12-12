@@ -1,15 +1,8 @@
-from enum import auto, IntFlag
 from typing import List, Tuple
 
 from utility.camera import CameraPose
 from utility.config import BaseConfig
-
-
-class ProcessRenderMode(IntFlag):
-    FINAL = auto()
-    NODE_ITERATIONS = auto()
-    EDGE_ITERATIONS = auto()
-    SMOOTHING = auto()
+from utility.types import ProcessRenderMode
 
 
 class AutomationConfig(BaseConfig):

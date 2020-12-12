@@ -1,7 +1,7 @@
 from typing import List
 from pyrr import Vector3
 
-from automation.automation_config import AutomationConfig, ProcessRenderMode
+from automation.automation_config import AutomationConfig
 from data.data_handler import ImportanceDataHandler
 from definitions import DATA_PATH
 from opengl_helper.frame_buffer import FrameBufferObject
@@ -11,7 +11,8 @@ from OpenGL.GL import *
 
 from processing.processing_config import ProcessingConfig
 from rendering.rendering_config import RenderingConfig
-from utility.camera import Camera, CameraPose
+from utility.camera import Camera
+from utility.types import ProcessRenderMode
 from utility.window import WindowHandler, Window
 
 

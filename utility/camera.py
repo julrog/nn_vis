@@ -1,9 +1,9 @@
-from enum import Enum, IntEnum
-
 import pyrr
 from pyrr import Vector3, Matrix44, vector, vector3
 from math import sin, cos, radians, asin, degrees, acos
 import numpy as np
+
+from utility.types import CameraPose
 
 
 def look_at(position: Vector3, target: Vector3, world_up: Vector3) -> Matrix44:
@@ -28,16 +28,6 @@ def look_at(position: Vector3, target: Vector3, world_up: Vector3) -> Matrix44:
     rotation[2][2] = z_axis[2]
 
     return rotation * translation
-
-
-class CameraPose(IntEnum):
-    FRONT = 2
-    RIGHT = 3
-    LEFT = 4
-    LOWER_BACK_RIGHT = 5
-    BACK_RIGHT = 6
-    UPPER_BACK_LEFT = 7
-    UPPER_BACK_RIGHT = 8
 
 
 class Camera:

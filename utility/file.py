@@ -5,6 +5,7 @@ from typing import Dict
 from datetime import datetime, timezone
 
 from definitions import BASE_PATH
+from utility.nnvis_type_converter import convert_values, nnvis_to_str, str_to_nnvis
 from utility.singleton import Singleton
 
 
@@ -117,7 +118,7 @@ class DictFile:
             with open(self.file_path, "r") as stats_file:
                 file_data = stats_file.read()
                 if file_data:
-                    read_data = json.loads(file_data)
+                    read_data = convert_values(json.loads(file_data), str_to_nnvis)
         except FileNotFoundError:
             with open(self.file_path, 'w+'):
                 pass
@@ -128,7 +129,7 @@ class DictFile:
     def write_data(self, data: Dict):
         try:
             with open(self.file_path, 'w+') as file_data:
-                json.dump(data, file_data, sort_keys=True, indent=4)
+                json.dump(convert_values(data, nnvis_to_str), file_data, sort_keys=True, indent=4)
         except FileNotFoundError:
             with open(self.file_path, 'w+') as file_data:
-                json.dump(data, file_data, sort_keys=True, indent=4)
+                json.dump(convert_values(data, nnvis_to_str), file_data, sort_keys=True, indent=4)
