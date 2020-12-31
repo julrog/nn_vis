@@ -1,53 +1,83 @@
+from typing import List, Tuple
+
 from OpenGL.GL import *
 from models.grid import Grid
-from opengl_helper.render_utility import VertexDataHandler, RenderSet, render_setting_0, render_setting_1
-from opengl_helper.shader import RenderShaderHandler, RenderShader
+from opengl_helper.render_utility import VertexDataHandler, RenderSet, render_setting_0, render_setting_1, BaseRenderSet
+from opengl_helper.shader import RenderShaderHandler, RenderShader, ShaderSetting
 from processing.node_processing import NodeProcessor
+from rendering.rendering import Renderer
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.performance import track_time
 
 
-class NodeRenderer:
+class NodeRenderer(Renderer):
     def __init__(self, node_processor: NodeProcessor, grid: Grid):
+        Renderer.__init__(self)
         self.node_processor = node_processor
         self.grid = grid
 
-        shader_handler: RenderShaderHandler = RenderShaderHandler()
-        node_point_shader: RenderShader = shader_handler.create("node_point", "node/sample.vert",
-                                                                "basic/discard_screen_color.frag")
-        node_sphere_shader: RenderShader = shader_handler.create("node_sphere", "node/sample_impostor.vert",
-                                                                 "node/point_to_sphere_impostor_phong.frag",
-                                                                 "node/point_to_sphere_impostor.geom")
-        node_transparent_shader: RenderShader = shader_handler.create("node_transparent_sphere",
-                                                                      "node/sample_impostor.vert",
-                                                                      "node/point_to_sphere_impostor_transparent.frag",
-                                                                      "node/point_to_sphere_impostor.geom")
+        shader_settings: List[ShaderSetting] = []
+        shader_settings.extend([ShaderSetting("node_point", ["node/sample.vert", "basic/discard_screen_color.frag"]),
+                                ShaderSetting("node_sphere",
+                                              ["node/sample_impostor.vert", "node/point_to_sphere_impostor_phong.fragg",
+                                               "node/point_to_sphere_impostor.geom"]),
+                                ShaderSetting("node_transparent_sphere", ["node/sample_impostor.vert",
+                                                                          "node/point_to_sphere_impostor_transparent.frag",
+                                                                          "node/point_to_sphere_impostor.geom"])
+                                ])
+        self.set_shader(shader_settings)
 
         self.data_handler: VertexDataHandler = VertexDataHandler([(self.node_processor.node_buffer, 0)])
 
+        def point_render_func():
+            node_count: int = len(self.node_processor.nodes)
+            render_setting_0(False)
+            glPointSize(10.0)
+            glDrawArrays(GL_POINTS, 0, node_count)
+            glMemoryBarrier(GL_ALL_BARRIER_BITS)
+
+        self.render_funcs["node_point"] = point_render_func
+
+        def point_render_func():
+            node_count: int = len(self.node_processor.nodes)
+            render_setting_0(False)
+            glPointSize(10.0)
+            glDrawArrays(GL_POINTS, 0, node_count)
+            glMemoryBarrier(GL_ALL_BARRIER_BITS)
+
+        self.render_funcs["node_point"] = point_render_func
+
+        # self.create_sets(nod)
+
         self.point_render: RenderSet = RenderSet(node_point_shader, self.data_handler)
         self.sphere_render: RenderSet = RenderSet(node_sphere_shader, self.data_handler)
-        self.sphere_render.set_uniform_label(["node_object_radius", "node_importance_threshold"])
         self.transparent_render: RenderSet = RenderSet(node_transparent_shader, self.data_handler)
+
+        self.sphere_render.set_uniform_label(["node_object_radius", "node_importance_threshold"])
         self.transparent_render.set_uniform_label(
             ["node_object_radius", "node_base_opacity", "node_importance_opacity", "node_depth_opacity",
              "node_opacity_exponent", "node_importance_threshold"])
 
     @track_time
-    def render_point(self, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
-        node_count: int = len(self.node_processor.nodes)
+    def render(self, set_name: str, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
+        current_set: BaseRenderSet = self.sets[set_name]
+        current_set.set_uniform_data([("projection", cam.projection, "mat4"),
+                                      ("view", cam.view, "mat4")])
+        current_set.set_uniform_labeled_data(config)
+        current_set.render()
 
+    @track_time
+    def render_point(self, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
         self.point_render.set_uniform_data([("projection", cam.projection, "mat4"),
-                                            ("view", cam.view, "mat4"),
-                                            ("screen_width", 1920.0, "float"),
-                                            ("screen_height", 1080.0, "float")])
+                                            ("view", cam.view, "mat4")])
         self.point_render.set_uniform_labeled_data(config)
 
         self.point_render.set()
 
         render_setting_0(False)
         glPointSize(10.0)
+        node_count: int = len(self.node_processor.nodes)
         glDrawArrays(GL_POINTS, 0, node_count)
         glMemoryBarrier(GL_ALL_BARRIER_BITS)
 

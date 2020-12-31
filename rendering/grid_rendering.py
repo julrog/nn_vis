@@ -36,7 +36,7 @@ class GridRenderer:
         for i in range(len(self.grid_processor.grid_density_buffer.handle)):
             grid_count: int = self.grid_processor.grid_density_buffer.get_objects() - self.grid_processor.grid_slice_size
 
-            self.point_render.set(i)
+            self.point_render.set_sub(i)
 
             render_setting_0(False)
             glPointSize(10.0)
@@ -54,7 +54,7 @@ class GridRenderer:
         for i in range(len(self.grid_processor.grid_density_buffer.handle)):
             grid_count: int = self.grid_processor.grid_density_buffer.get_objects() - self.grid_processor.grid_slice_size
 
-            self.cube_render.set(i)
+            self.cube_render.set_sub(i)
 
             render_setting_0(False)
 

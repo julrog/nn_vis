@@ -39,6 +39,16 @@ def uniform_setter_function(uniform_setter: str):
     raise Exception("[%s] Uniform setter function for '%s' not defined." % (LOG_SOURCE, uniform_setter))
 
 
+class ShaderSetting:
+    def __init__(self, id_name: str, shader_paths: List[str]):
+        self.id_name: str = id_name
+        if len(shader_paths) < 2 or len(shader_paths) > 3:
+            raise Exception("[%s] No texture position configured" % LOG_SOURCE)
+        self.vertex = shader_paths[0]
+        self.fragment = shader_paths[1]
+        self.geometry = None if len(shader_paths) else shader_paths[0]
+
+
 class BaseShader:
     def __init__(self):
         self.shader_handle: int = 0
@@ -94,8 +104,19 @@ class RenderShaderHandler(metaclass=Singleton):
         self.shader_dir: str = os.path.join(BASE_PATH, 'shader_src')
         self.shader_list: Dict[str, RenderShader] = dict()
 
+    def create(self, shader_setting: ShaderSetting) -> RenderShader:
+        if shader_setting.id_name in self.shader_list.keys():
+            return self.shader_list[shader_setting.id_name]
+        vertex_src: str = open(os.path.join(self.shader_dir, shader_setting.vertex), 'r').read()
+        fragment_src: str = open(os.path.join(self.shader_dir, shader_setting.fragment), 'r').read()
+        geometry_src: str or None = None
+        if shader_setting.geometry is not None:
+            geometry_src = open(os.path.join(self.shader_dir, shader_setting.geometry), 'r').read()
+        self.shader_list[shader_setting.id_name] = RenderShader(vertex_src, fragment_src, geometry_src)
+        return self.shader_list[shader_setting.id_name]
+
     def create(self, shader_name: str, vertex_file_path: str = None, fragment_file_path: str = None,
-               geometry_file_path: str = None) -> RenderShader:
+               geometry_file_path: str = None) -> RenderShader:  # TODO delete if replaced everywhere
         if shader_name in self.shader_list.keys():
             return self.shader_list[shader_name]
         vertex_src: str = open(os.path.join(self.shader_dir, vertex_file_path), 'r').read()

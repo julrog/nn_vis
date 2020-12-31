@@ -2,7 +2,7 @@ from typing import List
 from OpenGL.GL import *
 from models.grid import Grid
 from opengl_helper.render_utility import VertexDataHandler, render_setting_0, render_setting_1, \
-    RenderSetLayered
+    LayeredRenderSet
 from opengl_helper.shader import RenderShaderHandler, RenderShader
 from processing.edge_processing import EdgeProcessor
 from rendering.rendering_config import RenderingConfig
@@ -37,17 +37,17 @@ class EdgeRenderer:
             [(self.edge_processor.sample_buffer[i][j], 0), (self.edge_processor.edge_buffer[i][j], 2)], []) for j in
             range(len(self.edge_processor.sample_buffer[i]))] for i in range(len(self.edge_processor.sample_buffer))]
 
-        self.point_render: RenderSetLayered = RenderSetLayered(sample_point_shader, self.data_handler)
+        self.point_render: LayeredRenderSet = LayeredRenderSet(sample_point_shader, self.data_handler)
         self.point_render.set_uniform_label(["edge_importance_threshold"])
-        self.line_render: RenderSetLayered = RenderSetLayered(sample_line_shader, self.data_handler)
+        self.line_render: LayeredRenderSet = LayeredRenderSet(sample_line_shader, self.data_handler)
         self.line_render.set_uniform_label(["edge_importance_threshold"])
-        self.sphere_render: RenderSetLayered = RenderSetLayered(sample_sphere_shader, self.data_handler)
+        self.sphere_render: LayeredRenderSet = LayeredRenderSet(sample_sphere_shader, self.data_handler)
         self.sphere_render.set_uniform_label(["edge_object_radius", "edge_importance_threshold"])
-        self.transparent_render: RenderSetLayered = RenderSetLayered(sample_transparent_shader, self.data_handler)
+        self.transparent_render: LayeredRenderSet = LayeredRenderSet(sample_transparent_shader, self.data_handler)
         self.transparent_render.set_uniform_label(
             ["edge_object_radius", "edge_base_opacity", "edge_importance_opacity", "edge_depth_opacity",
              "edge_opacity_exponent", "edge_importance_threshold"])
-        self.ellipse_render: RenderSetLayered = RenderSetLayered(sample_ellipse_shader, self.data_handler)
+        self.ellipse_render: LayeredRenderSet = LayeredRenderSet(sample_ellipse_shader, self.data_handler)
         self.ellipse_render.set_uniform_label(
             ["edge_object_radius", "edge_base_opacity", "edge_importance_opacity", "edge_depth_opacity",
              "edge_opacity_exponent", "edge_importance_threshold"])
