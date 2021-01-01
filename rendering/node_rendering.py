@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 
 from OpenGL.GL import *
 from models.grid import Grid
@@ -21,43 +21,47 @@ class NodeRenderer(Renderer):
         shader_settings.extend([ShaderSetting("node_point", ["node/sample.vert", "basic/discard_screen_color.frag"]),
                                 ShaderSetting("node_sphere",
                                               ["node/sample_impostor.vert", "node/point_to_sphere_impostor_phong.fragg",
-                                               "node/point_to_sphere_impostor.geom"]),
+                                               "node/point_to_sphere_impostor.geom"],
+                                              ["node_object_radius", "node_importance_threshold"]),
                                 ShaderSetting("node_transparent_sphere", ["node/sample_impostor.vert",
                                                                           "node/point_to_sphere_impostor_transparent.frag",
-                                                                          "node/point_to_sphere_impostor.geom"])
+                                                                          "node/point_to_sphere_impostor.geom"],
+                                              ["node_object_radius", "node_base_opacity", "node_importance_opacity",
+                                               "node_depth_opacity",
+                                               "node_opacity_exponent", "node_importance_threshold"])
                                 ])
         self.set_shader(shader_settings)
 
         self.data_handler: VertexDataHandler = VertexDataHandler([(self.node_processor.node_buffer, 0)])
 
-        def point_render_func():
-            node_count: int = len(self.node_processor.nodes)
+        def point_render_func(elements: int):
             render_setting_0(False)
             glPointSize(10.0)
-            glDrawArrays(GL_POINTS, 0, node_count)
+            glDrawArrays(GL_POINTS, 0, elements)
             glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
-        self.render_funcs["node_point"] = point_render_func
-
-        def point_render_func():
-            node_count: int = len(self.node_processor.nodes)
-            render_setting_0(False)
+        def point_render_trans_func(elements: int):
+            render_setting_1(False)
             glPointSize(10.0)
-            glDrawArrays(GL_POINTS, 0, node_count)
+            glDrawArrays(GL_POINTS, 0, elements)
             glMemoryBarrier(GL_ALL_BARRIER_BITS)
 
+        def generate_element_count_func(np: NodeProcessor) -> Callable:
+            buffered_np: NodeProcessor = np
+            
+            def element_count_func():
+                return buffered_np.get_buffer_points()
+
+            return element_count_func
+
         self.render_funcs["node_point"] = point_render_func
+        self.render_funcs["node_sphere"] = point_render_func
+        self.render_funcs["node_transparent_sphere"] = point_render_trans_func
+        self.element_count_funcs["node_point"] = generate_element_count_func(node_processor)
+        self.element_count_funcs["node_sphere"] = generate_element_count_func(node_processor)
+        self.element_count_funcs["node_transparent_sphere"] = generate_element_count_func(node_processor)
 
-        # self.create_sets(nod)
-
-        self.point_render: RenderSet = RenderSet(node_point_shader, self.data_handler)
-        self.sphere_render: RenderSet = RenderSet(node_sphere_shader, self.data_handler)
-        self.transparent_render: RenderSet = RenderSet(node_transparent_shader, self.data_handler)
-
-        self.sphere_render.set_uniform_label(["node_object_radius", "node_importance_threshold"])
-        self.transparent_render.set_uniform_label(
-            ["node_object_radius", "node_base_opacity", "node_importance_opacity", "node_depth_opacity",
-             "node_opacity_exponent", "node_importance_threshold"])
+        self.create_sets(self.data_handler)
 
     @track_time
     def render(self, set_name: str, cam: Camera, config: RenderingConfig = None, show_class: int = 0):

@@ -210,11 +210,11 @@ class NetworkProcessor:
         elif config["edge_render_mode"] == 1:
             self.edge_renderer.render_sphere(cam, config=config, show_class=show_class)
         if config["node_render_mode"] == 3:
-            self.node_renderer.render_point(cam, config=config, show_class=show_class)
+            self.node_renderer.render("node_point", cam, config=config, show_class=show_class)
         elif config["node_render_mode"] == 2:
-            self.node_renderer.render_transparent(cam, config=config, show_class=show_class)
+            self.node_renderer.render("node_transparent_sphere", cam, config=config, show_class=show_class)
         elif config["node_render_mode"] == 1:
-            self.node_renderer.render_sphere(cam, config=config, show_class=show_class)
+            self.node_renderer.render("node_sphere", cam, config=config, show_class=show_class)
 
     def save_model(self, file_path: str):
         layer_data: List[int] = self.network.layer

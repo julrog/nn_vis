@@ -16,7 +16,8 @@ class Renderer:
         self.shaders: Dict[str, RenderShader] = dict()
         self.sets: Dict[str, BaseRenderSet] = dict()
         self.render_funcs: Dict[str, Callable] = dict()
-        self.point_count_funcs: Dict[str, Callable] = dict()
+        self.element_count_funcs: Dict[str, Callable] = dict()
+        self.render_elements: int = 0
 
     def set_shader(self, shader_settings: List[ShaderSetting]):
         shader_handler = RenderShaderHandler()
@@ -27,14 +28,15 @@ class Renderer:
         if isinstance(data_handler, OverflowingVertexDataHandler):
             for name, shader in self.shaders:
                 self.sets[name] = OverflowingRenderSet(shader, data_handler, self.render_funcs[name],
-                                                       self.point_count_funcs[name])
+                                                       self.element_count_funcs[name])
         elif isinstance(data_handler, LayeredVertexDataHandler):
             for name, shader in self.shaders:
                 self.sets[name] = LayeredRenderSet(shader, data_handler, self.render_funcs[name],
-                                                   self.point_count_funcs[name])
+                                                   self.element_count_funcs[name])
         elif isinstance(data_handler, VertexDataHandler):
             for name, shader in self.shaders:
-                self.sets[name] = RenderSet(shader, data_handler, self.render_funcs[name], self.point_count_funcs[name])
+                self.sets[name] = RenderSet(shader, data_handler, self.render_funcs[name],
+                                            self.element_count_funcs[name])
 
     @abc.abstractmethod
     def render(self, set_name: str, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
