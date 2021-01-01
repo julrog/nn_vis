@@ -2,7 +2,7 @@ import abc
 from typing import List, Dict, Callable
 
 from opengl_helper.render_utility import BaseRenderSet, VertexDataHandler, OverflowingVertexDataHandler, \
-    OverflowingRenderSet, LayeredVertexDataHandler, LayeredRenderSet, RenderSet
+    OverflowingRenderSet, LayeredVertexDataHandler, LayeredRenderSet, RenderSet, BaseDataHandler
 from opengl_helper.shader import RenderShaderHandler, RenderShader, ShaderSetting
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
@@ -24,7 +24,7 @@ class Renderer:
         for shader_setting in shader_settings:
             self.shaders[shader_setting.id_name] = shader_handler.create(shader_setting)
 
-    def create_sets(self, data_handler: VertexDataHandler):
+    def create_sets(self, data_handler: BaseDataHandler):
         if isinstance(data_handler, OverflowingVertexDataHandler):
             for name, shader in self.shaders:
                 self.sets[name] = OverflowingRenderSet(shader, data_handler, self.render_funcs[name],

@@ -71,58 +71,5 @@ class NodeRenderer(Renderer):
         current_set.set_uniform_labeled_data(config)
         current_set.render()
 
-    @track_time
-    def render_point(self, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
-        self.point_render.set_uniform_data([("projection", cam.projection, "mat4"),
-                                            ("view", cam.view, "mat4")])
-        self.point_render.set_uniform_labeled_data(config)
-
-        self.point_render.set()
-
-        render_setting_0(False)
-        glPointSize(10.0)
-        node_count: int = len(self.node_processor.nodes)
-        glDrawArrays(GL_POINTS, 0, node_count)
-        glMemoryBarrier(GL_ALL_BARRIER_BITS)
-
-    @track_time
-    def render_sphere(self, cam: Camera, sphere_radius: float = 0.03, config: RenderingConfig = None,
-                      show_class: int = 0):
-        node_count: int = len(self.node_processor.nodes)
-
-        self.sphere_render.set_uniform_data([("projection", cam.projection, "mat4"),
-                                             ("view", cam.view, "mat4"),
-                                             ("object_radius", sphere_radius, "float"),
-                                             ("importance_max", self.node_processor.node_max_importance, "float"),
-                                             ('show_class', show_class, 'int')])
-        self.sphere_render.set_uniform_labeled_data(config)
-
-        self.sphere_render.set()
-
-        render_setting_0(False)
-        glDrawArrays(GL_POINTS, 0, node_count)
-        glMemoryBarrier(GL_ALL_BARRIER_BITS)
-
-    @track_time
-    def render_transparent(self, cam: Camera, sphere_radius: float = 0.03, config: RenderingConfig = None,
-                           show_class: int = 0):
-        node_count: int = len(self.node_processor.nodes)
-
-        near, far = self.grid.get_near_far_from_view(cam.view)
-        self.transparent_render.set_uniform_data([("projection", cam.projection, "mat4"),
-                                                  ("view", cam.view, "mat4"),
-                                                  ("farthest_point_view_z", far, "float"),
-                                                  ("nearest_point_view_z", near, "float"),
-                                                  ("object_radius", sphere_radius, "float"),
-                                                  ("importance_max", self.node_processor.node_max_importance, "float"),
-                                                  ('show_class', show_class, 'int')])
-        self.transparent_render.set_uniform_labeled_data(config)
-
-        self.transparent_render.set()
-
-        render_setting_1(False)
-        glDrawArrays(GL_POINTS, 0, node_count)
-        glMemoryBarrier(GL_ALL_BARRIER_BITS)
-
     def delete(self):
         self.data_handler.delete()

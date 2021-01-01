@@ -195,7 +195,7 @@ class NetworkProcessor:
 
     def render(self, cam: Camera, config: RenderingConfig, show_class: int = 0):
         clear_screen([1.0, 1.0, 1.0, 1.0])
-        if config["grid_render_mode"] == 1:
+        '''if config["grid_render_mode"] == 1:
             self.grid_renderer.render_cube(cam, config=config)
         elif config["grid_render_mode"] == 2:
             self.grid_renderer.render_point(cam, config=config)
@@ -208,7 +208,7 @@ class NetworkProcessor:
         elif config["edge_render_mode"] == 2:
             self.edge_renderer.render_transparent_sphere(cam, config=config, show_class=show_class)
         elif config["edge_render_mode"] == 1:
-            self.edge_renderer.render_sphere(cam, config=config, show_class=show_class)
+            self.edge_renderer.render_sphere(cam, config=config, show_class=show_class)'''
         if config["node_render_mode"] == 3:
             self.node_renderer.render("node_point", cam, config=config, show_class=show_class)
         elif config["node_render_mode"] == 2:
