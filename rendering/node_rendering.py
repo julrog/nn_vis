@@ -18,7 +18,8 @@ class NodeRenderer(Renderer):
         self.grid = grid
 
         shader_settings: List[ShaderSetting] = []
-        shader_settings.extend([ShaderSetting("node_point", ["node/sample.vert", "basic/discard_screen_color.frag"]),
+        shader_settings.extend([ShaderSetting("node_point", ["node/sample.vert", "basic/discard_screen_color.frag"],
+                                              ["screen_width", "screen_height"]),
                                 ShaderSetting("node_sphere",
                                               ["node/sample_impostor.vert", "node/point_to_sphere_impostor_phong.frag",
                                                "node/point_to_sphere_impostor.geom"],

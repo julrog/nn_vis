@@ -20,7 +20,7 @@ class EdgeRenderer(Renderer):
         shader_settings: List[ShaderSetting] = []
         shader_settings.extend(
             [ShaderSetting("sample_point", ["sample/sample.vert", "basic/discard_screen_color.frag"],
-                           ["edge_importance_threshold"]),
+                           ["edge_importance_threshold", "screen_width", "screen_height"]),
              ShaderSetting("sample_line",
                            ["sample/sample_impostor.vert", "basic/color.frag",
                             "sample/points_to_line.geom"],

@@ -57,6 +57,7 @@ class BaseShader:
         self.textures: List[Tuple[Texture, str, int]] = []
         self.uniform_cache: Dict[str, Tuple[int, any, any]] = dict()
         self.uniform_labels: List[str] = []
+        self.uniform_ignore_labels: List[str] = []
 
     def set_uniform_label(self, data: List[str]):
         for setting in data:
@@ -73,19 +74,20 @@ class BaseShader:
     def set_uniform_data(self, data: List[Tuple[str, any, any]]):
         program_is_set: bool = False
         for uniform_name, uniform_data, uniform_setter in data:
-            if uniform_name not in self.uniform_cache.keys():
-                if not program_is_set:
-                    glUseProgram(self.shader_handle)
-                    program_is_set = True
-                uniform_location = glGetUniformLocation(self.shader_handle, uniform_name)
-                if uniform_location != -1:
-                    self.uniform_cache[uniform_name] = (
-                        uniform_location, uniform_data, uniform_setter_function(uniform_setter))
+            if uniform_name not in self.uniform_ignore_labels:
+                if uniform_name not in self.uniform_cache.keys():
+                    if not program_is_set:
+                        glUseProgram(self.shader_handle)
+                        program_is_set = True
+                    uniform_location = glGetUniformLocation(self.shader_handle, uniform_name)
+                    if uniform_location != -1:
+                        self.uniform_cache[uniform_name] = (
+                            uniform_location, uniform_data, uniform_setter_function(uniform_setter))
+                    else:
+                        self.uniform_ignore_labels.append(uniform_name)
                 else:
-                    print(["[%s] Uniform variable '%s' not used in shader_src." % (LOG_SOURCE, uniform_name)])
-            else:
-                uniform_location, _, setter = self.uniform_cache[uniform_name]
-                self.uniform_cache[uniform_name] = (uniform_location, uniform_data, setter)
+                    uniform_location, _, setter = self.uniform_cache[uniform_name]
+                    self.uniform_cache[uniform_name] = (uniform_location, uniform_data, setter)
 
     def set_textures(self, textures: List[Tuple[Texture, str, int]]):
         self.textures: List[Tuple[Texture, str, int]] = textures

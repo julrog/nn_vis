@@ -17,9 +17,11 @@ class GridRenderer(Renderer):
         self.grid_processor: GridProcessor = grid_processor
 
         shader_settings: List[ShaderSetting] = []
-        shader_settings.extend([ShaderSetting("grid_point", ["grid/grid.vert", "basic/discard_screen_color.frag"]),
+        shader_settings.extend([ShaderSetting("grid_point", ["grid/grid.vert", "basic/discard_screen_color.frag"],
+                                              ["screen_width", "screen_height"]),
                                 ShaderSetting("grid_cube", ["grid/grid_impostor.vert", "basic/screen_color.frag",
-                                                            "grid/point_to_cube_impostor.geom"])
+                                                            "grid/point_to_cube_impostor.geom"],
+                                              ["screen_width", "screen_height"])
                                 ])
         self.set_shader(shader_settings)
 
