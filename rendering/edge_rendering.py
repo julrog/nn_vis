@@ -1,9 +1,9 @@
 from typing import List, Callable
 from OpenGL.GL import *
 from models.grid import Grid
-from opengl_helper.render_utility import VertexDataHandler, render_setting_0, render_setting_1, \
-    LayeredRenderSet, LayeredVertexDataHandler, BaseRenderSet
-from opengl_helper.shader import RenderShaderHandler, RenderShader, ShaderSetting
+from opengl_helper.render_utility import VertexDataHandler, LayeredRenderSet, LayeredVertexDataHandler, BaseRenderSet, \
+    generate_render_function, OGLRenderFunction
+from opengl_helper.shader import ShaderSetting
 from processing.edge_processing import EdgeProcessor
 from rendering.rendering import Renderer
 from rendering.rendering_config import RenderingConfig
@@ -46,28 +46,6 @@ class EdgeRenderer(Renderer):
             [(self.edge_processor.sample_buffer[i][j], 0), (self.edge_processor.edge_buffer[i][j], 2)], []) for j in
             range(len(self.edge_processor.sample_buffer[i]))] for i in range(len(self.edge_processor.sample_buffer))])
 
-        def point_render_func(elements: int):
-            render_setting_0(False)
-            glPointSize(10.0)
-            glDrawArraysInstanced(GL_POINTS, 0, 1, elements)
-            glMemoryBarrier(GL_ALL_BARRIER_BITS)
-
-        def line_render_func(elements: int):
-            render_setting_0(False)
-            glLineWidth(2.0)
-            glDrawArraysInstanced(GL_POINTS, 0, 1, elements)
-            glMemoryBarrier(GL_ALL_BARRIER_BITS)
-
-        def sphere_render_func(elements: int):
-            render_setting_0(False)
-            glDrawArraysInstanced(GL_POINTS, 0, 1, elements)
-            glMemoryBarrier(GL_ALL_BARRIER_BITS)
-
-        def render_trans_func(elements: int):
-            render_setting_1(False)
-            glDrawArraysInstanced(GL_POINTS, 0, 1, elements)
-            glMemoryBarrier(GL_ALL_BARRIER_BITS)
-
         def generate_element_count_func(ep: EdgeProcessor) -> Callable:
             buffered_ep: EdgeProcessor = ep
 
@@ -76,11 +54,16 @@ class EdgeRenderer(Renderer):
 
             return element_count_func
 
-        self.render_funcs["sample_point"] = point_render_func
-        self.render_funcs["sample_line"] = line_render_func
-        self.render_funcs["sample_sphere"] = sphere_render_func
-        self.render_funcs["sample_transparent_sphere"] = render_trans_func
-        self.render_funcs["sample_ellipsoid_transparent"] = render_trans_func
+        self.render_funcs["sample_point"] = generate_render_function(OGLRenderFunction.ARRAYS_INSTANCED, GL_POINTS,
+                                                                     10.0, depth_test=True)
+        self.render_funcs["sample_line"] = generate_render_function(OGLRenderFunction.ARRAYS_INSTANCED, GL_POINTS,
+                                                                    line_width=2.0, depth_test=True)
+        self.render_funcs["sample_sphere"] = generate_render_function(OGLRenderFunction.ARRAYS_INSTANCED, GL_POINTS,
+                                                                      depth_test=True)
+        self.render_funcs["sample_transparent_sphere"] = generate_render_function(OGLRenderFunction.ARRAYS_INSTANCED,
+                                                                                  GL_POINTS, add_blending=True)
+        self.render_funcs["sample_ellipsoid_transparent"] = generate_render_function(OGLRenderFunction.ARRAYS_INSTANCED,
+                                                                                     GL_POINTS, add_blending=True)
         self.element_count_funcs["sample_point"] = generate_element_count_func(edge_processor)
         self.element_count_funcs["sample_line"] = generate_element_count_func(edge_processor)
         self.element_count_funcs["sample_sphere"] = generate_element_count_func(edge_processor)
@@ -95,21 +78,21 @@ class EdgeRenderer(Renderer):
     def render(self, set_name: str, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
         current_set: BaseRenderSet = self.sets[set_name]
         if isinstance(current_set, LayeredRenderSet):
-            current_set.buffer_divisor = [(0, 1), (1, self.edge_processor.max_sample_points)]
+            current_set.set_buffer_divisor([(0, 1), (1, self.edge_processor.max_sample_points)])
         near: float = 0.0
         far: float = 0.0
         if set_name is "sample_ellipsoid_transparent" or set_name is "sample_transparent_sphere":
             near, far = self.grid.get_near_far_from_view(cam.view)
         current_set.set_uniform_data([("projection", cam.projection, "mat4"),
-                                              ("view", cam.view, "mat4"),
-                                              ("farthest_point_view_z", far, "float"),
-                                              ("nearest_point_view_z", near, "float"),
-                                              ("object_radius", self.edge_processor.sample_length * 0.5, "float"),
-                                              ("importance_threshold", self.importance_threshold, "float"),
-                                              ("importance_max", self.edge_processor.edge_max_importance, "float"),
-                                              ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
-                                              ('show_class', show_class, 'int'),
-                                              ('edge_importance_type', 0, 'int')])
+                                      ("view", cam.view, "mat4"),
+                                      ("farthest_point_view_z", far, "float"),
+                                      ("nearest_point_view_z", near, "float"),
+                                      ("object_radius", self.edge_processor.sample_length * 0.5, "float"),
+                                      ("importance_threshold", self.importance_threshold, "float"),
+                                      ("importance_max", self.edge_processor.edge_max_importance, "float"),
+                                      ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
+                                      ('show_class', show_class, 'int'),
+                                      ('edge_importance_type', 0, 'int')])
         current_set.set_uniform_labeled_data(config)
         current_set.render()
 

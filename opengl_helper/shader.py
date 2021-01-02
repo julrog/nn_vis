@@ -43,10 +43,11 @@ class ShaderSetting:
     def __init__(self, id_name: str, shader_paths: List[str], uniform_labels: List[str] = None):
         self.id_name: str = id_name
         if len(shader_paths) < 2 or len(shader_paths) > 3:
-            raise Exception("[%s] No texture position configured" % LOG_SOURCE)
+            raise Exception(
+                "[%s] Can't handle number of shaders for a program (either 2 or 3 with geometry shader)." % LOG_SOURCE)
         self.vertex: str = shader_paths[0]
         self.fragment: str = shader_paths[1]
-        self.geometry: str = None if len(shader_paths) else shader_paths[0]
+        self.geometry: str = None if len(shader_paths) < 3 else shader_paths[2]
         self.uniform_labels: List[str] = uniform_labels if uniform_labels is not None else []
 
 
@@ -132,18 +133,6 @@ class RenderShaderHandler(metaclass=Singleton):
         self.shader_list[shader_setting.id_name] = RenderShader(vertex_src, fragment_src, geometry_src,
                                                                 shader_setting.uniform_labels)
         return self.shader_list[shader_setting.id_name]
-
-    def create(self, shader_name: str, vertex_file_path: str = None, fragment_file_path: str = None,
-               geometry_file_path: str = None) -> RenderShader:  # TODO delete if replaced everywhere
-        if shader_name in self.shader_list.keys():
-            return self.shader_list[shader_name]
-        vertex_src: str = open(os.path.join(self.shader_dir, vertex_file_path), 'r').read()
-        fragment_src: str = open(os.path.join(self.shader_dir, fragment_file_path), 'r').read()
-        geometry_src: str or None = None
-        if geometry_file_path is not None:
-            geometry_src = open(os.path.join(self.shader_dir, geometry_file_path), 'r').read()
-        self.shader_list[shader_name] = RenderShader(vertex_src, fragment_src, geometry_src)
-        return self.shader_list[shader_name]
 
     def get(self, shader_name: str) -> RenderShader:
         return self.shader_list[shader_name]

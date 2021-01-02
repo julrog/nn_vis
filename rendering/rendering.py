@@ -26,15 +26,15 @@ class Renderer:
 
     def create_sets(self, data_handler: BaseDataHandler):
         if isinstance(data_handler, OverflowingVertexDataHandler):
-            for name, shader in self.shaders:
+            for name, shader in self.shaders.items():
                 self.sets[name] = OverflowingRenderSet(shader, data_handler, self.render_funcs[name],
                                                        self.element_count_funcs[name])
         elif isinstance(data_handler, LayeredVertexDataHandler):
-            for name, shader in self.shaders:
+            for name, shader in self.shaders.items():
                 self.sets[name] = LayeredRenderSet(shader, data_handler, self.render_funcs[name],
                                                    self.element_count_funcs[name])
         elif isinstance(data_handler, VertexDataHandler):
-            for name, shader in self.shaders:
+            for name, shader in self.shaders.items():
                 self.sets[name] = RenderSet(shader, data_handler, self.render_funcs[name],
                                             self.element_count_funcs[name])
 

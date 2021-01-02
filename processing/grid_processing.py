@@ -121,7 +121,8 @@ class GridProcessor:
     @track_time
     def clear_buffer(self):
         for i in range(len(self.grid_density_buffer.handle)):
-            self.density_ssbo_handler.set(i)
+            self.density_ssbo_handler.set_buffer(i)
+            self.density_ssbo_handler.set()
             self.clear_compute_shader.compute(self.grid_density_buffer.get_objects(i))
         self.clear_compute_shader.barrier()
 
@@ -129,7 +130,8 @@ class GridProcessor:
     def calculate_position(self):
         print("[%s] Calculate grid positions." % LOG_SOURCE)
         for i in range(len(self.grid_position_buffer.handle)):
-            self.position_ssbo_handler.set(i)
+            self.position_ssbo_handler.set_buffer(i)
+            self.position_ssbo_handler.set()
             self.position_compute_shader.set_uniform_data([
                 ('slice_size', self.grid_slice_size, 'int'),
                 ('slice_count', self.position_buffer_slice_count, 'int'),
@@ -143,7 +145,8 @@ class GridProcessor:
 
     @track_time
     def calculate_node_density(self, advection_status: AdvectionProgress):
-        self.node_density_ssbo_handler.set(0)
+        self.node_density_ssbo_handler.set_buffer(0)
+        self.node_density_ssbo_handler.set()
 
         self.node_density_compute_shader.set_uniform_data([
             ('density_strength', self.density_strength, 'float'),
@@ -175,7 +178,8 @@ class GridProcessor:
             for container in range(len(self.edge_processor.sample_buffer[layer])):
                 self.sample_density_compute_shader.set_uniform_data(
                     [('grid_layer_offset', self.grid.layer_distance * layer, 'float')])
-                self.sample_density_ssbo_handler[layer][container].set_range(i - 1, 3)
+                self.sample_density_ssbo_handler[layer][container].set_buffer(i - 1)
+                self.sample_density_ssbo_handler[layer][container].set_range(3)
                 self.sample_density_compute_shader.compute(self.edge_processor.get_buffer_points(layer, container))
                 if wait_for_compute:
                     glFinish()
@@ -183,7 +187,8 @@ class GridProcessor:
 
     @track_time
     def node_advect(self, advection_status: AdvectionProgress):
-        self.node_advect_ssbo_handler.set(0)
+        self.node_advect_ssbo_handler.set_buffer(0)
+        self.node_advect_ssbo_handler.set()
 
         self.node_advect_compute_shader.set_uniform_data([
             ('advect_strength', advection_status.get_advection_strength(), 'float'),
@@ -217,7 +222,8 @@ class GridProcessor:
             for container in range(len(self.edge_processor.sample_buffer[layer])):
                 self.sample_advect_compute_shader.set_uniform_data(
                     [('grid_layer_offset', self.grid.layer_distance * layer, 'float')])
-                self.sample_advect_ssbo_handler[layer][container].set(i)
+                self.sample_advect_ssbo_handler[layer][container].set_buffer(i)
+                self.sample_advect_ssbo_handler[layer][container].set()
                 self.sample_advect_compute_shader.compute(self.edge_processor.get_buffer_points(layer, container))
                 self.edge_processor.sample_buffer[layer][container].swap()
                 if wait_for_compute:
