@@ -1,15 +1,13 @@
 import os
 import numpy as np
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 from sklearn.metrics import classification_report
 from tensorflow import keras
 from tensorflow_core.python.keras import Model, Input
 from tensorflow_core.python.keras.layers import BatchNormalization, Dense
 from tensorflow_core.python.keras.regularizers import l1_l2, l1, l2
-from tensorflow_core.python.layers.base import Layer
 from data.model_data import ModelData
 from definitions import DATA_PATH
-
 
 LOG_SOURCE: str = "NEURAL_NETWORK"
 
@@ -36,11 +34,13 @@ def modify_model(model: Model, class_index: int, batch_norm_centering: bool = Fa
             last_output = layer.output
             network_input = layer.input
         if 0 < i < max_layer:
-            new_layer: Layer = BatchNormalization(center=batch_norm_centering, gamma_initializer=gamma_initializer,
-                                                  gamma_regularizer=gamma_regularizer)
+            new_layer: Union[BatchNormalization, BatchNormalization] = BatchNormalization(
+                center=batch_norm_centering,
+                gamma_initializer=gamma_initializer,
+                gamma_regularizer=gamma_regularizer)
             last_output = new_layer(last_output)
         if i == max_layer - 1:
-            new_end_layer: Layer = Dense(2, activation='softmax', name="binary_output_layer")
+            new_end_layer: Dense = Dense(2, activation='softmax', name="binary_output_layer")
             last_output = new_end_layer(last_output)
 
             old_weights = layer.get_weights()
@@ -256,7 +256,7 @@ class ProcessedNetwork:
                                    importance_value_range_data)
 
     def store_importance_data_layer_normalized(self, train_data_path: str, test_data_path: str, centering: bool = False,
-                              gamma_one: bool = True, regularize_gamma: str = "l1"):
+                                               gamma_one: bool = True, regularize_gamma: str = "l1"):
         self.centering = centering
         self.gamma_one = gamma_one
         self.regularize_gamma = regularize_gamma
