@@ -4,6 +4,7 @@ from OpenGL.GL import *
 from pyrr import Vector3
 from utility.camera import Camera
 from utility.singleton import Singleton
+from utility.types import CameraPose
 
 
 class Window:
@@ -108,25 +109,25 @@ class Window:
                 self.record = not self.record
 
             if key == glfw.KEY_0 and action == glfw.RELEASE:
-                self.cam.set_position(0)
+                self.cam.set_position(CameraPose.LEFT)
             if key == glfw.KEY_1 and action == glfw.RELEASE:
-                self.cam.set_position(1)
+                self.cam.set_position(CameraPose.FRONT)
             if key == glfw.KEY_2 and action == glfw.RELEASE:
-                self.cam.set_position(2)
+                self.cam.set_position(CameraPose.RIGHT)
             if key == glfw.KEY_3 and action == glfw.RELEASE:
-                self.cam.set_position(3)
+                self.cam.set_position(CameraPose.BACK)
             if key == glfw.KEY_4 and action == glfw.RELEASE:
-                self.cam.set_position(4)
+                self.cam.set_position(CameraPose.BACK_RIGHT)
             if key == glfw.KEY_5 and action == glfw.RELEASE:
-                self.cam.set_position(5)
+                self.cam.set_position(CameraPose.UPPER_BACK_LEFT)
             if key == glfw.KEY_6 and action == glfw.RELEASE:
-                self.cam.set_position(6)
+                self.cam.set_position(CameraPose.UPPER_BACK_RIGHT)
             if key == glfw.KEY_7 and action == glfw.RELEASE:
-                self.cam.set_position(7)
+                self.cam.set_position(CameraPose.LOWER_BACK_RIGHT)
             if key == glfw.KEY_8 and action == glfw.RELEASE:
-                self.cam.set_position(8)
+                self.cam.set_position(CameraPose.LEFT)
             if key == glfw.KEY_9 and action == glfw.RELEASE:
-                self.cam.set_position(9)
+                self.cam.set_position(CameraPose.LEFT)
 
         glfw.set_window_size_callback(self.window_handle, resize_clb)
         glfw.set_cursor_pos_callback(self.window_handle, mouse_look_clb)

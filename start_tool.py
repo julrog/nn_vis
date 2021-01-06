@@ -22,7 +22,7 @@ def compute_render(name: str):
 
     window_handler: WindowHandler = WindowHandler()
     window: Window = window_handler.create_window("Testing", width, height, 1)
-    window.set_position(0, 0)
+    window.set_position(100, 100)
     window.set_callbacks()
     window.activate()
 
