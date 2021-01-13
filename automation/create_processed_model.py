@@ -1,5 +1,6 @@
-from typing import List
+import os.path
 from pyrr import Vector3
+from OpenGL.GL import *
 
 from automation.automation_config import AutomationConfig
 from data.data_handler import ImportanceDataHandler
@@ -7,13 +8,13 @@ from definitions import DATA_PATH
 from opengl_helper.frame_buffer import FrameBufferObject
 from opengl_helper.screenshot import create_screenshot
 from processing.network_processing import NetworkProcessor, NetworkProcess
-from OpenGL.GL import *
-
 from processing.processing_config import ProcessingConfig
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.types import ProcessRenderMode
 from utility.window import WindowHandler, Window
+
+LOG_SOURCE: str = "PROCESSED_MODEL_CREATION"
 
 
 def generate_images(cam: Camera, screenshot_name: str, frame_buffer: FrameBufferObject, processor: NetworkProcessor,
@@ -122,9 +123,13 @@ def process_network(network_name: str, importance_type: str, automation_config: 
     if automation_config["screenshot_mode"]:
         frame_buffer = FrameBufferObject(automation_config["screenshot_width"], automation_config["screenshot_height"])
 
-    print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
+    print("[%s] OpenGL Version: %d.%d" % (LOG_SOURCE, glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
     importance_data_path: str = DATA_PATH + "model/%s/%s_importance_data.npz" % (network_name, importance_type)
+
+    if not os.path.exists(importance_data_path):
+        raise Exception("[%s] Importance data of type '%s' for model '%s' is not yet created." % (
+            LOG_SOURCE, importance_type, network_name))
 
     importance_data: ImportanceDataHandler = ImportanceDataHandler(importance_data_path)
 

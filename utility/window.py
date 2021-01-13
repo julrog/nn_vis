@@ -115,7 +115,7 @@ class Window:
             if key == glfw.KEY_2 and action == glfw.RELEASE:
                 self.cam.set_position(CameraPose.RIGHT)
             if key == glfw.KEY_3 and action == glfw.RELEASE:
-                self.cam.set_position(CameraPose.BACK)
+                self.cam.set_position(CameraPose.BACK_RIGHT)
             if key == glfw.KEY_4 and action == glfw.RELEASE:
                 self.cam.set_position(CameraPose.BACK_RIGHT)
             if key == glfw.KEY_5 and action == glfw.RELEASE:
