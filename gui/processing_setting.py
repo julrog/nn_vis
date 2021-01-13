@@ -10,8 +10,9 @@ class ProcessingSetting:
         self.settings: Dict[str, SettingEntry] = {}
 
         for i, (key, item) in enumerate(self.processing_config.items()):
-            self.settings[key] = SettingEntry(root, self.processing_config.label[key], row=i, column=0,
-                                              variable_type=self.processing_config.value_type[key])
+            if key in self.processing_config.value_type.keys():
+                self.settings[key] = SettingEntry(root, self.processing_config.label[key], row=i, column=0,
+                                                  variable_type=self.processing_config.value_type[key])
 
     def set(self):
         for key, setting in self.settings.items():

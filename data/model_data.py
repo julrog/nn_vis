@@ -1,9 +1,16 @@
 import os
+from enum import Enum
 from typing import List, Dict
 from tensorflow_core.python.keras.models import Model
 from tensorflow import keras
 from definitions import DATA_PATH
 from utility.file import EvaluationFile
+
+
+class ModelTrainType(Enum):
+    UNTRAINED = 0
+    BALANCED = 1
+    UNBALANCED = 2
 
 
 class ModelData:

@@ -29,6 +29,8 @@ def save_plot(name: str):
         os.makedirs(directory_path)
     file_path: str = "%s/%s.svg" % (directory_path, name)
     plt.savefig(file_path)
+    file_path = "%s/%s.jpg" % (directory_path, name)
+    plt.savefig(file_path)
 
 
 def create_importance_plot(filename: str, importance_name: str, timed_name: bool = False, show: bool = False):

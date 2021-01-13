@@ -41,8 +41,8 @@ class RenderSettings:
 
         if shader_settings is not None:
             for i, setting in enumerate(shader_settings):
-                self.shader_settings[setting] = SettingEntry(self.shader_setting_frame, setting, config[setting],
-                                                             "float", i, 0)
+                self.shader_settings[setting] = SettingEntry(self.shader_setting_frame, config.shader_label[setting],
+                                                             config[setting], "float", i, 0)
 
             self.apply_settings.grid(row=len(self.shader_settings), column=0, columnspan=2)
             self.shader_setting_frame.grid(row=0, column=1, rowspan=len(self.render_radio_buttons), padx=1, pady=1)

@@ -22,7 +22,7 @@ def compute_render(name: str):
 
     window_handler: WindowHandler = WindowHandler()
     window: Window = window_handler.create_window("Testing", width, height, 1)
-    window.set_position(0, 0)
+    window.set_position(100, 100)
     window.set_callbacks()
     window.activate()
 
@@ -43,7 +43,7 @@ def compute_render(name: str):
             options.settings["trigger_network_sample"] = 0
 
         if network_processor is not None:
-            network_processor.process(options.settings["action_state"], options.settings["edge_smoothing"])
+            network_processor.process(options.settings["action_state"])
             network_processor.render(window.cam, options.render_config, options.settings["show_class"])
 
         if "sample_count" in options.settings:

@@ -127,12 +127,12 @@ class OptionGui:
                                                          self.action_state, command=self.change_setting,
                                                          option="action", sub_option="state", row=2, column=0)
 
-        self.smoothing_status: IntVar = IntVar(value=1)
+        self.smoothing_status: IntVar = IntVar(value=self.processing_config["smoothing"])
         self.smoothing_checkbox: Checkbutton = Checkbutton(self.action_frame, text="Smoothing",
                                                            variable=self.smoothing_status,
-                                                           command=lambda: self.change_setting("edge",
-                                                                                               "smoothing",
-                                                                                               self.smoothing_status.get()))
+                                                           command=lambda: self.change_processing_config(
+                                                               "smoothing",
+                                                               self.smoothing_status.get()))
         self.change_setting("edge", "smoothing", self.smoothing_status.get())
         self.smoothing_checkbox.grid(row=1, column=0)
 
@@ -230,6 +230,10 @@ class OptionGui:
             self.action_buttons.press(0)
         self.render_config[name] = value
         self.render_config.store()
+
+    def change_processing_config(self, name: str, value: int):
+        self.processing_config[name] = value
+        self.processing_config.store()
 
     def on_closing(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):

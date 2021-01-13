@@ -10,8 +10,12 @@ class RenderConfigType(Enum):
 
 
 class RenderingConfig(BaseConfig):
-    def __init__(self):
-        super().__init__("rendering")
+    def __init__(self, name: str = None):
+        if name is None:
+            super().__init__("rendering")
+        else:
+            super().__init__("rendering", name)
+
         self.shader_label: Dict[str, str] = dict()
         self.shader_name: Dict[str, str] = dict()
         self.selection_labels: Dict[str, List[str]] = dict()
@@ -20,8 +24,10 @@ class RenderingConfig(BaseConfig):
         self.set_defaults()
 
     def set_defaults(self):
-        shader_items: List[Tuple[str, str, str, str, any]] = []
-        shader_items.extend([("edge_object_radius", "object_radius", "Size", 0.2),
+        shader_items: List[Tuple[str, str, str, any]] = []
+        shader_items.extend([("screen_width", "screen_width", "Screen Width", 1920.0),
+                             ("screen_height", "screen_height", "Screen Height", 1080.0),
+                             ("edge_object_radius", "object_radius", "Size", 0.2),
                              ("edge_base_opacity", "base_opacity", "Base Opacity", 0.0),
                              ("edge_importance_opacity", "importance_opacity", "Importance Opacity", 1.1),
                              ("edge_depth_opacity", "depth_opacity", "Depth Opacity", 0.5),

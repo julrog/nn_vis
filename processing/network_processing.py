@@ -1,3 +1,5 @@
+from enum import IntEnum
+
 import numpy as np
 from typing import List
 from pyrr import Vector3
@@ -20,6 +22,16 @@ from OpenGL.GL import *
 
 
 LOG_SOURCE: str = "NETWORK_PROCESSING"
+
+
+class NetworkProcess(IntEnum):
+    RESET = 0
+    NODE_ADVECT = 1
+    NODE_DIVERGE = 2
+    NODE_RANDOM = 3
+    EDGE_ADVECT = 4
+    EDGE_DIVERGE = 5
+    EDGE_RANDOM = 6
 
 
 class NetworkProcessor:
@@ -71,9 +83,12 @@ class NetworkProcessor:
         self.grid_renderer: GridRenderer = GridRenderer(self.grid_processor)
 
         self.action_finished: bool = False
-        self.last_action_mode: int = 0
+        self.last_action_mode: NetworkProcess = NetworkProcess.RESET
 
         self.frame_buffer: FrameBufferObject = frame_buffer
+
+        self.edge_smoothing: bool = processing_config["smoothing"]
+        self.edge_smoothing_iterations: int = processing_config["smoothing_iterations"]
 
     def reset_edges(self):
         self.edge_processor.delete()
@@ -91,9 +106,9 @@ class NetworkProcessor:
         self.edge_advection_status.reset()
         self.edge_processor.check_limits()
 
-    def process(self, action_mode: int, smoothing: bool = False):
+    def process(self, action_mode: NetworkProcess):
         if self.last_action_mode is not action_mode:
-            if action_mode == 0:
+            if action_mode == NetworkProcess.RESET:
                 print("[%s] Resample %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                 self.edge_processor.sample_edges()
                 self.edge_processor.check_limits()
@@ -102,31 +117,31 @@ class NetworkProcessor:
                 self.node_advection_status.reset()
                 self.edge_advection_status.reset()
 
-        if action_mode is not 0 and not self.action_finished:
-            if action_mode > 3:
+        if action_mode is not NetworkProcess.RESET and not self.action_finished:
+            if action_mode >= NetworkProcess.EDGE_ADVECT:
                 print("[%s] Resample %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                 self.edge_processor.sample_edges()
                 self.edge_processor.check_limits()
 
-            if action_mode == 1:
+            if action_mode == NetworkProcess.NODE_ADVECT:
                 self.node_advection()
-            elif action_mode == 2:
+            elif action_mode == NetworkProcess.NODE_DIVERGE:
                 self.node_advection(True)
-            elif action_mode == 3:
+            elif action_mode == NetworkProcess.NODE_RANDOM:
                 print("[%s] Randomize %i nodes" % (LOG_SOURCE, len(self.node_processor.nodes)))
                 self.node_processor.node_noise(self.sample_length, 0.5)
-            if action_mode == 4:
+            if action_mode == NetworkProcess.EDGE_ADVECT:
                 self.edge_advection()
-            elif action_mode == 5:
+            elif action_mode == NetworkProcess.EDGE_DIVERGE:
                 self.edge_advection(True)
-            elif action_mode == 6:
+            elif action_mode == NetworkProcess.EDGE_RANDOM:
                 print("[%s] Randomize %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
                 self.edge_processor.sample_noise(3.0)
 
-            if action_mode > 3:
-                if smoothing:
+            if action_mode >= NetworkProcess.EDGE_ADVECT:
+                if self.edge_smoothing:
                     print("[%s] Smooth %i edges" % (LOG_SOURCE, self.edge_processor.get_edge_count()))
-                    for i in range(8):
+                    for i in range(self.edge_smoothing_iterations):
                         glFinish()
                         self.edge_processor.sample_smooth(self.edge_advection_status, True)
                         glFinish()
@@ -181,25 +196,25 @@ class NetworkProcessor:
     def render(self, cam: Camera, config: RenderingConfig, show_class: int = 0):
         clear_screen([1.0, 1.0, 1.0, 1.0])
         if config["grid_render_mode"] == 1:
-            self.grid_renderer.render_cube(cam, config=config)
+            self.grid_renderer.render("grid_cube", cam, config=config)
         elif config["grid_render_mode"] == 2:
-            self.grid_renderer.render_point(cam, config=config)
+            self.grid_renderer.render("grid_point", cam, config=config)
         if config["edge_render_mode"] == 5:
-            self.edge_renderer.render_point(cam, config=config, show_class=show_class)
+            self.edge_renderer.render("sample_point", cam, config=config, show_class=show_class)
         elif config["edge_render_mode"] == 4:
-            self.edge_renderer.render_line(cam, config=config, show_class=show_class)
+            self.edge_renderer.render("sample_line", cam, config=config, show_class=show_class)
         elif config["edge_render_mode"] == 3:
-            self.edge_renderer.render_ellipsoid_transparent(cam, config=config, show_class=show_class)
+            self.edge_renderer.render("sample_ellipsoid_transparent", cam, config=config, show_class=show_class)
         elif config["edge_render_mode"] == 2:
-            self.edge_renderer.render_transparent_sphere(cam, config=config, show_class=show_class)
+            self.edge_renderer.render("sample_transparent_sphere", cam, config=config, show_class=show_class)
         elif config["edge_render_mode"] == 1:
-            self.edge_renderer.render_sphere(cam, config=config, show_class=show_class)
+            self.edge_renderer.render("sample_sphere", cam, config=config, show_class=show_class)
         if config["node_render_mode"] == 3:
-            self.node_renderer.render_point(cam, config=config, show_class=show_class)
+            self.node_renderer.render("node_point", cam, config=config, show_class=show_class)
         elif config["node_render_mode"] == 2:
-            self.node_renderer.render_transparent(cam, config=config, show_class=show_class)
+            self.node_renderer.render("node_transparent_sphere", cam, config=config, show_class=show_class)
         elif config["node_render_mode"] == 1:
-            self.node_renderer.render_sphere(cam, config=config, show_class=show_class)
+            self.node_renderer.render("node_sphere", cam, config=config, show_class=show_class)
 
     def save_model(self, file_path: str):
         layer_data: List[int] = self.network.layer
