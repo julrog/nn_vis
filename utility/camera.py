@@ -32,7 +32,7 @@ def look_at(position: Vector3, target: Vector3, world_up: Vector3) -> Matrix44:
 
 class Camera:
     def __init__(self, width: float, height: float, base: Vector3, move_speed: float = 0.1,
-                 rotation_speed: float = -0.25):
+                 rotation: bool = False, rotation_speed: float = -0.25):
         self.base: Vector3 = base
         self.camera_pos: Vector3 = self.base + Vector3([-3.0, 0.0, 0.0])
         self.camera_front: Vector3 = Vector3([1.0, 0.0, 0.0])
@@ -48,7 +48,7 @@ class Camera:
 
         self.projection: Matrix44 = pyrr.matrix44.create_perspective_projection_matrix(45, width / height, 0.1, 100)
         self.view: Matrix44 = self.generate_view_matrix()
-        self.rotate_around_base: bool = True
+        self.rotate_around_base: bool = rotation
         self.yaw_offset: float = 0.0
 
     def update(self):
