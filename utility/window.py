@@ -31,7 +31,6 @@ class Window:
         self.mouse_captured: bool = False
         self.focused: bool = True
         self.screenshot: bool = False
-        self.screenshot_series: int = 0
         self.record: bool = False
         self.frame_id: int = 0
 
@@ -120,8 +119,6 @@ class Window:
 
             if key == glfw.KEY_K and action == glfw.RELEASE:
                 self.screenshot = True
-            if key == glfw.KEY_L and action == glfw.RELEASE:
-                self.screenshot_series = 8
             if key == glfw.KEY_R and action == glfw.RELEASE:
                 self.record = not self.record
 
