@@ -5,15 +5,15 @@ from opengl_helper.screenshot import create_screenshot
 from processing.network_processing import NetworkProcessor
 from utility.file import FileHandler
 from utility.performance import track_time
+from utility.types import CameraPose
 from utility.window import WindowHandler, Window
 from OpenGL.GL import *
-
 
 global options
 options = OptionGui()
 
 
-def compute_render(name: str):
+def compute_render(some_name: str):
     global options
 
     width, height = 1920, 1200
@@ -28,10 +28,6 @@ def compute_render(name: str):
     print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
     network_processor: NetworkProcessor or None = None
-
-    frame_count: int = 0
-    start_count: int = -1
-    start_time: float = time.perf_counter()
 
     @track_time(track_recursive=False)
     def frame():
@@ -67,7 +63,15 @@ def compute_render(name: str):
                                              importance_data=options.settings["importance_data"],
                                              processed_nn=options.settings["processed_nn"])
         window.cam.base = network_processor.get_node_mid()
-        window.cam.set_position(1)
+        window.cam.set_position(CameraPose.LEFT)
+
+        fps: float = 60
+        frame_count: int = 0
+        to_pause_time: float = 0
+        last_frame_count: int = 0
+        checked_frame_count: int = -1
+        check_time: float = time.perf_counter()
+        last_time: float = time.perf_counter()
 
         while window.is_active() and not options.settings["Closed"]:
             if options.settings["update_model"]:
@@ -79,42 +83,49 @@ def compute_render(name: str):
                                                      importance_data=options.settings["importance_data"],
                                                      processed_nn=options.settings["processed_nn"])
                 window.cam.base = network_processor.get_node_mid()
-                window.cam.set_position(1)
-            if start_count < 0:
-                start_count = frame_count
-                start_time = time.perf_counter()
+                window.cam.set_position(CameraPose.LEFT)
 
-            if window.screenshot_series > 0:
-                window.cam.set_position(window.screenshot_series)
             frame()
-            if window.screenshot_series > 0:
+            if window.screenshot:
                 if 'network_name' in options.settings.keys():
-                    create_screenshot(width, height,
-                                      options.settings['network_name'] + "_" + str(window.screenshot_series))
+                    create_screenshot(width, height, options.settings['network_name'])
                 else:
-                    create_screenshot(width, height, "network_" + str(window.screenshot_series))
-                window.screenshot_series -= 1
-            else:
-                if window.screenshot:
-                    if 'network_name' in options.settings.keys():
-                        create_screenshot(width, height, options.settings['network_name'])
-                    else:
-                        create_screenshot(width, height)
-                    window.screenshot = False
-                elif window.record:
-                    window.frame_id += 1
-                    if 'network_name' in options.settings.keys():
-                        create_screenshot(width, height, options.settings['network_name'], frame_id=window.frame_id)
-                    else:
-                        create_screenshot(width, height, frame_id=window.frame_id)
+                    create_screenshot(width, height)
+                window.screenshot = False
+            elif window.record:
+                window.frame_id += 1
+                if 'network_name' in options.settings.keys():
+                    create_screenshot(width, height, options.settings['network_name'], frame_id=window.frame_id)
+                else:
+                    create_screenshot(width, height, frame_id=window.frame_id)
+
             frame_count += 1
-            if time.perf_counter() - start_time > 1.0:
+            if time.perf_counter() - check_time > 1.0:
                 options.settings["fps"].set(
-                    float("{:.2f}".format(float(frame_count - start_count) / (time.perf_counter() - start_time))))
-                start_count = -1
+                    float("{:.2f}".format(float(frame_count - checked_frame_count) / (time.perf_counter() - check_time))))
+                checked_frame_count = frame_count
+                check_time = time.perf_counter()
             if "save_file" in options.settings.keys() and options.settings["save_file"]:
                 network_processor.save_model(options.settings["save_processed_nn_path"])
                 options.settings["save_file"] = False
+
+            current_time: float = time.perf_counter()
+            elapsed_time: float = current_time - last_time
+            if elapsed_time < 1.0/fps:
+                if elapsed_time > 0.001:
+                    to_pause_time += (float(frame_count - last_frame_count)/fps) - elapsed_time
+                    last_frame_count = frame_count
+                    last_time = current_time
+
+                if to_pause_time > 0.005:
+                    time.sleep(to_pause_time)
+                    paused_for: float = time.perf_counter() - current_time
+                    to_pause_time -= paused_for
+                    last_time += paused_for
+            else:
+                last_frame_count = frame_count
+                last_time = current_time
+                to_pause_time = 0 if to_pause_time < 0 else to_pause_time - (elapsed_time - 1.0/fps)
 
         network_processor.delete()
 
