@@ -1,6 +1,6 @@
 import threading
 import time
-from gui.window import OptionGui
+from gui.ui_window import OptionGui
 from opengl_helper.screenshot import create_screenshot
 from processing.network_processing import NetworkProcessor
 from utility.file import FileHandler
@@ -21,8 +21,7 @@ def compute_render(name: str):
     FileHandler().read_statistics()
 
     window_handler: WindowHandler = WindowHandler()
-    window: Window = window_handler.create_window("Testing", width, height, 1)
-    window.set_position(100, 100)
+    window: Window = window_handler.create_window()
     window.set_callbacks()
     window.activate()
 

@@ -10,11 +10,12 @@ from gui.processing_setting import ProcessingSetting
 from gui.render_setting import RenderSettings
 from processing.processing_config import ProcessingConfig
 from rendering.rendering_config import RenderingConfig
+from utility.window_config import WindowConfig
 
 
 class OptionGui:
     def __init__(self):
-        self.test: bool = False
+        self.window_config: WindowConfig = WindowConfig('ui')
 
         self.gui_root: Tk = Tk()
         self.layer_settings: List[LayerSettings] = []
@@ -144,6 +145,11 @@ class OptionGui:
         # ------------------------------------------------------------------------------------------------------------ #
 
         self.gui_root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        screen_width = self.gui_root.winfo_reqwidth()
+        screen_height = self.gui_root.winfo_reqheight()
+        self.gui_root.geometry(
+            '+%d+%d' % (self.window_config['screen_x'], self.window_config['screen_y']))
+        self.gui_root.bind("<Configure>", self.handle_configure)
 
     def start(self, layer_data: List[int] = None):
         if layer_data is None:
@@ -159,6 +165,11 @@ class OptionGui:
 
         self.gui_root.mainloop()
         self.settings["Closed"] = True
+
+    def handle_configure(self, event):
+        self.window_config['screen_x'] = self.gui_root.winfo_x()
+        self.window_config['screen_y'] = self.gui_root.winfo_y()
+        self.window_config.store()
 
     def save_processed_nn_file(self):
         filename = filedialog.asksaveasfilename()
