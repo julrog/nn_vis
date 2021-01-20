@@ -1,7 +1,7 @@
 #version 440
 
 layout(location = 0) in vec4 position;
-$$layout(location = $class_node_buffer_group_location$) in vec4 node_data_$class_node_buffer_group_id$;$$
+$$layout(location = 1$r_nodebuffer_group_location$) in vec4 node_data_$r_nodebuffer_group_id$;$$
 
 out vec3  vs_normal;
 out float vs_discard;
@@ -14,25 +14,25 @@ uniform int show_class = 0;
 uniform float importance_threshold = 0;
 uniform float importance_max = 1.0;
 
-$$const vec3 color_$class_id$ = $class_color$;$$
+$$const vec3 color_$r_class_id$ = $r_class_color$;$$
 
 void main()
 {
-    if (position.w == 0.0 || position.w > 1.0 || node_data_$class_length_node_buffer_id$ == 0.0 || importance_threshold >= node_data_$class_length_node_buffer_id$) {
+    if (position.w == 0.0 || position.w > 1.0 || node_data_$nodebuffer_length$ == 0.0 || importance_threshold >= node_data_$nodebuffer_length$) {
         vs_discard = 1.0;
     } else {
         vs_discard = 0.0;
         gl_Position = view * vec4(position.xyz, 1.0);
         vec4 new_normal = view * vec4((position.xyz + vec3(0.0, 1.0, 0.0)), 1.0);
         vs_normal = normalize(vec3(new_normal.xyz - gl_Position.xyz));
-        vs_size = node_data_$class_length_node_buffer_id$;
-        vs_importance = node_data_$class_average_node_buffer_id$;
+        vs_size = node_data_$nodebuffer_length$;
+        vs_importance = node_data_$nodebuffer_average$;
 
         float importance[$num_classes$];
-        $$importance[$class_id$] = node_data_$class_importance_node_buffer_id$/(node_data_$class_average_node_buffer_id$ * $num_classes$.0);$$
+        $$importance[$r_class_id$] = node_data_$r_nodebuffer_class_importance$/(node_data_$nodebuffer_average$ * $num_classes$.0);$$
 
         vec3 color_list[$num_classes$];
-        $$color_list[$class_id$] = color_$class_id$;$$
+        $$color_list[$r_class_id$] = color_$r_class_id$;$$
 
         vs_color = vec4(0.0, 0.0, 0.0, 0.0);
         if (show_class == 1) {

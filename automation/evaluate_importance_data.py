@@ -32,8 +32,8 @@ def get_added_bn_importance_class(edge_alpha: float, classes_importance: List[fl
                                   relevant_classes: List[int]) -> float:
     edge_sum_class_importance: float = 0.0
     class_count: int = 0
-    for class_id, class_importance in enumerate(classes_importance):
-        if class_id in relevant_classes:
+    for r_class_id, class_importance in enumerate(classes_importance):
+        if r_class_id in relevant_classes:
             class_count += 1
             edge_sum_class_importance += class_importance * edge_alpha
     edge_sum_class_importance = edge_sum_class_importance / float(class_count)

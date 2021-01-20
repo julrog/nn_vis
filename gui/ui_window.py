@@ -153,7 +153,7 @@ class OptionGui:
 
     def start(self, layer_data: List[int] = None):
         if layer_data is None:
-            default_layer_data = [4, 9, 4]
+            default_layer_data = [4, 9, 10]
             for nodes in default_layer_data:
                 self.add_layer(nodes)
         else:

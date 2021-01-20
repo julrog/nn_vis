@@ -1,10 +1,7 @@
-import os
 from typing import List, Tuple, Dict
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
-from definitions import BASE_PATH
 from rendering.rendering_config import RenderingConfig
-from utility.singleton import Singleton
 from opengl_helper.texture import Texture
 
 LOG_SOURCE: str = "SHADER"
@@ -117,24 +114,3 @@ class RenderShader(BaseShader):
 
         for uniform_location, uniform_data, uniform_setter in self.uniform_cache.values():
             uniform_setter(uniform_location, uniform_data)
-
-
-class RenderShaderHandler(metaclass=Singleton):
-    def __init__(self):
-        self.shader_dir: str = os.path.join(BASE_PATH, 'shader_src')
-        self.shader_list: Dict[str, RenderShader] = dict()
-
-    def create(self, shader_setting: ShaderSetting) -> RenderShader:
-        if shader_setting.id_name in self.shader_list.keys():
-            return self.shader_list[shader_setting.id_name]
-        vertex_src: str = open(os.path.join(self.shader_dir, shader_setting.vertex), 'r').read()
-        fragment_src: str = open(os.path.join(self.shader_dir, shader_setting.fragment), 'r').read()
-        geometry_src: str or None = None
-        if shader_setting.geometry is not None:
-            geometry_src = open(os.path.join(self.shader_dir, shader_setting.geometry), 'r').read()
-        self.shader_list[shader_setting.id_name] = RenderShader(vertex_src, fragment_src, geometry_src,
-                                                                shader_setting.uniform_labels)
-        return self.shader_list[shader_setting.id_name]
-
-    def get(self, shader_name: str) -> RenderShader:
-        return self.shader_list[shader_name]
