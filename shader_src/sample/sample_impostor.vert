@@ -31,7 +31,7 @@ void main()
         vs_edge = 0.0;
         if(next_position.w <= 0.0) vs_edge = 1.0;
         if(position.w > 1.0) vs_edge = 1.0;
-        if(mod(gl_InstanceID + 1, max_sample_points) >= edge_data_$nodebuffer_samples$ - 2.0) vs_edge = 1.0;
+        if(mod(gl_InstanceID + 1, max_sample_points) >= edge_data_$edgebuffer_samples$ - 2.0) vs_edge = 1.0;
 
         vs_next_position = view * vec4(next_position.xyz, 1.0);
         gl_Position = view * vec4(position.xyz, 1.0);
@@ -40,7 +40,7 @@ void main()
 
         float importance[$num_classes$];
         if (edge_importance_type == 0) {
-            float t = clamp(mod(gl_InstanceID + 1, max_sample_points)/edge_data_$nodebuffer_samples$, 0.0, 1.0);
+            float t = clamp(mod(gl_InstanceID + 1, max_sample_points)/edge_data_$edgebuffer_samples$, 0.0, 1.0);
             $$importance[$r_class_id$] = (1.0 - t) * edge_data_$r_edgebuffer_start_class_importance$/(edge_data_$edgebuffer_start_average$ * $num_classes$.0) + t * edge_data_$r_edgebuffer_end_class_importance$/(edge_data_$edgebuffer_end_average$ * $num_classes$.0);$$
             vs_importance =((1.0 - t) * edge_data_$edgebuffer_start_average$ + t * edge_data_$edgebuffer_end_average$) * edge_data_$edgebuffer_importance$;
         }

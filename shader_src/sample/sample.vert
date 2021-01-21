@@ -28,7 +28,7 @@ void main()
 
         float importance[$num_classes$];
         if (edge_importance_type == 0) {
-            float t = clamp(mod(gl_InstanceID + 1, max_sample_points)/edge_data_$nodebuffer_samples$, 0.0, 1.0);
+            float t = clamp(mod(gl_InstanceID + 1, max_sample_points)/edge_data_$edgebuffer_samples$, 0.0, 1.0);
             $$importance[$r_class_id$] = (1.0 - t) * edge_data_$r_edgebuffer_start_class_importance$/(edge_data_$edgebuffer_start_average$ * $num_classes$.0) + t * edge_data_$r_edgebuffer_end_class_importance$/(edge_data_$edgebuffer_end_average$ * $num_classes$.0);$$
             vs_importance =((1.0 - t) * edge_data_$edgebuffer_start_average$ + t * edge_data_$edgebuffer_end_average$) * edge_data_$edgebuffer_importance$;
         }

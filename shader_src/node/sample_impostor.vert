@@ -1,7 +1,7 @@
 #version 440
 
 layout(location = 0) in vec4 position;
-$$layout(location = 1$r_nodebuffer_group_location$) in vec4 node_data_$r_nodebuffer_group_id$;$$
+$$layout(location = $r_nodebuffer_group_location$) in vec4 node_data_$r_nodebuffer_group_id$;$$
 
 out vec3  vs_normal;
 out float vs_discard;

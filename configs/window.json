@@ -2,11 +2,11 @@
     "camera_rotation": true,
     "camera_rotation_speed": 0.5,
     "height": 900,
-    "monitor_id": null,
+    "monitor_id": 0,
     "screen_height": 900,
     "screen_width": 1600,
-    "screen_x": 0,
-    "screen_y": 0,
+    "screen_x": 764,
+    "screen_y": 143,
     "title": "NNVis Render",
     "width": 1600
 }
