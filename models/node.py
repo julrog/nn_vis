@@ -62,6 +62,19 @@ class Node:
         self.data.append(math.sqrt(importance_squared_sum))
         return self
 
+    def class_importance_init(self, position: Vector3):
+        self.position = position
+        self.data = [position.x, position.y, position.z, 1.0]
+
+        for i in range(self.num_classes):
+            if i == self.node_id:
+                self.data.append(1.0)
+            else:
+                self.data.append(0.0)
+        self.data.append(0.1)
+        self.data.append(1.0)
+        return self
+
     def reset_position(self, position: Vector3):
         self.position: Vector3 = position
         self.data[0] = position.x
@@ -87,17 +100,17 @@ def create_random_nodes(layer_nodes: List[int],
         nodes_sqrt = math.ceil(math.sqrt(node_count))
 
         current_layer_nodes: List[Node] = []
-        if node_count <= 1 and type != "from_complete_data":
+        if node_count <= 1:
             position: Vector3 = Vector3(
                 [center_position.x,
                  center_position.y,
                  z_range[0] * (1 - layer / (len(layer_nodes) - 1)) + z_range[1] * layer / (len(layer_nodes) - 1)])
-            current_layer_nodes.append(Node(
-                len(current_layer_nodes),
-                num_classes,
-                input_edges,
-                output_edges
-            ).random_importance_init(position))
+            new_node: Node = Node(len(current_layer_nodes), num_classes, input_edges, output_edges)
+            if layer is not len(layer_nodes) - 1:
+                new_node = new_node.random_importance_init(position)
+            else:
+                new_node = new_node.class_importance_init(position)
+            current_layer_nodes.append(new_node)
         else:
             node_size_x: float = node_size
             node_size_y: float = node_size
@@ -112,12 +125,12 @@ def create_random_nodes(layer_nodes: List[int],
                      pos_y * node_size_y + center_position.y,
                      z_range[0] * (1 - layer / (len(layer_nodes) - 1)) + z_range[1] * layer / (
                              len(layer_nodes) - 1)])
-                current_layer_nodes.append(Node(
-                    len(current_layer_nodes),
-                    num_classes,
-                    input_edges,
-                    output_edges
-                ).random_importance_init(position))
+                new_node: Node = Node(len(current_layer_nodes), num_classes, input_edges, output_edges)
+                if layer is not len(layer_nodes) - 1:
+                    new_node = new_node.random_importance_init(position)
+                else:
+                    new_node = new_node.class_importance_init(position)
+                current_layer_nodes.append(new_node)
 
         nodes.append(current_layer_nodes)
     return nodes
