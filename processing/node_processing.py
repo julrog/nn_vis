@@ -4,7 +4,8 @@ import numpy as np
 from models.network import NetworkModel
 from models.node import Node
 from opengl_helper.buffer import SwappingBufferObject
-from opengl_helper.compute_shader import ComputeShader, ComputeShaderHandler
+from opengl_helper.compute_shader import ComputeShader
+from opengl_helper.compute_shader_handler import ComputeShaderHandler
 from utility.performance import track_time
 from opengl_helper.render_utility import VertexDataHandler
 

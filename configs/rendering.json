@@ -1,7 +1,7 @@
 {
     "Edge": 3,
-    "Grid": 0,
-    "Node": 2,
+    "Grid": 1,
+    "Node": 1,
     "edge_base_opacity": 0.0,
     "edge_depth_opacity": 0.5,
     "edge_importance_opacity": 1.1,
@@ -9,7 +9,7 @@
     "edge_object_radius": 0.2,
     "edge_opacity_exponent": 0.5,
     "edge_render_mode": 3,
-    "grid_render_mode": 0,
+    "grid_render_mode": 1,
     "node_base_opacity": 0.0,
     "node_depth_opacity": 0.5,
     "node_importance_opacity": 1.0,

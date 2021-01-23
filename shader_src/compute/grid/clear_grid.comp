@@ -3,17 +3,8 @@
 struct DensityGrid
 {
     uint overall_density;
-    uint density_0;
-    uint density_1;
-    uint density_2;
-    uint density_3;
-    uint density_4;
-    uint density_5;
-    uint density_6;
-    uint density_7;
-    uint density_8;
-    uint density_9;
-    uint fill;
+    $$uint density_$r_class_id$;$$
+    $$uint padding_$r_densitybuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -29,14 +20,5 @@ void main() {
     int index = int(gl_WorkGroupID.x) + work_group_offset;
 
     density[index].overall_density = 0;
-    density[index].density_0 = 0;
-    density[index].density_1 = 0;
-    density[index].density_2 = 0;
-    density[index].density_3 = 0;
-    density[index].density_4 = 0;
-    density[index].density_5 = 0;
-    density[index].density_6 = 0;
-    density[index].density_7 = 0;
-    density[index].density_8 = 0;
-    density[index].density_9 = 0;
+    $$density[index].density_$r_densitybuffer_padding_id$ = 0;$$
 }

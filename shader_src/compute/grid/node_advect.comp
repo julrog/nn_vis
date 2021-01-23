@@ -3,34 +3,17 @@
 struct Node
 {
     vec4 pos;
-    float importance_0;
-    float importance_1;
-    float importance_2;
-    float importance_3;
-    float importance_4;
-    float importance_5;
-    float importance_6;
-    float importance_7;
-    float importance_8;
-    float importance_9;
+    $$uint importance_$r_class_id$;$$
     float overall_importance;
     float importance_length;
+    $$float padding_$r_nodebuffer_padding_id$$;$
 };
 
 struct DensityGrid
 {
     uint overall_density;
-    uint density_0;
-    uint density_1;
-    uint density_2;
-    uint density_3;
-    uint density_4;
-    uint density_5;
-    uint density_6;
-    uint density_7;
-    uint density_8;
-    uint density_9;
-    uint fill;
+    $$uint density_$r_class_id$;$$
+    $$uint padding_$r_densitybuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -59,8 +42,8 @@ uniform vec3 grid_bounding_max;
 ivec3 gridIndex(vec3 position)
 {
     return ivec3(int(floor((position.x - grid_bounding_min.x)/grid_cell_size.x)),
-    int(floor((position.y - grid_bounding_min.y)/grid_cell_size.y)),
-    0);
+        int(floor((position.y - grid_bounding_min.y)/grid_cell_size.y)),
+        0);
 }
 
 vec3 gridDirection(ivec3 index, vec3 position)
@@ -94,48 +77,15 @@ highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to, No
     highp float drive_towards = 0.0;
     highp float drive_from = 0.0;
 
-    highp float towards_density_overall = sqrt(density_to.density_0 * density_to.density_0
-    + density_to.density_1 * density_to.density_1
-    + density_to.density_2 * density_to.density_2
-    + density_to.density_3 * density_to.density_3
-    + density_to.density_4 * density_to.density_4
-    + density_to.density_5 * density_to.density_5
-    + density_to.density_6 * density_to.density_6
-    + density_to.density_7 * density_to.density_7
-    + density_to.density_8 * density_to.density_8
-    + density_to.density_9 * density_to.density_9);
-    highp float from_density_overall = sqrt(density_from.density_0 * density_from.density_0
-    + density_from.density_1 * density_from.density_1
-    + density_from.density_2 * density_from.density_2
-    + density_from.density_3 * density_from.density_3
-    + density_from.density_4 * density_from.density_4
-    + density_from.density_5 * density_from.density_5
-    + density_from.density_6 * density_from.density_6
-    + density_from.density_7 * density_from.density_7
-    + density_from.density_8 * density_from.density_8
-    + density_from.density_9 * density_from.density_9);
+    highp float towards_density_overall = sqrt(0
+    $$+ density_to.density_$r_class_id$ * density_to.density_$r_class_id$ $$
+    );
+    highp float from_density_overall = sqrt(0
+    $$+ density_from.density_$r_class_id$ * density_to.density_$r_class_id$ $$
+    );
 
-    drive_towards += (node.importance_0/node.importance_length) * (density_to.density_0/towards_density_overall);
-    drive_towards += (node.importance_1/node.importance_length) * (density_to.density_1/towards_density_overall);
-    drive_towards += (node.importance_2/node.importance_length) * (density_to.density_2/towards_density_overall);
-    drive_towards += (node.importance_3/node.importance_length) * (density_to.density_3/towards_density_overall);
-    drive_towards += (node.importance_4/node.importance_length) * (density_to.density_4/towards_density_overall);
-    drive_towards += (node.importance_5/node.importance_length) * (density_to.density_5/towards_density_overall);
-    drive_towards += (node.importance_6/node.importance_length) * (density_to.density_6/towards_density_overall);
-    drive_towards += (node.importance_7/node.importance_length) * (density_to.density_7/towards_density_overall);
-    drive_towards += (node.importance_8/node.importance_length) * (density_to.density_8/towards_density_overall);
-    drive_towards += (node.importance_9/node.importance_length) * (density_to.density_9/towards_density_overall);
-
-    drive_from += (node.importance_0/node.importance_length) * (density_from.density_0/from_density_overall);
-    drive_from += (node.importance_1/node.importance_length) * (density_from.density_1/from_density_overall);
-    drive_from += (node.importance_2/node.importance_length) * (density_from.density_2/from_density_overall);
-    drive_from += (node.importance_3/node.importance_length) * (density_from.density_3/from_density_overall);
-    drive_from += (node.importance_4/node.importance_length) * (density_from.density_4/from_density_overall);
-    drive_from += (node.importance_5/node.importance_length) * (density_from.density_5/from_density_overall);
-    drive_from += (node.importance_6/node.importance_length) * (density_from.density_6/from_density_overall);
-    drive_from += (node.importance_7/node.importance_length) * (density_from.density_7/from_density_overall);
-    drive_from += (node.importance_8/node.importance_length) * (density_from.density_8/from_density_overall);
-    drive_from += (node.importance_9/node.importance_length) * (density_from.density_9/from_density_overall);
+    $$drive_towards += (node.importance_$r_class_id$ /node.importance_length) * (density_to.density_$r_class_id$ /towards_density_overall);$$
+    $$drive_from += (node.importance_$r_class_id$/node.importance_length) * (density_from.density_$r_class_id$/from_density_overall);$$
 
     return float(towards_density_overall * (drive_towards - importance_similarity) - from_density_overall * (drive_from - importance_similarity));
 }

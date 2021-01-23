@@ -62,7 +62,7 @@ class RenderShaderHandler(metaclass=Singleton):
         self.set_classification_number(self.num_classes)
 
     def set_classification_number(self, num_classes: int):
-        self.num_classes: int = num_classes
+        self.num_classes = num_classes
         self.static_var_map['$num_classes$'] = str(num_classes)
         self.static_var_map['$nodebuffer_average$'] = get_buffer_id(num_classes)
         self.static_var_map['$nodebuffer_length$'] = get_buffer_id(num_classes + 1)
