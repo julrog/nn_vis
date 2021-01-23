@@ -35,6 +35,7 @@ class ComputeShaderHandler(metaclass=Singleton):
         self.edgebuffer_padding = (4 - ((self.num_classes * 2) % 4)) % 4
         self.densitybuffer_padding = (4 - ((self.num_classes + 1) % 4)) % 4
         self.nodebuffer_padding = (4 - ((self.num_classes + 2) % 4)) % 4
+        self.shader_list = dict()
 
     def create(self, shader_name: str, shader_file_path: str) -> ComputeShader:
         if shader_name in self.shader_list.keys():

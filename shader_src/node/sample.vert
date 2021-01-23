@@ -1,9 +1,7 @@
 #version 440 core
 
 layout(location = 0) in vec4 position;
-layout(location = 1) in vec4 node_data_0;
-layout(location = 2) in vec4 node_data_1;
-layout(location = 3) in vec4 node_data_2;
+$$layout(location = $r_nodebuffer_group_location$) in vec4 node_data_$r_nodebuffer_group_id$;$$
 
 flat out float vs_discard;
 flat out float vs_size;
@@ -19,5 +17,5 @@ void main()
         vs_discard = 0.0;
     }
     gl_Position = projection * view * vec4(position.xyz, 1.0);
-    vs_size = node_data_2.w;
+    vs_size = node_data_$nodebuffer_length$;
 }

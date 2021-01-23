@@ -20,5 +20,5 @@ void main() {
     int index = int(gl_WorkGroupID.x) + work_group_offset;
 
     density[index].overall_density = 0;
-    $$density[index].density_$r_densitybuffer_padding_id$ = 0;$$
+    $$density[index].density_$r_class_id$ = 0;$$
 }

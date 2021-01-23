@@ -1,16 +1,15 @@
 from typing import List
 import numpy as np
-from definitions import pairwise
+from definitions import pairwise, ADDITIONAL_EDGE_BUFFER_DATA
 from models.edge import Edge
 from models.network import NetworkModel
-from opengl_helper.buffer import SwappingBufferObject, BufferObject
+from opengl_helper.buffer import SwappingBufferObject, BufferObject, get_buffer_settings
 from opengl_helper.compute_shader import ComputeShader
 from opengl_helper.compute_shader_handler import ComputeShaderHandler
 from processing.advection_process import AdvectionProgress
 from utility.performance import track_time
 from opengl_helper.render_utility import VertexDataHandler
 from OpenGL.GL import *
-
 
 LOG_SOURCE: str = "EDGE_PROCESSING"
 
@@ -81,9 +80,12 @@ class EdgeProcessor:
                 new_sample_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True, object_size=4,
                                                                                render_data_size=[4, 4],
                                                                                render_data_offset=[0, 4])
-                new_edge_buffer: BufferObject = BufferObject(ssbo=True, object_size=28,
-                                                             render_data_size=[4, 4, 4, 4, 4, 4, 4],
-                                                             render_data_offset=[0, 4, 8, 12, 16, 20, 24])
+
+                object_size, render_data_offset, render_data_size = \
+                    get_buffer_settings(network.num_classes * 2, ADDITIONAL_EDGE_BUFFER_DATA)
+                new_edge_buffer: BufferObject = BufferObject(ssbo=True, object_size=object_size,
+                                                             render_data_size=render_data_size,
+                                                             render_data_offset=render_data_offset)
                 new_ssbo_handler: VertexDataHandler = VertexDataHandler([(new_sample_buffer, 0), (new_edge_buffer, 2)])
 
                 initial_data: List[float] = []

@@ -1,9 +1,10 @@
+import math
 import os
 from typing import Dict, List
 
 from opengl_helper.shader import RenderShader, ShaderSetting
 from utility.singleton import Singleton
-from definitions import BASE_PATH
+from definitions import BASE_PATH, ADDITIONAL_NODE_BUFFER_DATA, ADDITIONAL_EDGE_BUFFER_DATA
 
 SHADER_STATIC_VAR: List[str] = [
     'num_classes',
@@ -34,16 +35,16 @@ SHADER_DYNAMIC_VAR: List[str] = [
 BUFFER_GROUP_VALUE: List[str] = ['x', 'y', 'z', 'w']
 
 CLASS_COLOR: List[str] = [
-    'vec3(0.133, 0.545, 0.133);',
-    'vec3(0, 0, 0.545);',
-    'vec3(0.69, 0.188, 0.376);',
-    'vec3(1, 0.271, 0);',
-    'vec3(1, 1, 0);',
-    'vec3(0.871, 0.722, 0.529);',
-    'vec3(0, 1, 0);',
-    'vec3(0, 1, 1);',
-    'vec3(1, 0, 1);',
-    'vec3(0.392, 0.584, 0.929);'
+    'vec3(0.133, 0.545, 0.133)',
+    'vec3(0, 0, 0.545)',
+    'vec3(0.69, 0.188, 0.376)',
+    'vec3(1, 0.271, 0)',
+    'vec3(1, 1, 0)',
+    'vec3(0.871, 0.722, 0.529)',
+    'vec3(0, 1, 0)',
+    'vec3(0, 1, 1)',
+    'vec3(1, 0, 1)',
+    'vec3(0.392, 0.584, 0.929)'
 ]
 
 
@@ -74,6 +75,7 @@ class RenderShaderHandler(metaclass=Singleton):
         self.static_var_map['$edgebuffer_end_length$'] = get_buffer_id(5)
         self.static_var_map['$edgebuffer_start_average$'] = get_buffer_id(6)
         self.static_var_map['$edgebuffer_end_average$'] = get_buffer_id(7)
+        self.shader_list = dict()
 
     def create(self, shader_setting: ShaderSetting) -> RenderShader:
         if shader_setting.id_name in self.shader_list.keys():
@@ -105,7 +107,7 @@ class RenderShaderHandler(metaclass=Singleton):
             processed_line: str = processed_line.replace(static, value)
 
         if '$$' in processed_line:
-            for node_buffer_group in range(int((self.num_classes + 2) / 4)):
+            for node_buffer_group in range(int(math.ceil((self.num_classes + (ADDITIONAL_NODE_BUFFER_DATA - 4)) / 4.0))):
                 new_line: str = processed_line
                 added: bool = False
                 if '$r_nodebuffer_group_id$' in new_line:
@@ -117,7 +119,7 @@ class RenderShaderHandler(metaclass=Singleton):
                 if added:
                     parsed_lines = parsed_lines + new_line.replace('$$', '')
 
-            for edge_buffer_group in range(int((self.num_classes * 2 + 8) / 4)):
+            for edge_buffer_group in range(int(math.ceil((self.num_classes * 2 + ADDITIONAL_EDGE_BUFFER_DATA) / 4))):
                 new_line: str = processed_line
                 added: bool = False
                 if '$r_edgebuffer_group_id$' in new_line:
@@ -142,10 +144,12 @@ class RenderShaderHandler(metaclass=Singleton):
                     new_line = new_line.replace('$r_nodebuffer_class_importance$', get_buffer_id(class_id))
                     added = True
                 if '$r_edgebuffer_start_class_importance$' in new_line:
-                    new_line = new_line.replace('$r_edgebuffer_start_class_importance$', get_buffer_id(class_id + 8))
+                    new_line = new_line.replace('$r_edgebuffer_start_class_importance$',
+                                                get_buffer_id(class_id + ADDITIONAL_EDGE_BUFFER_DATA))
                     added = True
                 if '$r_edgebuffer_end_class_importance$' in new_line:
-                    new_line = new_line.replace('$r_edgebuffer_end_class_importance$', get_buffer_id(class_id * 2 + 8))
+                    new_line = new_line.replace('$r_edgebuffer_end_class_importance$',
+                                                get_buffer_id(class_id + self.num_classes + ADDITIONAL_EDGE_BUFFER_DATA))
                     added = True
                 if added:
                     parsed_lines = parsed_lines + new_line.replace('$$', '')

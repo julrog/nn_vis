@@ -6,7 +6,7 @@ struct Node
     $$uint importance_$r_class_id$;$$
     float overall_importance;
     float importance_length;
-    $$float padding_$r_nodebuffer_padding_id$$;$
+    $$float padding_$r_nodebuffer_padding_id$;$$
 };
 
 struct DensityGrid

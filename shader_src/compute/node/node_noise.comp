@@ -6,7 +6,7 @@ struct Node
     $$uint importance_$r_class_id$;$$
     float overall_importance;
     float importance_length;
-    $$float padding_$r_nodebuffer_padding_id$$;$
+    $$float padding_$r_nodebuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;

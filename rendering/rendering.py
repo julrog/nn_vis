@@ -21,7 +21,7 @@ class Renderer:
         self.render_elements: int = 0
 
     def set_shader(self, shader_settings: List[ShaderSetting]):
-        shader_handler = RenderShaderHandler()
+        shader_handler: RenderShaderHandler = RenderShaderHandler()
         for shader_setting in shader_settings:
             self.shaders[shader_setting.id_name] = shader_handler.create(shader_setting)
 

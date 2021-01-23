@@ -6,8 +6,10 @@ from pyrr import Vector3
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from models.grid import Grid
 from models.network import NetworkModel
+from opengl_helper.compute_shader_handler import ComputeShaderHandler
 from opengl_helper.frame_buffer import FrameBufferObject
 from opengl_helper.render_utility import clear_screen
+from opengl_helper.shader_handler import RenderShaderHandler
 from processing.advection_process import AdvectionProgress
 from processing.edge_processing import EdgeProcessor
 from processing.grid_processing import GridProcessor
@@ -52,6 +54,9 @@ class NetworkProcessor:
         self.grid_cell_size: float = self.sample_length / 3.0
         self.sample_radius: float = self.sample_length * 2.0
 
+        RenderShaderHandler().set_classification_number(self.network.num_classes)
+        ComputeShaderHandler().set_classification_number(self.network.num_classes)
+
         self.node_advection_status: AdvectionProgress = AdvectionProgress(self.network.average_node_distance,
                                                                           processing_config["node_bandwidth_reduction"],
                                                                           self.grid_cell_size * 2.0)
@@ -65,8 +70,7 @@ class NetworkProcessor:
                                self.network.bounding_volume, self.layer_distance)
 
         print("[%s] Prepare node processing..." % LOG_SOURCE)
-        self.node_processor: NodeProcessor = NodeProcessor()
-        self.node_processor.set_data(self.network)
+        self.node_processor: NodeProcessor = NodeProcessor(self.network)
         self.node_renderer: NodeRenderer = NodeRenderer(self.node_processor, self.grid)
 
         print("[%s] Prepare edge processing..." % LOG_SOURCE)

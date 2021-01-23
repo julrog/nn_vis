@@ -1,41 +1,43 @@
 from typing import List
 from pyrr import Vector3
 import numpy as np
+
+from definitions import ADDITIONAL_NODE_BUFFER_DATA
 from models.network import NetworkModel
 from models.node import Node
-from opengl_helper.buffer import SwappingBufferObject
+from opengl_helper.buffer import SwappingBufferObject, get_buffer_settings
 from opengl_helper.compute_shader import ComputeShader
 from opengl_helper.compute_shader_handler import ComputeShaderHandler
 from utility.performance import track_time
 from opengl_helper.render_utility import VertexDataHandler
 
-
 LOG_SOURCE: str = "NODE_PROCESSING"
 
 
 class NodeProcessor:
-    def __init__(self):
+    def __init__(self, network: NetworkModel):
         self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("node_noise", "node/node_noise.comp")
-        self.node_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True, object_size=16,
-                                                                      render_data_offset=[0, 4, 8, 12],
-                                                                      render_data_size=[4, 4, 4, 4])
+
+        object_size, render_data_offset, render_data_size = \
+            get_buffer_settings(network.num_classes, ADDITIONAL_NODE_BUFFER_DATA)
+        self.node_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True, object_size=object_size,
+                                                                      render_data_offset=render_data_offset,
+                                                                      render_data_size=render_data_size)
         self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.node_buffer, 0)])
 
-        self.nodes: List[Node] = []
+        self.nodes: List[Node] = network.get_nodes()
 
         self.point_count: int = 0
         self.nearest_view_z: int = -1000000
         self.farthest_view_z: int = 1000000
         self.max_sample_points: int = 0
 
-        self.node_min_importance: float = 0.0
-        self.node_max_importance: float = 1.0
+        self.node_min_importance: float = network.node_min_importance
+        self.node_max_importance: float = network.node_max_importance
 
-    def set_data(self, network: NetworkModel):
-        self.nodes = network.get_nodes()
-        self.node_min_importance = network.node_min_importance
-        self.node_max_importance = network.node_max_importance
+        self.set_data()
 
+    def set_data(self):
         # generate and load initial data for the buffer
         initial_data: List[float] = []
         for node in self.nodes:
