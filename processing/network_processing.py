@@ -40,8 +40,7 @@ class NetworkProcessor:
     def __init__(self, layer_nodes: List[int],
                  processing_config: ProcessingConfig,
                  importance_data: ImportanceDataHandler = None,
-                 processed_nn: ProcessedNNHandler = None,
-                 frame_buffer: FrameBufferObject = None):
+                 processed_nn: ProcessedNNHandler = None):
         print("[%s] Prepare network processing for network of size: %s" % (LOG_SOURCE, layer_nodes))
         self.layer_nodes: List[int] = layer_nodes
         self.layer_distance: float = processing_config["layer_distance"]
@@ -88,8 +87,6 @@ class NetworkProcessor:
 
         self.action_finished: bool = False
         self.last_action_mode: NetworkProcess = NetworkProcess.RESET
-
-        self.frame_buffer: FrameBufferObject = frame_buffer
 
         self.edge_smoothing: bool = processing_config["smoothing"]
         self.edge_smoothing_iterations: int = processing_config["smoothing_iterations"]

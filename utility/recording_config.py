@@ -5,12 +5,12 @@ from utility.config import BaseConfig
 from utility.types import ProcessRenderMode
 
 
-class AutomationConfig(BaseConfig):
+class RecordingConfig(BaseConfig):
     def __init__(self, name: str = None):
         if name is None:
-            super().__init__("automation")
+            super().__init__("recording")
         else:
-            super().__init__("automation", name)
+            super().__init__("recording", name)
 
         self.set_defaults()
 

@@ -1,9 +1,11 @@
+import logging
 import threading
 import time
 from gui.ui_window import OptionGui
 from opengl_helper.screenshot import create_screenshot
 from processing.network_processing import NetworkProcessor
 from utility.file import FileHandler
+from utility.log_handling import setup_logger
 from utility.performance import track_time
 from utility.types import CameraPose
 from utility.window import WindowHandler, Window
@@ -11,6 +13,7 @@ from OpenGL.GL import *
 
 global options
 options = OptionGui()
+setup_logger("tool")
 
 
 def compute_render(some_name: str):
@@ -25,7 +28,7 @@ def compute_render(some_name: str):
     window.set_callbacks()
     window.activate()
 
-    print("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
+    logging.info("OpenGL Version: %d.%d" % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
     network_processor: NetworkProcessor or None = None
 

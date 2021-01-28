@@ -264,7 +264,7 @@ class ProcessedNetwork:
         self.name: str = "beta_" if self.centering else "nobeta_"
         self.name += "gammaone_" if self.gamma_one else "gammazero_"
         if self.regularize_gamma is not "None":
-            self.name += "l1_" if self.regularize_gamma == "l1" else "l2_" if self.regularize_gamma == "l2" else "l1l2_"
+            self.name += "l1" if self.regularize_gamma == "l1" else "l2" if self.regularize_gamma == "l2" else "l1l2"
 
         importance_data: Tuple[List[np.array], List[np.array]] = self.generate_importance_for_data(train_data_path,
                                                                                                    test_data_path)

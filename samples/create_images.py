@@ -3,7 +3,7 @@ from sklearn.neighbors import KernelDensity
 import numpy as np
 import matplotlib.pyplot as plt
 
-from automation.create_plot import save_plot
+from samples.create_plot import save_plot
 from data.data_handler import ProcessedNNHandler
 from definitions import DATA_PATH
 

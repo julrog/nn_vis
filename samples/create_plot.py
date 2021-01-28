@@ -101,7 +101,6 @@ def create_importance_plot_compare_regularizer(filename: str, importance_names: 
     plot.text(0.9, -0.025, "{:.0f}".format(90), color="red", transform=trans,
               va="bottom", ha="center")
 
-
     save_plot("compare_%s" % check_importance_type)
 
     if show:

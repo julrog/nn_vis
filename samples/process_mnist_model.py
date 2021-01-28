@@ -1,16 +1,16 @@
 import os.path
 from typing import List
 
+from processing.processing_handler import RecordingProcessingHandler
 from data.mnist_data_handler import split_mnist_data
 from data.model_data import ModelData
 from definitions import DATA_PATH
 from neural_network_preprocessing.neural_network import ProcessedNetwork
-from automation.automation_config import AutomationConfig
-from automation.create_processed_model import process_network
-from automation.create_mnist_model import create
+from utility.recording_config import RecordingConfig
+from neural_network_preprocessing.create_mnist_model import create
 
-name: str = "8_class"
-class_selection: List[int] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+name: str = "5_class"
+class_selection: List[int] = [0, 1, 2, 3, 4]
 basic_model_data: ModelData = create(name=name, batch_size=128, epochs=15, layer_data=[81, 49], regularized=True,
                                      class_selection=class_selection)
 
@@ -28,5 +28,6 @@ pn.store_importance_data_layer_normalized("mnist/mnist_train_split%s" % split_su
 basic_model_data.store_model_data()
 basic_model_data.save_data()
 
-automation_config: AutomationConfig = AutomationConfig()
-process_network(name, "nobeta_gammaone_l1_", automation_config)
+recording_config: RecordingConfig = RecordingConfig()
+processHandler: RecordingProcessingHandler = RecordingProcessingHandler(name, "nobeta_gammaone_l1", recording_config)
+processHandler.process()
