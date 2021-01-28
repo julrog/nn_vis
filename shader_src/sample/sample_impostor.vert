@@ -42,20 +42,20 @@ void main()
         if (edge_importance_type == 0) {
             float t = clamp(mod(gl_InstanceID + 1, max_sample_points)/edge_data_$edgebuffer_samples$, 0.0, 1.0);
             $$importance[$r_class_id$] = (1.0 - t) * edge_data_$r_edgebuffer_start_class_importance$/(edge_data_$edgebuffer_start_average$ * $num_classes$.0) + t * edge_data_$r_edgebuffer_end_class_importance$/(edge_data_$edgebuffer_end_average$ * $num_classes$.0);$$
-            vs_importance =((1.0 - t) * edge_data_$edgebuffer_start_average$ + t * edge_data_$edgebuffer_end_average$) * edge_data_$edgebuffer_importance$;
+            vs_importance =((1.0 - t) * edge_data_$edgebuffer_start_length$ + t * edge_data_$edgebuffer_end_length$) * edge_data_$edgebuffer_importance$;
         }
         if (edge_importance_type == 1) {
             $$importance[$r_class_id$] = edge_data_$r_edgebuffer_start_class_importance$/(edge_data_$edgebuffer_start_average$ * $num_classes$.0);$$
-            vs_importance = edge_data_$edgebuffer_start_average$ * edge_data_$edgebuffer_importance$;
+            vs_importance = edge_data_$edgebuffer_start_length$ * edge_data_$edgebuffer_importance$;
         }
         if (edge_importance_type == 2) {
             highp float divisor = (edge_data_$edgebuffer_start_average$ * $num_classes$.0 + edge_data_$edgebuffer_end_average$ * $num_classes$.0);
             $$importance[$r_class_id$] = (edge_data_$r_edgebuffer_start_class_importance$ + edge_data_$r_edgebuffer_end_class_importance$)/divisor;$$
-            vs_importance = edge_data_$edgebuffer_start_average$ * edge_data_$edgebuffer_end_average$ * edge_data_$edgebuffer_importance$;
+            vs_importance = edge_data_$edgebuffer_start_length$ * edge_data_$edgebuffer_end_length$ * edge_data_$edgebuffer_importance$;
         }
         if (edge_importance_type == 3) {
             $$importance[$r_class_id$] = edge_data_$r_edgebuffer_end_class_importance$/(edge_data_$edgebuffer_end_average$ * $num_classes$.0);$$
-            vs_importance = edge_data_$edgebuffer_end_average$ * edge_data_$edgebuffer_importance$;
+            vs_importance = edge_data_$edgebuffer_end_length$ * edge_data_$edgebuffer_importance$;
         }
 
         vec3 color_list[$num_classes$];
@@ -68,10 +68,10 @@ void main()
             {
                 combined_color += color_list[i] * importance[i];
             }
-            vs_color = vec4(combined_color, vs_importance/importance_max);
+            vs_color = vec4(combined_color, vs_importance/sqrt($num_classes$.0));
         } else {
             if (show_class == 0) {
-                vs_color = vec4(0.0, 0.0, 0.0, vs_importance/importance_max);
+                vs_color = vec4(0.0, 0.0, 0.0, vs_importance/sqrt($num_classes$.0));
             } else {
                 vs_color = vec4(color_list[show_class - 2] * importance[show_class - 2], importance[show_class - 2]);
             }

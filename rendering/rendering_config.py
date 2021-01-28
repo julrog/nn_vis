@@ -27,7 +27,7 @@ class RenderingConfig(BaseConfig):
         shader_items: List[Tuple[str, str, str, any]] = []
         shader_items.extend([("screen_width", "screen_width", "Screen Width", 1920.0),
                              ("screen_height", "screen_height", "Screen Height", 1080.0),
-                             ("edge_object_radius", "object_radius", "Size", 0.2),
+                             ("edge_object_radius", "object_radius", "Size", 0.04),
                              ("edge_base_opacity", "base_opacity", "Base Opacity", 0.0),
                              ("edge_importance_opacity", "importance_opacity", "Importance Opacity", 1.1),
                              ("edge_depth_opacity", "depth_opacity", "Depth Opacity", 0.5),

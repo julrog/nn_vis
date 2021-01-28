@@ -6,7 +6,7 @@
     "edge_depth_opacity": 0.5,
     "edge_importance_opacity": 1.1,
     "edge_importance_threshold": 0.01,
-    "edge_object_radius": 0.2,
+    "edge_object_radius": 0.04,
     "edge_opacity_exponent": 0.5,
     "edge_render_mode": 3,
     "grid_render_mode": 0,
