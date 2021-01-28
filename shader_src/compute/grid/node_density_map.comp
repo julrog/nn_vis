@@ -3,34 +3,17 @@
 struct Node
 {
     vec4 pos;
-    float importance_0;
-    float importance_1;
-    float importance_2;
-    float importance_3;
-    float importance_4;
-    float importance_5;
-    float importance_6;
-    float importance_7;
-    float importance_8;
-    float importance_9;
+    $$uint importance_$r_class_id$;$$
     float overall_importance;
     float importance_length;
+    $$float padding_$r_nodebuffer_padding_id$;$$
 };
 
 struct DensityGrid
 {
     uint overall_density;
-    uint density_0;
-    uint density_1;
-    uint density_2;
-    uint density_3;
-    uint density_4;
-    uint density_5;
-    uint density_6;
-    uint density_7;
-    uint density_8;
-    uint density_9;
-    uint fill;
+    $$uint density_$r_class_id$;$$
+    $$uint padding_$r_densitybuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -109,16 +92,7 @@ highp float density_estimation(vec3 position, float cell_length, vec3 center)
 
 void apply_density(Node node, highp int index, float scale) {
     atomicAdd(prev_grid[index].overall_density, int(scale * node.overall_importance));
-    atomicAdd(prev_grid[index].density_0, int(scale * node.importance_0));
-    atomicAdd(prev_grid[index].density_1, int(scale * node.importance_1));
-    atomicAdd(prev_grid[index].density_2, int(scale * node.importance_2));
-    atomicAdd(prev_grid[index].density_3, int(scale * node.importance_3));
-    atomicAdd(prev_grid[index].density_4, int(scale * node.importance_4));
-    atomicAdd(prev_grid[index].density_5, int(scale * node.importance_5));
-    atomicAdd(prev_grid[index].density_6, int(scale * node.importance_6));
-    atomicAdd(prev_grid[index].density_7, int(scale * node.importance_7));
-    atomicAdd(prev_grid[index].density_8, int(scale * node.importance_8));
-    atomicAdd(prev_grid[index].density_9, int(scale * node.importance_9));
+    $$atomicAdd(prev_grid[index].density_$r_class_id$, int(scale * node.importance_$r_class_id$));$$
 }
 
 void main() {

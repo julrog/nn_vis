@@ -3,18 +3,10 @@
 struct Node
 {
     vec4 pos;
-    float importance_0;
-    float importance_1;
-    float importance_2;
-    float importance_3;
-    float importance_4;
-    float importance_5;
-    float importance_6;
-    float importance_7;
-    float importance_8;
-    float importance_9;
+    $$uint importance_$r_class_id$;$$
     float overall_importance;
     float importance_length;
+    $$float padding_$r_nodebuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;

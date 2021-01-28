@@ -3,10 +3,11 @@ import numpy as np
 from typing import List, Tuple
 from pyrr import Vector3
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
+from definitions import ADDITIONAL_EDGE_BUFFER_DATA
 from models.edge import Edge, split_edges_for_buffer, create_edges_processed, create_edges_random, \
     create_edges_importance
 from models.node import Node, create_random_nodes, create_nodes_from_data, create_nodes_with_importance
-
+from opengl_helper.buffer import get_buffer_padding
 
 LOG_SOURCE: str = "NETWORK_MODEL"
 
@@ -19,6 +20,7 @@ class NetworkModel:
         self.layer_width: float = layer_width
         self.layer_distance: float = layer_distance
         self.prune_percentage: float = prune_percentage
+        self.num_classes: int = layer[len(layer) - 1]
 
         self.bounding_volume: Tuple[Vector3, Vector3] = (
             Vector3(
@@ -139,8 +141,10 @@ class NetworkModel:
         self.edge_min_importance = 10000.0
         self.edge_max_importance = 0.0
 
-        edges: List[List[Edge]] = create_edges_random(self.layer_nodes) if len(self.edge_data) == 0 \
-            else create_edges_importance(self.layer_nodes, self.edge_data) if self.edge_importance_only \
+        padding: int = get_buffer_padding(self.num_classes * 2, ADDITIONAL_EDGE_BUFFER_DATA)
+        edges: List[List[Edge]] = create_edges_random(self.layer_nodes, self.num_classes, padding) if len(
+            self.edge_data) == 0 else create_edges_importance(self.layer_nodes, self.edge_data, self.num_classes,
+                                                              padding) if self.edge_importance_only \
             else create_edges_processed(self.edge_data, self.sample_data)
 
         existing_edges: int = 0
@@ -252,14 +256,14 @@ class NetworkModel:
         min_importance: float = 10000.0
         for nodes in self.layer_nodes:
             for node in nodes:
-                if node.data[14] < min_importance:
-                    min_importance = node.data[14]
+                if node.data[self.num_classes + 4] < min_importance:
+                    min_importance = node.data[self.num_classes + 4]
         return min_importance
 
     def read_node_max_importance(self) -> float:
         max_importance: float = 0.0
         for nodes in self.layer_nodes:
             for node in nodes:
-                if node.data[14] > max_importance:
-                    max_importance = node.data[14]
+                if node.data[self.num_classes + 4] > max_importance:
+                    max_importance = node.data[self.num_classes + 4]
         return max_importance

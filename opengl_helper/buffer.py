@@ -1,10 +1,26 @@
 import math
-from typing import List
+from typing import List, Tuple
 import numpy as np
 from OpenGL.GL import *
 
-
 LOG_SOURCE: str = "BUFFER"
+
+
+def get_buffer_object_size(num_classes: int, additional_data: int) -> int:
+    object_size: int = (4 - ((num_classes + additional_data) % 4)) % 4 + (num_classes + additional_data)
+    return object_size
+
+
+def get_buffer_padding(num_classes: int, additional_data: int) -> int:
+    object_size: int = get_buffer_object_size(num_classes, additional_data)
+    return object_size - (num_classes + additional_data)
+
+
+def get_buffer_settings(num_classes: int, additional_data: int) -> Tuple[int, List[int], List[int]]:
+    object_size: int = get_buffer_object_size(num_classes, additional_data)
+    data_offset: List[int] = [i for i in range(0, object_size, 4)]
+    data_size: List[int] = [4 for _ in range(int(object_size / 4))]
+    return object_size, data_offset, data_size
 
 
 class BufferObject:

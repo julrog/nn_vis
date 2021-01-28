@@ -66,22 +66,18 @@ class SettingEntry:
 class RadioButtons:
     def __init__(self, root: LabelFrame, names: List[str], shared_variable: IntVar, command, option: str,
                  sub_option: str, row: int = 0, column: int = 0, width: int = 15, height: int = 1):
+        self.root: LabelFrame = root
+        self.row: int = row
+        self.column: int = column
+        self.width: int = width
+        self.height: int = height
         self.names: List[str] = names
         self.option: str = option
         self.sub_option: str = sub_option
         self.variable: IntVar = shared_variable
         self.command = command
         self.buttons: List[Button] = []
-        for i, name in enumerate(self.names):
-            def generate_press_function(current_index: int):
-                def press_function():
-                    self.press(current_index)
-
-                return press_function
-
-            new_button: Button = Button(root, text=name, width=width, height=height, command=generate_press_function(i))
-            new_button.grid(row=row + i, column=column)
-            self.buttons.append(new_button)
+        self.set_buttons(names)
         self.press(0)
 
     def press(self, button_id: int):
@@ -98,3 +94,22 @@ class RadioButtons:
 
     def get(self) -> any:
         return int(self.variable.get())
+
+    def set_buttons(self, button_names: List[str]):
+        if self.buttons:
+            for button in self.buttons:
+                button.destroy()
+
+        self.buttons = []
+        self.names = button_names
+        for i, name in enumerate(self.names):
+            def generate_press_function(current_index: int):
+                def press_function():
+                    self.press(current_index)
+
+                return press_function
+
+            new_button: Button = Button(self.root, text=name, width=self.width, height=self.height,
+                                        command=generate_press_function(i))
+            new_button.grid(row=self.row + i, column=self.column)
+            self.buttons.append(new_button)

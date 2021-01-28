@@ -15,26 +15,9 @@ struct EdgeData
     float end_importance_length;
     float start_importance;
     float end_importance;
-    float start_importance_0;
-    float start_importance_1;
-    float start_importance_2;
-    float start_importance_3;
-    float start_importance_4;
-    float start_importance_5;
-    float start_importance_6;
-    float start_importance_7;
-    float start_importance_8;
-    float start_importance_9;
-    float end_importance_0;
-    float end_importance_1;
-    float end_importance_2;
-    float end_importance_3;
-    float end_importance_4;
-    float end_importance_5;
-    float end_importance_6;
-    float end_importance_7;
-    float end_importance_8;
-    float end_importance_9;
+    $$float start_importance_$r_class_id$;$$
+    $$float end_importance_$r_class_id$;$$
+    $$float padding_$r_edgebuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -47,7 +30,6 @@ layout(std430, binding = 2) writeonly buffer edge_data
     EdgeData edge[];
 };
 
-//uniform mat4 view;
 uniform int work_group_offset;
 uniform int max_sample_points;
 
@@ -58,77 +40,7 @@ vec4 read(highp uint index, highp uint offset)
 
 void main() {
     highp uint offset = (gl_WorkGroupID.x + work_group_offset) * max_sample_points;
-    highp uint current_read_index = 0;
-    highp uint current_write_index = 0;
-
     vec4 first_point = read(0, offset);
-    vec4 last_point = read(int(first_point.w) - 1, offset);
-
     int index = int(gl_WorkGroupID.x) + work_group_offset;
     edge[index].samples = first_point.w;
-
-    /*
-    int last_nearest_z = -1000000;
-    int last_farthest_z = 1000000;
-    vec4 view_sample = view * vec4(first_point.xyz, 1.0);
-    float scaled_view_z = view_sample.z * 1000.0;
-    int next_view_z = int(scaled_view_z);
-
-    // compare with cached value first
-    if (last_nearest_z < next_view_z) {
-        // update cached value and eventually set new nearest
-        last_nearest_z = atomicMax(limits[0].nearest_z, next_view_z);
-        if (last_nearest_z < next_view_z) last_nearest_z = next_view_z;
-    }
-
-    // compare with cached value first
-    if (last_farthest_z > next_view_z) {
-        // update cached value and eventually set new nearest
-        last_farthest_z = atomicMin(limits[0].farthest_z, next_view_z);
-        if (last_farthest_z > next_view_z) last_farthest_z = next_view_z;
-    }
-
-    view_sample = view * vec4(last_point.xyz, 1.0);
-    scaled_view_z = view_sample.z * 1000.0;
-    next_view_z = int(scaled_view_z);
-
-    // compare with cached value first
-    if (last_nearest_z < next_view_z) {
-        // update cached value and eventually set new nearest
-        last_nearest_z = atomicMax(limits[0].nearest_z, next_view_z);
-        if (last_nearest_z < next_view_z) last_nearest_z = next_view_z;
-    }
-
-    // compare with cached value first
-    if (last_farthest_z > next_view_z) {
-        // update cached value and eventually set new nearest
-        last_farthest_z = atomicMin(limits[0].farthest_z, next_view_z);
-        if (last_farthest_z > next_view_z) last_farthest_z = next_view_z;
-    }
-
-    /*float is_used = 1.0;
-    do {
-        vec4 next_point = read(current_read_index++, offset);
-        vec4 view_sample = view * vec4(next_point.xyz, 1.0);
-        float scaled_view_z = view_sample.z * 1000.0;
-        int next_view_z = int(scaled_view_z);
-        is_used = next_point.w;
-
-        // compare with cached value first
-        if (last_nearest_z < next_view_z) {
-            // update cached value and eventually set new nearest
-            last_nearest_z = atomicMax(limits[0].nearest_z, next_view_z);
-            if (last_nearest_z < next_view_z) last_nearest_z = next_view_z;
-        }
-
-        // compare with cached value first
-        if (last_farthest_z > next_view_z) {
-            // update cached value and eventually set new nearest
-            last_farthest_z = atomicMin(limits[0].farthest_z, next_view_z);
-            if (last_farthest_z > next_view_z) last_farthest_z = next_view_z;
-        }
-    } while (is_used >= 1.0);*/
-
-    /*atomicMax(limits[0].max_samples, int(first_point.w));
-    atomicAdd(limits[0].samples, int(first_point.w));*/
 }

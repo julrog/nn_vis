@@ -103,10 +103,12 @@ class OptionGui:
                                                           padx=5, pady=5)
         self.class_setting_frame.grid(row=0, column=1, rowspan=3, padx=5, pady=5)
         self.class_show: IntVar = IntVar(value=0)
+
+        show_class_names: List[str] = ["Independent", "All"]
+        for class_id in range(9):
+            show_class_names.append("Class " + str(class_id))
         self.class_show_options: RadioButtons = RadioButtons(self.class_setting_frame,
-                                                             ["Independent", "All", "Class 0", "Class 1", "Class 2",
-                                                              "Class 3", "Class 4", "Class 5", "Class 6", "Class 7",
-                                                              "Class 8", "Class 9"], self.class_show,
+                                                             show_class_names, self.class_show,
                                                              command=self.change_setting, option="show",
                                                              sub_option="class", row=0, column=0, width=10, height=2)
         # ------------------------------------------------------------------------------------------------------------ #
@@ -153,7 +155,7 @@ class OptionGui:
 
     def start(self, layer_data: List[int] = None):
         if layer_data is None:
-            default_layer_data = [4, 9, 4]
+            default_layer_data = [4, 9, 9]
             for nodes in default_layer_data:
                 self.add_layer(nodes)
         else:
@@ -198,7 +200,9 @@ class OptionGui:
 
         for nodes in layer_data:
             self.add_layer(nodes)
+
         self.generate(importance_data, processed_nn)
+        self.set_classes(layer_data[len(layer_data) - 1])
 
     def add_layer(self, nodes: int = 9):
         layer_id: int = len(self.layer_settings)
@@ -249,6 +253,12 @@ class OptionGui:
     def on_closing(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self.settings["Closed"] = True
+
+    def set_classes(self, num_classes: int):
+        show_class_names: List[str] = ["Independent", "All"]
+        for class_id in range(num_classes):
+            show_class_names.append("Class " + str(class_id))
+        self.class_show_options.set_buttons(show_class_names)
 
     def destroy(self):
         self.gui_root.destroy()

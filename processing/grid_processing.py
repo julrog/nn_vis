@@ -3,7 +3,8 @@ from typing import List
 import numpy as np
 from models.grid import Grid
 from opengl_helper.buffer import OverflowingBufferObject
-from opengl_helper.compute_shader import ComputeShader, ComputeShaderHandler
+from opengl_helper.compute_shader import ComputeShader
+from opengl_helper.compute_shader_handler import ComputeShaderHandler
 from opengl_helper.render_utility import OverflowingVertexDataHandler
 from processing.advection_process import AdvectionProgress
 from processing.edge_processing import EdgeProcessor
@@ -53,7 +54,7 @@ class GridProcessor:
             return split_grid_data
 
         self.grid_position_buffer: OverflowingBufferObject = OverflowingBufferObject(split_function_generation(grid),
-                                                                                     object_size=12,
+                                                                                     object_size=4,
                                                                                      render_data_offset=[0],
                                                                                      render_data_size=[4])
         self.grid_density_buffer: OverflowingBufferObject = OverflowingBufferObject(split_function_generation(grid),

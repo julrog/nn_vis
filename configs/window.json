@@ -1,14 +1,12 @@
 {
     "camera_rotation": true,
     "camera_rotation_speed": 0.5,
-    "height": 1200,
+    "height": 900,
     "monitor_id": 0,
-    "screen_height": 1200,
-    "screen_width": 2120,
-    "screen_x": 1287,
-    "screen_y": 132,
+    "screen_height": 900,
+    "screen_width": 1600,
+    "screen_x": 1037,
+    "screen_y": 245,
     "title": "NNVis Render",
-    "ui_x": 927,
-    "ui_y": 1103,
-    "width": 2120
+    "width": 1600
 }

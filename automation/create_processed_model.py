@@ -114,8 +114,7 @@ def render(cam: Camera, processor: NetworkProcessor, show_class: int = 0):
 
 def process_network(network_name: str, importance_type: str, automation_config: AutomationConfig):
     window_handler: WindowHandler = WindowHandler()
-    window: Window = window_handler.create_window("Testing", 1, 1, 1)
-    window.set_position(0, 0)
+    window: Window = window_handler.create_window()
     window.set_callbacks()
     window.activate()
 

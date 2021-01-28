@@ -38,14 +38,18 @@ def evaluate_model(model: Model, x_train: Any, y_train: Any, x_test: Any, y_test
 
 def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learning_rate: float = 0.001,
            regularized: bool = False, train_type: ModelTrainType = ModelTrainType.BALANCED, main_class: int = None,
-           other_class_percentage: float = None) -> ModelData:
+           other_class_percentage: float = None, class_selection: List[int] = None) -> ModelData:
     print("[%s] Create MNIST neural network model with training type '%s'." % (LOG_SOURCE, train_type.name))
 
-    (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_prepared_data() \
-        if train_type is not ModelTrainType.UNBALANCED else get_unbalance_data(main_class, other_class_percentage)
+    (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_prepared_data(class_selection) \
+        if train_type is not ModelTrainType.UNBALANCED else get_unbalance_data(main_class, other_class_percentage,
+                                                                               class_selection)
 
     print("[%s] Train samples: %i" % (LOG_SOURCE, x_train.shape[0]))
     print("[%s] Test samples: %i" % (LOG_SOURCE, x_test.shape[0]))
+
+    if class_selection is not None:
+        num_classes = len(class_selection)
 
     model: Model = Sequential()
     model.add(Flatten(input_shape=input_shape))
