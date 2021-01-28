@@ -2,16 +2,22 @@ from tkinter import LabelFrame, IntVar, DoubleVar, StringVar, Label, Entry, Butt
 from typing import List
 
 
+LOG_SOURCE: str = "GUI_SETTINGS"
+
+
 class SettingField:
     def __init__(self, root: LabelFrame, name: str, variable_value: any = 0, variable_type: str = "string",
                  row: int = 0, column: int = 0):
         self.name: str = name
         self.variable_type: str = variable_type
         if variable_type is "int":
+            self.old_variable: IntVar = IntVar(value=int(variable_value))
             self.variable: IntVar = IntVar(value=int(variable_value))
         elif variable_type is "float":
+            self.old_variable: DoubleVar = DoubleVar(value=float(variable_value))
             self.variable: DoubleVar = DoubleVar(value=float(variable_value))
         else:
+            self.old_variable: StringVar = StringVar(value=str(variable_value))
             self.variable: StringVar = StringVar(value=str(variable_value))
         self.label: Label = Label(root, text=name)
         self.label.grid(row=row, column=column)
@@ -20,19 +26,32 @@ class SettingField:
 
     def set(self, value: any):
         if self.variable_type is "int":
+            self.old_variable.set(int(value))
             self.variable.set(int(value))
         elif self.variable_type is "float":
+            self.old_variable.set(float(value))
             self.variable.set(float(value))
         else:
+            self.old_variable.set(str(value))
             self.variable.set(str(value))
 
     def get(self) -> any:
-        if self.variable_type is "int":
-            return int(self.variable.get())
-        elif self.variable_type is "float":
-            return float(self.variable.get())
-        else:
-            return str(self.variable.get())
+        try:
+            if self.variable_type is "int":
+                return int(self.variable.get())
+            elif self.variable_type is "float":
+                return float(self.variable.get())
+            else:
+                return str(self.variable.get())
+        except ValueError:
+            self.variable.set(self.old_variable.get())
+            print("[%s] wrong value entered.. using old one." % LOG_SOURCE)
+            if self.variable_type is "int":
+                return int(self.variable.get())
+            elif self.variable_type is "float":
+                return float(self.variable.get())
+            else:
+                return str(self.variable.get())
 
 
 class SettingEntry:
@@ -40,6 +59,7 @@ class SettingEntry:
                  row: int = 0, column: int = 0):
         self.name: str = name
         self.variable_type: str = variable_type
+        self.old_variable: StringVar = StringVar(value=str(variable_value))
         self.variable: StringVar = StringVar(value=str(variable_value))
         self.label: Label = Label(root, text=name)
         self.label.grid(row=row, column=column)
@@ -48,19 +68,32 @@ class SettingEntry:
 
     def set(self, value: any):
         if self.variable_type is "int":
+            self.old_variable.set(int(value))
             self.variable.set(int(value))
         elif self.variable_type is "float":
+            self.old_variable.set(float(value))
             self.variable.set(float(value))
         else:
+            self.old_variable.set(str(value))
             self.variable.set(str(value))
 
     def get(self) -> any:
-        if self.variable_type is "int":
-            return int(self.variable.get())
-        elif self.variable_type is "float":
-            return float(self.variable.get())
-        else:
-            return str(self.variable.get())
+        try:
+            if self.variable_type is "int":
+                return int(self.variable.get())
+            elif self.variable_type is "float":
+                return float(self.variable.get())
+            else:
+                return str(self.variable.get())
+        except ValueError:
+            self.variable.set(self.old_variable.get())
+            print("[%s] wrong value entered.. using old one." % LOG_SOURCE)
+            if self.variable_type is "int":
+                return int(self.variable.get())
+            elif self.variable_type is "float":
+                return float(self.variable.get())
+            else:
+                return str(self.variable.get())
 
 
 class RadioButtons:
