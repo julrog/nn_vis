@@ -7,8 +7,12 @@ from data.mnist_data_handler import split_mnist_data
 from data.model_data import ModelData
 from definitions import DATA_PATH
 from neural_network_preprocessing.neural_network import ProcessedNetwork
+from utility.log_handling import setup_logger
 from utility.recording_config import RecordingConfig
 from neural_network_preprocessing.create_mnist_model import create
+
+
+setup_logger("sample_processing")
 
 name: str = "5_class"
 class_selection: List[int] = [0, 1, 2, 3, 4]

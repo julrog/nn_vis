@@ -1,6 +1,9 @@
 from data.mnist_data_handler import get_prepared_data
 from data.model_data import ModelData
 from evaluation.evaluator import ImportanceEvaluator
+from utility.log_handling import setup_logger
+
+setup_logger("sample_evaluation")
 
 name: str = "5_class"
 model_data: ModelData = ModelData(name)
