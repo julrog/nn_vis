@@ -7,7 +7,6 @@ from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from models.grid import Grid
 from models.network import NetworkModel
 from opengl_helper.compute_shader_handler import ComputeShaderHandler
-from opengl_helper.frame_buffer import FrameBufferObject
 from opengl_helper.render_utility import clear_screen
 from opengl_helper.shader_handler import RenderShaderHandler
 from processing.advection_process import AdvectionProgress

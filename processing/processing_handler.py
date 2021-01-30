@@ -25,7 +25,7 @@ class ProcessingHandler:
         window.activate()
 
         importance_data_path: str = DATA_PATH + "model/%s/%s.imp.npz" % (self.network_name,
-                                                                     self.importance_data_name)
+                                                                         self.importance_data_name)
 
         if not os.path.exists(importance_data_path):
             raise Exception("Importance data '%s' for model '%s' is not yet created." % (self.network_name,
@@ -55,7 +55,7 @@ class ProcessingHandler:
         self.process_loop()
 
         self.processor.save_model(DATA_PATH + "model/%s/%s.pro.npz" % (self.network_name,
-                                                                   self.importance_data_name))
+                                                                       self.importance_data_name))
         self.clean_up()
 
     def clean_up(self):

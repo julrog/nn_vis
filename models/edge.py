@@ -81,8 +81,8 @@ def create_edges_random(layer_nodes: List[List[Node]], num_classes: int, padding
     return edges
 
 
-def create_edges_importance(layer_nodes: List[List[Node]], edge_data: np.array, num_classes: int, padding: int) -> List[
-    List[Edge]]:
+def create_edges_importance(layer_nodes: List[List[Node]], edge_data: np.array, num_classes: int, padding: int) \
+        -> List[List[Edge]]:
     edges: List[List[Edge]] = []
     for i in range(len(layer_nodes) - 1):
         layer_edges: List[Edge] = []

@@ -8,8 +8,8 @@ from models.node import Node
 from opengl_helper.buffer import SwappingBufferObject, get_buffer_settings
 from opengl_helper.compute_shader import ComputeShader
 from opengl_helper.compute_shader_handler import ComputeShaderHandler
+from opengl_helper.vertex_data_handler import VertexDataHandler
 from utility.performance import track_time
-from opengl_helper.render_utility import VertexDataHandler
 
 LOG_SOURCE: str = "NODE_PROCESSING"
 

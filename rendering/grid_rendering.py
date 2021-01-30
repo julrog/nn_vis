@@ -1,11 +1,13 @@
 from typing import List, Callable
 
 from OpenGL.GL import *
-from opengl_helper.render_utility import OverflowingVertexDataHandler, generate_render_function, OGLRenderFunction, \
-    BaseRenderSet
+
+from opengl_helper.data_set import BaseRenderSet
+from opengl_helper.render_utility import generate_render_function, OGLRenderFunction
 from opengl_helper.shader import ShaderSetting
+from opengl_helper.vertex_data_handler import OverflowingVertexDataHandler
 from processing.grid_processing import GridProcessor
-from rendering.rendering import Renderer
+from rendering.renderer import Renderer
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.performance import track_time

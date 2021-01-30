@@ -11,7 +11,6 @@ from utility.log_handling import setup_logger
 from utility.recording_config import RecordingConfig
 from neural_network_preprocessing.create_mnist_model import create
 
-
 setup_logger("sample_processing")
 
 name: str = "5_class"
@@ -25,9 +24,9 @@ if not os.path.exists("%smnist/mnist_train_split%s" % (DATA_PATH, split_suffix))
     split_mnist_data(class_selection)
 
 pn = ProcessedNetwork(model_data=basic_model_data)
-pn.store_importance_data_layer_normalized("mnist/mnist_train_split%s" % split_suffix,
-                                          "mnist/mnist_test_split%s" % split_suffix,
-                                          ImportanceType(ImportanceType.GAMMA | ImportanceType.L1))
+pn.generate_importance_data("mnist/mnist_train_split%s" % split_suffix,
+                            "mnist/mnist_test_split%s" % split_suffix,
+                            ImportanceType(ImportanceType.GAMMA | ImportanceType.L1))
 basic_model_data.store_model_data()
 basic_model_data.save_data()
 

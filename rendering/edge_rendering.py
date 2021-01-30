@@ -1,11 +1,12 @@
 from typing import List, Callable
 from OpenGL.GL import *
 from models.grid import Grid
-from opengl_helper.render_utility import VertexDataHandler, LayeredRenderSet, LayeredVertexDataHandler, BaseRenderSet, \
-    generate_render_function, OGLRenderFunction
+from opengl_helper.data_set import LayeredRenderSet, BaseRenderSet
+from opengl_helper.render_utility import generate_render_function, OGLRenderFunction
 from opengl_helper.shader import ShaderSetting
+from opengl_helper.vertex_data_handler import LayeredVertexDataHandler, VertexDataHandler
 from processing.edge_processing import EdgeProcessor
-from rendering.rendering import Renderer
+from rendering.renderer import Renderer
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.performance import track_time
@@ -90,9 +91,9 @@ class EdgeRenderer(Renderer):
                                       ("object_radius", self.edge_processor.sample_length * 0.5, "float"),
                                       ("importance_threshold", self.importance_threshold, "float"),
                                       ("importance_max", self.edge_processor.edge_max_importance, "float"),
-                                      ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
-                                      ('show_class', show_class, 'int'),
-                                      ('edge_importance_type', 0, 'int')])
+                                      ('max_sample_points', self.edge_processor.max_sample_points, "int"),
+                                      ('show_class', show_class, "int"),
+                                      ('edge_importance_type', 0, "int")])
         current_set.set_uniform_labeled_data(config)
         current_set.render()
 

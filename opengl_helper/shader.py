@@ -1,47 +1,44 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Callable
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
 from rendering.rendering_config import RenderingConfig
 from opengl_helper.texture import Texture
 
-LOG_SOURCE: str = "SHADER"
 
-
-def uniform_setter_function(uniform_setter: str):
+def uniform_setter_function(uniform_setter: str) -> Callable:
     if uniform_setter is "float":
-        def uniform_func(location, data):
+        def uniform_func(location: int, data: float):
             glUniform1f(location, data)
 
         return uniform_func
     if uniform_setter is "vec3":
-        def uniform_func(location, data):
+        def uniform_func(location: int, data: List[float]):
             glUniform3fv(location, 1, data)
 
         return uniform_func
     if uniform_setter is "mat4":
-        def uniform_func(location, data):
+        def uniform_func(location: int, data: List[float]):
             glUniformMatrix4fv(location, 1, GL_FALSE, data)
 
         return uniform_func
     if uniform_setter is "int":
-        def uniform_func(location, data):
+        def uniform_func(location: int, data: int):
             glUniform1i(location, data)
 
         return uniform_func
     if uniform_setter is "ivec3":
-        def uniform_func(location, data):
+        def uniform_func(location: int, data: List[int]):
             glUniform3iv(location, 1, data)
 
         return uniform_func
-    raise Exception("[%s] Uniform setter function for '%s' not defined." % (LOG_SOURCE, uniform_setter))
+    raise Exception("Uniform setter function for '%s' not defined." % uniform_setter)
 
 
 class ShaderSetting:
     def __init__(self, id_name: str, shader_paths: List[str], uniform_labels: List[str] = None):
         self.id_name: str = id_name
         if len(shader_paths) < 2 or len(shader_paths) > 3:
-            raise Exception(
-                "[%s] Can't handle number of shaders for a program (either 2 or 3 with geometry shader)." % LOG_SOURCE)
+            raise Exception("Can't handle number of shaders for a program (either 2 or 3 with geometry shader).")
         self.vertex: str = shader_paths[0]
         self.fragment: str = shader_paths[1]
         self.geometry: str = None if len(shader_paths) < 3 else shader_paths[2]
@@ -52,7 +49,7 @@ class BaseShader:
     def __init__(self):
         self.shader_handle: int = 0
         self.textures: List[Tuple[Texture, str, int]] = []
-        self.uniform_cache: Dict[str, Tuple[int, any, any]] = dict()
+        self.uniform_cache: Dict[str, Tuple[int, any, Callable]] = dict()
         self.uniform_labels: List[str] = []
         self.uniform_ignore_labels: List[str] = []
 

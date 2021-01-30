@@ -6,7 +6,6 @@ from PIL import Image
 from definitions import SCREENSHOT_PATH
 from opengl_helper.frame_buffer import FrameBufferObject
 
-
 screenshot_count: int = 0
 
 
@@ -23,7 +22,7 @@ def create_screenshot(width: int, height: int, network_name: str = None, frame_b
 
     time_key: str = datetime.utcfromtimestamp(
         datetime.timestamp(datetime.now().replace(tzinfo=timezone.utc).astimezone())).strftime(
-        '%Y-%m-%d_%H_%M_%S_') + str(screenshot_count)
+        "%Y-%m-%d_%H_%M_%S_") + str(screenshot_count)
 
     os.makedirs(SCREENSHOT_PATH, exist_ok=True)
     if network_name is None:

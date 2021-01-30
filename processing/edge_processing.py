@@ -6,9 +6,9 @@ from models.network import NetworkModel
 from opengl_helper.buffer import SwappingBufferObject, BufferObject, get_buffer_settings
 from opengl_helper.compute_shader import ComputeShader
 from opengl_helper.compute_shader_handler import ComputeShaderHandler
+from opengl_helper.vertex_data_handler import VertexDataHandler
 from processing.advection_process import AdvectionProgress
 from utility.performance import track_time
-from opengl_helper.render_utility import VertexDataHandler
 from OpenGL.GL import *
 
 LOG_SOURCE: str = "EDGE_PROCESSING"
