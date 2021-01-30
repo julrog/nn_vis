@@ -133,4 +133,4 @@ dmypy.json
 /storage/
 /scripts/
 
-.config
+configs/*.config

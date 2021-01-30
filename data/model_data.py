@@ -30,6 +30,7 @@ class ModelData:
         self.data['batch_size'] = batch_size
         self.data['epochs'] = epochs
         self.data['layer_data'] = layer_data
+        self.data['num_classes'] = layer_data[len(layer_data) - 1]
         self.data['learning_rate'] = str(learning_rate)
         self.data['training_samples'] = training_samples
         self.data['test_samples'] = test_samples
@@ -41,6 +42,27 @@ class ModelData:
         self.data['train_loss'] = str(train_loss)
         self.data['train_accuracy'] = str(train_accuracy)
         self.data['classification_report'] = classification_report
+
+    def set_class_selection(self, class_selection: List[int]):
+        importance: dict = dict()
+        importance['class_selection'] = class_selection
+        self.data_file.append_main_data('processed', 'importance', importance)
+        self.data_file.write_data()
+
+    def set_importance_type(self, importance_type: int):
+        importance: dict = dict()
+        importance['importance_type'] = importance_type
+        self.data_file.append_main_data('processed', 'importance', importance)
+        self.data_file.write_data()
+
+    def get_num_classes(self) -> int:
+        return self.data_file.data_cache['overall']['basic_model']['num_classes']
+
+    def get_class_selection(self) -> List[int] or None:
+        return self.data_file.data_cache['processed']['importance']['class_selection']
+
+    def get_importance_type(self) -> int:
+        return self.data_file.data_cache['processed']['importance']['importance_type']
 
     def store_model_data(self):
         self.data_file.append_main_data("overall", "basic_model", self.data)

@@ -1,6 +1,7 @@
 import os.path
 from typing import List
 
+from neural_network_preprocessing.importance import ImportanceType
 from processing.processing_handler import RecordingProcessingHandler
 from data.mnist_data_handler import split_mnist_data
 from data.model_data import ModelData
@@ -22,9 +23,7 @@ if not os.path.exists("%smnist/mnist_train_split%s" % (DATA_PATH, split_suffix))
 pn = ProcessedNetwork(model_data=basic_model_data)
 pn.store_importance_data_layer_normalized("mnist/mnist_train_split%s" % split_suffix,
                                           "mnist/mnist_test_split%s" % split_suffix,
-                                          centering=False,
-                                          gamma_one=True,
-                                          regularize_gamma="l1")
+                                          ImportanceType(ImportanceType.GAMMA | ImportanceType.L1))
 basic_model_data.store_model_data()
 basic_model_data.save_data()
 

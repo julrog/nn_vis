@@ -1,0 +1,22 @@
+{
+    "Edge": 3,
+    "Grid": 0,
+    "Node": 2,
+    "edge_base_opacity": 0.0,
+    "edge_depth_opacity": 0.5,
+    "edge_importance_opacity": 1.1,
+    "edge_importance_threshold": 0.01,
+    "edge_object_radius": 0.04,
+    "edge_opacity_exponent": 0.5,
+    "edge_render_mode": 3,
+    "grid_render_mode": 0,
+    "node_base_opacity": 0.0,
+    "node_depth_opacity": 0.5,
+    "node_importance_opacity": 1.0,
+    "node_importance_threshold": 0.01,
+    "node_object_radius": 0.05,
+    "node_opacity_exponent": 0.5,
+    "node_render_mode": 2,
+    "screen_height": 1080.0,
+    "screen_width": 1920.0
+}

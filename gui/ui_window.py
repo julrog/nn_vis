@@ -177,19 +177,19 @@ class OptionGui:
         filename = filedialog.asksaveasfilename()
         if not filename:
             return
-        self.settings["save_processed_nn_path"] = filename
+        self.settings["save_processed_nn_path"] = filename + ".pro.npz"
         self.settings["save_file"] = True
 
     def open_processed_nn_file(self):
         filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
-                                              filetypes=(("processed nn files", "*.npz"),))
+                                              filetypes=(("processed nn files", "*.pro.npz"),))
         data_loader: ProcessedNNHandler = ProcessedNNHandler(filename)
         self.settings['network_name'] = ntpath.basename(filename) + "_processed"
         self.update_layer(data_loader.layer_data, processed_nn=data_loader)
 
     def open_importance_file(self):
         filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
-                                              filetypes=(("importance files", "*.npz"),))
+                                              filetypes=(("importance files", "*.imp.npz"),))
         data_loader: ImportanceDataHandler = ImportanceDataHandler(filename)
         self.settings['network_name'] = ntpath.basename(filename) + "_raw"
         self.update_layer(data_loader.layer_data, importance_data=data_loader)

@@ -70,6 +70,7 @@ def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learn
     model_data: ModelData = ModelData(name, model_description, model)
     model_data.set_parameter(batch_size, epochs, model_layer_nodes, learning_rate, x_train.shape[0], x_test.shape[0])
     model_data = evaluate_model(model_data, x_train, y_train, x_test, y_test)
+    model_data.set_class_selection(class_selection)
     model_data.save_model()
     model_data.store_model_data()
 

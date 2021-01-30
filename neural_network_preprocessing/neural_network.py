@@ -8,22 +8,22 @@ from tensorflow_core.python.keras.layers import BatchNormalization, Dense
 from tensorflow_core.python.keras.regularizers import l1_l2, l1, l2
 from data.model_data import ModelData
 from definitions import DATA_PATH
+from neural_network_preprocessing.importance import ImportanceType, get_importance_type_name
 
 LOG_SOURCE: str = "NEURAL_NETWORK"
 
 
-def modify_model(model: Model, class_index: int, batch_norm_centering: bool = False,
-                 importance_start_at_one: bool = False, regularize_gamma: str = "None") -> Model:
+def modify_model(model: Model, class_index: int, importance_type: ImportanceType) -> Model:
     gamma_initializer: str = "zeros"
-    if importance_start_at_one:
+    if importance_type & ImportanceType.GAMMA:
         gamma_initializer = "ones"
 
     gamma_regularizer = None
-    if regularize_gamma == "l1":
+    if importance_type & ImportanceType.L1 and not importance_type & ImportanceType.L2:
         gamma_regularizer = l1()
-    if regularize_gamma == "l2":
+    if not importance_type & ImportanceType.L1 and importance_type & ImportanceType.L2:
         gamma_regularizer = l2()
-    if regularize_gamma == "l1l2":
+    if importance_type & ImportanceType.L1 and importance_type & ImportanceType.L2:
         gamma_regularizer = l1_l2()
 
     max_layer: int = len(model.layers)
@@ -35,7 +35,7 @@ def modify_model(model: Model, class_index: int, batch_norm_centering: bool = Fa
             network_input = layer.input
         if 0 < i < max_layer:
             new_layer: Union[BatchNormalization, BatchNormalization] = BatchNormalization(
-                center=batch_norm_centering,
+                center=(importance_type & ImportanceType.CENTERING),
                 gamma_initializer=gamma_initializer,
                 gamma_regularizer=gamma_regularizer)
             last_output = new_layer(last_output)
@@ -82,9 +82,7 @@ class ProcessedNetwork:
             if i is len(model_data.model.layers) - 1:
                 self.num_classes = layer.output_shape[1]
 
-        self.centering: bool = False
-        self.gamma_one: bool = True
-        self.regularize_gamma: str = "None"
+        self.importance_type: ImportanceType = ImportanceType(0)
 
     def get_fine_tuned_model_data(self, class_index: int, train_data: Tuple[np.array, np.array],
                                   test_data: Tuple[np.array, np.array]) -> Model:
@@ -100,8 +98,7 @@ class ProcessedNetwork:
         y_test = keras.utils.to_categorical(y_test, 2)
 
         self.model_data.reload_model()
-        modified_model: Model = modify_model(self.model_data.model, class_index, self.centering, self.gamma_one,
-                                             self.regularize_gamma)
+        modified_model: Model = modify_model(self.model_data.model, class_index, self.importance_type)
 
         for layer in modified_model.layers:
             layer.trainable = False
@@ -180,17 +177,12 @@ class ProcessedNetwork:
             result_edge_importance.append(importance_values)
         return result_node_importance, result_edge_importance
 
-    def store_importance_data(self, train_data_path: str, test_data_path: str, centering: bool = False,
-                              gamma_one: bool = True, regularize_gamma: str = "l1"):
-        self.centering = centering
-        self.gamma_one = gamma_one
-        self.regularize_gamma = regularize_gamma
-
-        self.name: str = "beta_" if self.centering else "nobeta_"
-        self.name += "gammaone_" if self.gamma_one else "gammazero_"
-        if self.regularize_gamma is not "None":
-            self.name += "l1_" if self.regularize_gamma == "l1" else "l2_" if self.regularize_gamma == "l2" else "l1l2_"
-
+    def store_importance_data(self, train_data_path: str, test_data_path: str,
+                              importance_type: ImportanceType = ImportanceType(
+                                  ImportanceType.GAMMA | ImportanceType.L1)):
+        self.importance_type = importance_type
+        self.model_data.set_importance_type(importance_type)
+        self.name = get_importance_type_name(self.importance_type)
         importance_data: Tuple[List[np.array], List[np.array]] = self.generate_importance_for_data(train_data_path,
                                                                                                    test_data_path)
         node_importance_data: List[np.array] = importance_data[0]
@@ -242,7 +234,7 @@ class ProcessedNetwork:
             last_layer_node_importance.append(new_node_data)
         node_importance_data.append(last_layer_node_importance)
 
-        data_path: str = self.model_data.get_path() + self.name + "_importance_data"
+        data_path: str = self.model_data.get_path() + self.name + ".imp.npz"
         if not os.path.exists(os.path.dirname(data_path)):
             os.makedirs(os.path.dirname(data_path))
         np.savez(data_path, (node_importance_data, edge_importance_data))
@@ -255,17 +247,12 @@ class ProcessedNetwork:
         self.model_data.store_data("modified_fine_tuned_performance", self.name, "importance_value_range",
                                    importance_value_range_data)
 
-    def store_importance_data_layer_normalized(self, train_data_path: str, test_data_path: str, centering: bool = False,
-                                               gamma_one: bool = True, regularize_gamma: str = "l1"):
-        self.centering = centering
-        self.gamma_one = gamma_one
-        self.regularize_gamma = regularize_gamma
-
-        self.name: str = "beta_" if self.centering else "nobeta_"
-        self.name += "gammaone_" if self.gamma_one else "gammazero_"
-        if self.regularize_gamma is not "None":
-            self.name += "l1" if self.regularize_gamma == "l1" else "l2" if self.regularize_gamma == "l2" else "l1l2"
-
+    def store_importance_data_layer_normalized(self, train_data_path: str, test_data_path: str,
+                                               importance_type: ImportanceType = ImportanceType(
+                                                   ImportanceType.GAMMA | ImportanceType.L1)):
+        self.importance_type = importance_type
+        self.model_data.set_importance_type(importance_type)
+        self.name = get_importance_type_name(self.importance_type)
         importance_data: Tuple[List[np.array], List[np.array]] = self.generate_importance_for_data(train_data_path,
                                                                                                    test_data_path)
         node_importance_data: List[np.array] = importance_data[0]
@@ -313,7 +300,7 @@ class ProcessedNetwork:
             last_layer_node_importance.append(new_node_data)
         node_importance_data.append(last_layer_node_importance)
 
-        data_path: str = self.model_data.get_path() + self.name + "_importance_data"
+        data_path: str = self.model_data.get_path() + self.name + ".imp.npz"
         if not os.path.exists(os.path.dirname(data_path)):
             os.makedirs(os.path.dirname(data_path))
         np.savez(data_path, (node_importance_data, edge_importance_data))
@@ -323,5 +310,6 @@ class ProcessedNetwork:
         importance_value_range_data['max_node_importance'] = str(max_node_importance)
         importance_value_range_data['min_edge_importance'] = str(min_edge_importance)
         importance_value_range_data['max_edge_importance'] = str(max_edge_importance)'''
+
         self.model_data.store_data("modified_fine_tuned_performance", self.name, "importance_value_range",
                                    importance_value_range_data)
