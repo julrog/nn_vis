@@ -112,12 +112,12 @@ class ImportanceEvaluator:
     def test_model(self, importance_prune_percent: str):
         self.model_data.model.compile(loss=keras.losses.categorical_crossentropy,
                                       optimizer=keras.optimizers.Adam(0.001),
-                                      metrics=['accuracy'])
+                                      metrics=["accuracy"])
         train_score = self.model_data.model.evaluate(self.x_train, self.y_train, verbose=0)
         test_score = self.model_data.model.evaluate(self.x_test, self.y_test, verbose=0)
 
-        logging.info('Train loss: %f, Train accuracy: %f' % (train_score[0], train_score[1]))
-        logging.info('Test loss: %f, Test accuracy: %f' % (test_score[0], test_score[1]))
+        logging.info("Train loss: %f, Train accuracy: %f" % (train_score[0], train_score[1]))
+        logging.info("Test loss: %f, Test accuracy: %f" % (test_score[0], test_score[1]))
 
         truth_train: np.array = np.argmax(self.y_train, axis=1)  # Convert one-hot to index
         prediction_train: np.array = self.model_data.model.predict_classes(self.x_train)
@@ -128,12 +128,12 @@ class ImportanceEvaluator:
         test_class_accuracy_report: Dict[str, any] = self.accuracy_report(truth_test, prediction_test)
 
         importance_prune_data: Dict[str, any] = dict()
-        importance_prune_data['train_loss'] = str(train_score[0])
-        importance_prune_data['train_accuracy'] = str(train_score[1])
-        importance_prune_data['test_loss'] = str(test_score[0])
-        importance_prune_data['test_accuracy'] = str(test_score[1])
-        importance_prune_data['train_class_accuracy'] = train_class_accuracy_report
-        importance_prune_data['test_class_accuracy'] = test_class_accuracy_report
+        importance_prune_data["train_loss"] = str(train_score[0])
+        importance_prune_data["train_accuracy"] = str(train_score[1])
+        importance_prune_data["test_loss"] = str(test_score[0])
+        importance_prune_data["test_accuracy"] = str(test_score[1])
+        importance_prune_data["train_class_accuracy"] = train_class_accuracy_report
+        importance_prune_data["test_class_accuracy"] = test_class_accuracy_report
         self.model_data.store_data(
             get_importance_type_name(self.importance_type) + str(self.relevant_classes),
             importance_prune_percent,

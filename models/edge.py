@@ -17,8 +17,8 @@ class Edge:
             self.sample_data.append(sd)
         return self
 
-    def importance_init(self, num_classes: int, padding: int, start_node: Node, end_node: Node, layer_id: int, layer_edge_id: int,
-                        importance: float):
+    def importance_init(self, num_classes: int, padding: int, start_node: Node, end_node: Node, layer_id: int,
+                        layer_edge_id: int, importance: float):
         self.data = []
         self.data = [2.0, layer_id, layer_edge_id, importance, start_node.data[num_classes + 5],
                      end_node.data[num_classes + 5], start_node.data[num_classes + 4], end_node.data[num_classes + 4]]
@@ -73,14 +73,16 @@ def create_edges_random(layer_nodes: List[List[Node]], num_classes: int, padding
         layer_edges: List[Edge] = []
         for node_one_i, node_one in enumerate(layer_nodes[i]):
             for node_two_i, node_two in enumerate(layer_nodes[i + 1]):
-                new_edge: Edge = Edge().random_importance_init(num_classes, padding, node_one, node_two, i, node_one_i * len(
-                    layer_nodes[i + 1]) + node_two_i)
+                new_edge: Edge = Edge().random_importance_init(num_classes, padding, node_one, node_two, i,
+                                                               node_one_i * len(
+                                                                   layer_nodes[i + 1]) + node_two_i)
                 layer_edges.append(new_edge)
         edges.append(layer_edges)
     return edges
 
 
-def create_edges_importance(layer_nodes: List[List[Node]], edge_data: np.array, num_classes: int, padding: int) -> List[List[Edge]]:
+def create_edges_importance(layer_nodes: List[List[Node]], edge_data: np.array, num_classes: int, padding: int) -> List[
+    List[Edge]]:
     edges: List[List[Edge]] = []
     for i in range(len(layer_nodes) - 1):
         layer_edges: List[Edge] = []
@@ -103,27 +105,3 @@ def create_edges_processed(edge_data: np.array, sample_data: np.array) -> List[L
                 layer_edges.append(edge)
         edges.append(layer_edges)
     return edges
-
-
-'''def create_edges_processed(edge_data: np.array, sample_data: np.array) -> Tuple[
-    List[List[List[Edge]]], int, float, float]:
-    edge_count: int = 0
-    edge_min_importance: float = 10000.0
-    edge_max_importance: float = 0.0
-
-    edges: List[List[List[Edge]]] = []
-    for layer_edge_data, layer_sample_data in zip(self.edge_data, self.sample_data):
-        layer_edges: List[List[Edge]] = []
-        for container_edge_data, container_sample_data in zip(layer_edge_data, layer_sample_data):
-            container_edges: List[Edge] = []
-            for edge_data, sample_data in zip(container_edge_data, container_sample_data):
-                edge: Edge = Edge().data_init(edge_data, sample_data)
-                container_edges.append(edge)
-                if edge_min_importance > edge.data[3] * edge.data[6]:
-                    edge_min_importance = edge.data[3] * edge.data[6]
-                if edge_max_importance < edge.data[3] * edge.data[6]:
-                    edge_max_importance = edge.data[3] * edge.data[6]
-            edge_count += len(container_edges)
-            layer_edges.append(container_edges)
-        edges.append(layer_edges)
-    return edges, edge_count, edge_min_importance, edge_max_importance'''

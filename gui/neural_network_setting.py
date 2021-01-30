@@ -1,8 +1,9 @@
 from tkinter import LabelFrame, Button, Entry, Label, END
+from typing import Callable
 
 
 class LayerSettings:
-    def __init__(self, root: LabelFrame, layer_id: int, row: int, column: int, remove_func):
+    def __init__(self, root: LabelFrame, layer_id: int, row: int, column: int, remove_func: Callable):
         self.layer_id: int = layer_id
         self.row: int = row
         self.column: int = column

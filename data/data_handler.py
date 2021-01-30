@@ -7,7 +7,7 @@ from opengl_helper.buffer import get_buffer_object_size
 
 class ImportanceDataHandler:
     def __init__(self, path: str):
-        node_importance_data, edge_importance_data = np.load(path, allow_pickle=True)['arr_0']
+        node_importance_data, edge_importance_data = np.load(path, allow_pickle=True)["arr_0"]
         self.node_importance_data: List[List[List[float]]] = node_importance_data
         self.edge_importance_data: List[List[List[float]]] = edge_importance_data
         self.layer_data: List[int] = []
@@ -17,7 +17,7 @@ class ImportanceDataHandler:
 
 class ProcessedNNHandler:
     def __init__(self, path: str):
-        layer_data, node_data, edge_data, sample_data, max_sample_points = np.load(path, allow_pickle=True)['arr_0']
+        layer_data, node_data, edge_data, sample_data, max_sample_points = np.load(path, allow_pickle=True)["arr_0"]
         self.layer_data: List[int] = layer_data
         num_classes: int = layer_data[len(layer_data) - 1]
 

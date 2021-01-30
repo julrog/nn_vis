@@ -1,6 +1,8 @@
 import logging
 import threading
 import time
+
+from gui.constants import StatisticLink
 from gui.ui_window import OptionGui
 from opengl_helper.screenshot import create_screenshot
 from processing.network_processing import NetworkProcessor
@@ -44,14 +46,15 @@ def compute_render(some_name: str):
             network_processor.process(options.settings["action_state"])
             network_processor.render(window.cam, options.render_config, options.settings["show_class"])
 
-        if "sample_count" in options.settings:
-            options.settings["sample_count"].set(network_processor.edge_processor.point_count)
-        if "edge_count" in options.settings:
-            options.settings["edge_count"].set(network_processor.edge_processor.get_edge_count())
-        if "cell_count" in options.settings:
-            options.settings["cell_count"].set(network_processor.grid_processor.grid.grid_cell_count_overall)
-        if "pruned_edges" in options.settings:
-            options.settings["pruned_edges"].set(network_processor.network.pruned_edges)
+        if StatisticLink.SAMPLE_COUNT in options.settings:
+            options.settings[StatisticLink.SAMPLE_COUNT].set(network_processor.edge_processor.point_count)
+        if StatisticLink.EDGE_COUNT in options.settings:
+            options.settings[StatisticLink.EDGE_COUNT].set(network_processor.edge_processor.get_edge_count())
+        if StatisticLink.CELL_COUNT in options.settings:
+            options.settings[StatisticLink.CELL_COUNT].set(
+                network_processor.grid_processor.grid.grid_cell_count_overall)
+        if StatisticLink.PRUNED_EDGES in options.settings:
+            options.settings[StatisticLink.PRUNED_EDGES].set(network_processor.network.pruned_edges)
 
         window.swap()
 
@@ -104,8 +107,8 @@ def compute_render(some_name: str):
 
             frame_count += 1
             if time.perf_counter() - check_time > 1.0:
-                options.settings["fps"].set(
-                    float("{:.2f}".format(float(frame_count - checked_frame_count) / (time.perf_counter() - check_time))))
+                options.settings[StatisticLink.FPS].set(float(
+                    "{:.2f}".format(float(frame_count - checked_frame_count) / (time.perf_counter() - check_time))))
                 checked_frame_count = frame_count
                 check_time = time.perf_counter()
             if "save_file" in options.settings.keys() and options.settings["save_file"]:
@@ -114,9 +117,9 @@ def compute_render(some_name: str):
 
             current_time: float = time.perf_counter()
             elapsed_time: float = current_time - last_time
-            if elapsed_time < 1.0/fps:
+            if elapsed_time < 1.0 / fps:
                 if elapsed_time > 0.001:
-                    to_pause_time += (float(frame_count - last_frame_count)/fps) - elapsed_time
+                    to_pause_time += (float(frame_count - last_frame_count) / fps) - elapsed_time
                     last_frame_count = frame_count
                     last_time = current_time
 
@@ -128,7 +131,7 @@ def compute_render(some_name: str):
             else:
                 last_frame_count = frame_count
                 last_time = current_time
-                to_pause_time = 0 if to_pause_time < 0 else to_pause_time - (elapsed_time - 1.0/fps)
+                to_pause_time = 0 if to_pause_time < 0 else to_pause_time - (elapsed_time - 1.0 / fps)
 
         network_processor.delete()
 

@@ -4,8 +4,8 @@
     "layer_distance": 1.0,
     "layer_width": 1.0,
     "node_bandwidth_reduction": 0.95,
-    "prune_percentage": 0.0,
-    "sampling_rate": 10.0,
+    "prune_percentage": 0.2,
+    "sampling_rate": 15.0,
     "smoothing": true,
     "smoothing_iterations": 8
 }

@@ -1,13 +1,12 @@
 from tkinter import LabelFrame, IntVar, Radiobutton, Button
-from typing import List, Dict
+from typing import List, Dict, Callable
 from gui.general_setting import SettingEntry
 from rendering.rendering_config import RenderingConfig
 
 
 class RenderSettings:
-    def __init__(self, root: LabelFrame, name: str, change_setting_func, config: RenderingConfig, render_mode: str,
-                 shader_settings: List[str] = None, row: int = 0,
-                 column: int = 0):
+    def __init__(self, root: LabelFrame, name: str, change_setting_func: Callable, config: RenderingConfig,
+                 render_mode: str, shader_settings: List[str] = None, row: int = 0, column: int = 0):
         self.name: str = name
         self.render_frame: LabelFrame = LabelFrame(root, text=self.name, width=60, padx=1, pady=1)
         self.render_mode: IntVar = IntVar(value=config[render_mode])
@@ -15,7 +14,7 @@ class RenderSettings:
         self.shader_settings: Dict[str, SettingEntry] = dict()
         self.shader_setting_frame: LabelFrame = LabelFrame(self.render_frame, text="Shader Settings", padx=1, pady=1)
 
-        def create_apply_func(function, inner_func):
+        def create_apply_func(function: Callable, inner_func: Callable) -> Callable:
             def command():
                 function(inner_func)
 
@@ -24,7 +23,7 @@ class RenderSettings:
         self.apply_settings: Button = Button(self.shader_setting_frame, text="Apply",
                                              command=create_apply_func(self.get_settings, change_setting_func))
 
-        def create_radio_func(setting_value: int):
+        def create_radio_func(setting_value: int) -> Callable:
             def command():
                 change_setting_func(render_mode, setting_value)
 
@@ -37,7 +36,6 @@ class RenderSettings:
             self.render_radio_buttons[i].grid(row=i, column=0)
 
         change_setting_func(self.name, config[render_mode])
-        # create_radio_func(config[render_mode])()
 
         if shader_settings is not None:
             for i, setting in enumerate(shader_settings):
@@ -50,6 +48,6 @@ class RenderSettings:
 
         self.get_settings(change_setting_func)
 
-    def get_settings(self, change_setting_func):
+    def get_settings(self, change_setting_func: Callable):
         for key, entry in self.shader_settings.items():
             change_setting_func(key, entry.get())
