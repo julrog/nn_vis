@@ -1,7 +1,5 @@
 from OpenGL.GL import *
 
-LOG_SOURCE: str = "FRAMEBUFFER"
-
 
 class FrameBufferObject:
     def __init__(self, width: int, height: int):

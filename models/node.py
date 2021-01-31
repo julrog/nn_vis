@@ -1,7 +1,8 @@
 import math
 import random
-import numpy as np
 from typing import List, Tuple
+
+import numpy as np
 from pyrr import Vector3
 
 from definitions import ADDITIONAL_NODE_BUFFER_DATA
@@ -174,7 +175,7 @@ def create_nodes_with_importance(layer_nodes: List[int],
                 len(current_layer_nodes),
                 input_edges,
                 output_edges
-            ).importance_init(num_classes, position, node_importance_data[layer][0]))
+            ).importance_init(num_classes, padding, position, node_importance_data[layer][0]))
         else:
             node_size_x: float = node_size
             node_size_y: float = node_size

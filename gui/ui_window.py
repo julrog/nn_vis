@@ -2,12 +2,13 @@ import ntpath
 from tkinter import *
 from tkinter import filedialog, messagebox
 from typing import List, Dict
-from definitions import DATA_PATH
+
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
-from gui.general_setting import SettingField, RadioButtons
+from definitions import DATA_PATH
+from gui.frame_building import set_render_frame, set_architecture_frame, set_stat_frame, set_processing_frame
+from gui.general_setting import RadioButtons
 from gui.neural_network_setting import LayerSettings
 from gui.processing_setting import ProcessingSetting
-from gui.render_setting import RenderSettings
 from processing.processing_config import ProcessingConfig
 from rendering.rendering_config import RenderingConfig
 from utility.window_config import WindowConfig
@@ -15,147 +16,38 @@ from utility.window_config import WindowConfig
 
 class OptionGui:
     def __init__(self):
-        self.window_config: WindowConfig = WindowConfig('ui')
+        self.window_config: WindowConfig = WindowConfig("ui")
 
         self.gui_root: Tk = Tk()
         self.layer_settings: List[LayerSettings] = []
-        self.settings: Dict[str, any] = {"Closed": False, "current_layer_data": []}
+        self.settings: Dict[any, any] = {"Closed": False, "current_layer_data": []}
         self.render_config: RenderingConfig = RenderingConfig()
         self.processing_config: ProcessingConfig = ProcessingConfig()
 
         self.gui_root.title("NNVIS Options")
 
-        # - Stats shown in the GUI ----------------------------------------------------------------------------------- #
-        self.stats_frame: LabelFrame = LabelFrame(self.gui_root, text="Statistics", width=60, padx=5, pady=5)
-        self.stats_frame.grid(row=0, column=0, padx=5, pady=5)
-        self.field_text: dict = {"edge_count": "Edges", "sample_count": "Samples", "cell_count": "Grid Cells",
-                                 "pruned_edges": "Pruned Edges", "fps": "FPS"}
-        stats_rows: int = 0
-        for field in self.field_text.keys():
-            self.settings[field] = SettingField(self.stats_frame, self.field_text[field] + ":", row=stats_rows,
-                                                column=0)
-            stats_rows += 1
-        # ------------------------------------------------------------------------------------------------------------ #
+        set_stat_frame(self.gui_root, self.settings)
 
-        # - Architecture section of the GUI -------------------------------------------------------------------------- #
-        self.architecture_frame: LabelFrame = LabelFrame(self.gui_root, text="Neural Network Architecture", width=60,
-                                                         padx=5, pady=5)
-        self.architecture_frame.grid(row=1, column=0, rowspan=2, padx=5, pady=5)
-        self.architecture_buttons: List[Button] = []
-        self.save_processed_button: Button = Button(self.architecture_frame, text="Save Processed Network", width=20,
-                                                    command=self.save_processed_nn_file)
-        self.save_processed_button.grid(row=0, column=0, columnspan=3)
-        self.load_processed_button: Button = Button(self.architecture_frame, text="Load Processed Network", width=20,
-                                                    command=self.open_processed_nn_file)
-        self.load_processed_button.grid(row=1, column=0, columnspan=3)
-        self.load_button: Button = Button(self.architecture_frame, text="Load Network", width=20,
-                                          command=self.open_importance_file)
-        self.load_button.grid(row=2, column=0, columnspan=3)
-        self.generate_button: Button = Button(self.architecture_frame, text="Generate Network", width=20,
-                                              command=self.generate)
-        self.generate_button.grid(row=3, column=0, columnspan=3)
-        self.layer_label: Label = Label(self.architecture_frame, text="Modify:")
-        self.add_layer_button: Button = Button(self.architecture_frame, text="Add Layer", command=self.add_layer)
-        self.clear_layer_button: Button = Button(self.architecture_frame, text="Clear Layer", command=self.clear_layer)
-        self.layer_label.grid(row=4, column=0)
-        self.add_layer_button.grid(row=4, column=1)
-        self.clear_layer_button.grid(row=4, column=2)
-        # ------------------------------------------------------------------------------------------------------------ #
+        architecture, layer_label = set_architecture_frame(self.gui_root, self.save_processed_nn_file,
+                                                           self.open_processed_nn_file, self.open_importance_file,
+                                                           self.generate, self.add_layer, self.clear_layer)
+        self.architecture_frame: LabelFrame = architecture
+        self.layer_label: Label = layer_label
+        self.class_show_options: RadioButtons = set_render_frame(self.gui_root, self.change_render_config,
+                                                                 self.change_setting, self.render_config)
 
-        # - Render settings section of the GUI ----------------------------------------------------------------------- #
-        self.render_frame: LabelFrame = LabelFrame(self.gui_root, text="Render Settings", width=60,
-                                                   padx=5, pady=5)
-        self.render_frame.grid(row=0, column=3, columnspan=2, rowspan=3, padx=5, pady=5)
-
-        self.grid_render_settings: RenderSettings = \
-            RenderSettings(self.render_frame,
-                           "Grid",
-                           self.change_render_config,
-                           self.render_config,
-                           "grid_render_mode",
-                           None,
-                           row=0,
-                           column=0)
-        edge_shader_settings: List[str] = ["edge_object_radius", "edge_base_opacity", "edge_importance_opacity",
-                                           "edge_depth_opacity", "edge_opacity_exponent", "edge_importance_threshold"]
-        self.edge_render_settings: RenderSettings = \
-            RenderSettings(self.render_frame,
-                           "Edge",
-                           self.change_render_config,
-                           self.render_config,
-                           "edge_render_mode",
-                           edge_shader_settings,
-                           row=1,
-                           column=0)
-        node_shader_settings: List[str] = ["node_object_radius", "node_base_opacity", "node_importance_opacity",
-                                           "node_depth_opacity", "node_opacity_exponent", "node_importance_threshold"]
-        self.node_render_settings: RenderSettings = \
-            RenderSettings(self.render_frame,
-                           "Node",
-                           self.change_render_config,
-                           self.render_config,
-                           "node_render_mode",
-                           node_shader_settings,
-                           row=2,
-                           column=0)
-
-        self.class_setting_frame: LabelFrame = LabelFrame(self.render_frame, text="Class Visibility", width=60,
-                                                          padx=5, pady=5)
-        self.class_setting_frame.grid(row=0, column=1, rowspan=3, padx=5, pady=5)
-        self.class_show: IntVar = IntVar(value=0)
-
-        show_class_names: List[str] = ["Independent", "All"]
-        for class_id in range(9):
-            show_class_names.append("Class " + str(class_id))
-        self.class_show_options: RadioButtons = RadioButtons(self.class_setting_frame,
-                                                             show_class_names, self.class_show,
-                                                             command=self.change_setting, option="show",
-                                                             sub_option="class", row=0, column=0, width=10, height=2)
-        # ------------------------------------------------------------------------------------------------------------ #
-
-        # - Processing section of the GUI --------------------------------------------------------------------- #
-        self.processing_frame: LabelFrame = LabelFrame(self.gui_root, text="Processing", width=60, padx=5, pady=5)
-        self.processing_frame.grid(row=0, column=1, columnspan=2, rowspan=3, padx=5, pady=5)
-
-        self.action_frame: LabelFrame = LabelFrame(self.processing_frame, text="Actions", width=60,
-                                                   padx=5, pady=5)
-        self.action_frame.grid(row=1, column=0, rowspan=2, padx=5, pady=5)
-        self.sample_button: Button = Button(self.action_frame, text="Resample Edges", width=15,
-                                            command=lambda: self.change_setting("trigger_network", "sample", 1, True))
-        self.sample_button.grid(row=0, column=0)
-        self.action_state: IntVar = IntVar(value=0)
-        self.action_buttons: RadioButtons = RadioButtons(self.action_frame,
-                                                         ["Stop Everything", "Node Advect", "Node Diverge",
-                                                          "Node Noise", "Edge Advect", "Edge Diverge", "Edge Noise"],
-                                                         self.action_state, command=self.change_setting,
-                                                         option="action", sub_option="state", row=2, column=0)
-
-        self.smoothing_status: IntVar = IntVar(value=self.processing_config["smoothing"])
-        self.smoothing_checkbox: Checkbutton = Checkbutton(self.action_frame, text="Smoothing",
-                                                           variable=self.smoothing_status,
-                                                           command=lambda: self.change_processing_config(
-                                                               "smoothing",
-                                                               self.smoothing_status.get()))
-        self.change_setting("edge", "smoothing", self.smoothing_status.get())
-        self.smoothing_checkbox.grid(row=1, column=0)
-
-        self.setting_frame: LabelFrame = LabelFrame(self.processing_frame, text="Settings", width=60,
-                                                    padx=5, pady=5)
-        self.setting_frame.grid(row=0, column=0, padx=5, pady=5)
-        self.processing_setting: ProcessingSetting = ProcessingSetting(self.processing_config, self.setting_frame)
-
-        # ------------------------------------------------------------------------------------------------------------ #
+        action_buttons, processing_setting = set_processing_frame(self.gui_root, self.processing_config,
+                                                                  self.change_setting, self.change_processing_config)
+        self.action_buttons: RadioButtons = action_buttons
+        self.processing_setting: ProcessingSetting = processing_setting
 
         self.gui_root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        screen_width = self.gui_root.winfo_reqwidth()
-        screen_height = self.gui_root.winfo_reqheight()
-        self.gui_root.geometry(
-            '+%d+%d' % (self.window_config['screen_x'], self.window_config['screen_y']))
+        self.gui_root.geometry("+%d+%d" % (self.window_config["screen_x"], self.window_config["screen_y"]))
         self.gui_root.bind("<Configure>", self.handle_configure)
 
     def start(self, layer_data: List[int] = None):
         if layer_data is None:
-            default_layer_data = [4, 9, 9]
+            default_layer_data = [4, 9, 10]
             for nodes in default_layer_data:
                 self.add_layer(nodes)
         else:
@@ -169,29 +61,29 @@ class OptionGui:
         self.settings["Closed"] = True
 
     def handle_configure(self, event):
-        self.window_config['screen_x'] = self.gui_root.winfo_x()
-        self.window_config['screen_y'] = self.gui_root.winfo_y()
+        self.window_config["screen_x"] = self.gui_root.winfo_x()
+        self.window_config["screen_y"] = self.gui_root.winfo_y()
         self.window_config.store()
 
     def save_processed_nn_file(self):
         filename = filedialog.asksaveasfilename()
         if not filename:
             return
-        self.settings["save_processed_nn_path"] = filename
+        self.settings["save_processed_nn_path"] = filename + ".pro.npz"
         self.settings["save_file"] = True
 
     def open_processed_nn_file(self):
         filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
-                                              filetypes=(("processed nn files", "*.npz"),))
+                                              filetypes=(("processed nn files", "*.pro.npz"),))
         data_loader: ProcessedNNHandler = ProcessedNNHandler(filename)
-        self.settings['network_name'] = ntpath.basename(filename) + "_processed"
+        self.settings["network_name"] = ntpath.basename(filename) + "_processed"
         self.update_layer(data_loader.layer_data, processed_nn=data_loader)
 
     def open_importance_file(self):
         filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
-                                              filetypes=(("importance files", "*.npz"),))
+                                              filetypes=(("importance files", "*.imp.npz"),))
         data_loader: ImportanceDataHandler = ImportanceDataHandler(filename)
-        self.settings['network_name'] = ntpath.basename(filename) + "_raw"
+        self.settings["network_name"] = ntpath.basename(filename) + "_raw"
         self.update_layer(data_loader.layer_data, importance_data=data_loader)
 
     def update_layer(self, layer_data: List[int], importance_data: ImportanceDataHandler = None,

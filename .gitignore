@@ -132,3 +132,5 @@ dmypy.json
 .pyre/
 /storage/
 /scripts/
+
+configs/*.config

@@ -15,9 +15,9 @@ struct EdgeData
     float end_importance_length;
     float start_importance;
     float end_importance;
-    $$float start_importance_$r_class_id$;$$
-    $$float end_importance_$r_class_id$;$$
-    $$float padding_$r_edgebuffer_padding_id$;$$
+    //$$float start_importance_$r_class_id$;$$
+    //$$float end_importance_$r_class_id$;$$
+    //$$float padding_$r_edgebuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;

@@ -1,7 +1,9 @@
 import math
 from typing import Dict, Tuple, List
+
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
+
 from opengl_helper.shader import BaseShader
 from opengl_helper.texture import Texture
 
@@ -17,7 +19,7 @@ class ComputeShader(BaseShader):
     def compute(self, width: int, barrier: bool = False):
         for i in range(math.ceil(width / self.max_workgroup_size)):
             self.set_uniform_data(
-                [('work_group_offset', i * self.max_workgroup_size, 'int')])
+                [("work_group_offset", i * self.max_workgroup_size, "int")])
 
             for texture, flag, image_position in self.textures:
                 texture.bind_as_image(flag, image_position)
@@ -33,5 +35,6 @@ class ComputeShader(BaseShader):
         if barrier:
             self.barrier()
 
-    def barrier(self):
+    @staticmethod
+    def barrier():
         glMemoryBarrier(GL_ALL_BARRIER_BITS)

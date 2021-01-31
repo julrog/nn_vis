@@ -1,14 +1,13 @@
 import abc
 from typing import List, Dict, Callable
 
-from opengl_helper.render_utility import BaseRenderSet, VertexDataHandler, OverflowingVertexDataHandler, \
-    OverflowingRenderSet, LayeredVertexDataHandler, LayeredRenderSet, RenderSet, BaseDataHandler
+from opengl_helper.data_set import BaseRenderSet, OverflowingRenderSet, LayeredRenderSet, RenderSet
 from opengl_helper.shader import RenderShader, ShaderSetting
 from opengl_helper.shader_handler import RenderShaderHandler
+from opengl_helper.vertex_data_handler import BaseDataHandler, OverflowingVertexDataHandler, LayeredVertexDataHandler, \
+    VertexDataHandler
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
-
-LOG_SOURCE = "RENDERING"
 
 
 class Renderer:

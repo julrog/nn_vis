@@ -1,6 +1,7 @@
 from typing import List
-from pyrr import Vector3
+
 import numpy as np
+from pyrr import Vector3
 
 from definitions import ADDITIONAL_NODE_BUFFER_DATA
 from models.network import NetworkModel
@@ -8,15 +9,13 @@ from models.node import Node
 from opengl_helper.buffer import SwappingBufferObject, get_buffer_settings
 from opengl_helper.compute_shader import ComputeShader
 from opengl_helper.compute_shader_handler import ComputeShaderHandler
+from opengl_helper.vertex_data_handler import VertexDataHandler
 from utility.performance import track_time
-from opengl_helper.render_utility import VertexDataHandler
-
-LOG_SOURCE: str = "NODE_PROCESSING"
 
 
 class NodeProcessor:
     def __init__(self, network: NetworkModel):
-        self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("node_noise", "node/node_noise.comp")
+        ComputeShaderHandler().create("node_noise", "node/node_noise.comp")
 
         object_size, render_data_offset, render_data_size = \
             get_buffer_settings(network.num_classes, ADDITIONAL_NODE_BUFFER_DATA)
@@ -38,7 +37,6 @@ class NodeProcessor:
         self.set_data()
 
     def set_data(self):
-        # generate and load initial data for the buffer
         initial_data: List[float] = []
         for node in self.nodes:
             initial_data.extend(node.data)
@@ -49,14 +47,10 @@ class NodeProcessor:
 
     @track_time
     def node_noise(self, sample_length: float, strength: float = 1.0):
+        noise: ComputeShader = ComputeShaderHandler().get("node_noise")
+        noise.set_uniform_data([("noise_strength", strength, "float"), ("sample_length", sample_length, "float")])
         self.ssbo_handler.set()
-
-        self.noise_compute_shader.set_uniform_data([
-            ('noise_strength', strength, 'float'),
-            ('sample_length', sample_length, 'float')
-        ])
-        self.noise_compute_shader.compute(len(self.nodes), barrier=True)
-
+        noise.compute(len(self.nodes), barrier=True)
         self.node_buffer.swap()
 
     @track_time

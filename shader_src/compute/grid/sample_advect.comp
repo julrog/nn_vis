@@ -8,8 +8,8 @@ struct SamplePoint
 struct DensityGrid
 {
     uint overall_density;
-    $$uint density_$r_class_id$;$$
-    $$uint padding_$r_densitybuffer_padding_id$;$$
+    //$$uint density_$r_class_id$;$$
+    //$$uint padding_$r_densitybuffer_padding_id$;$$
 };
 
 struct EdgeData
@@ -22,9 +22,9 @@ struct EdgeData
     float end_importance_length;
     float start_importance;
     float end_importance;
-    $$float start_importance_$r_class_id$;$$
-    $$float end_importance_$r_class_id$;$$
-    $$float padding_$r_edgebuffer_padding_id$;$$
+    //$$float start_importance_$r_class_id$;$$
+    //$$float end_importance_$r_class_id$;$$
+    //$$float padding_$r_edgebuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -65,7 +65,7 @@ uniform vec3 grid_cell_size;
 uniform vec3 grid_bounding_min;
 
 EdgeData current_edge;
-float importance[$num_classes$];
+//$float importance[$num_classes$];
 float overall_importance;
 
 ivec3 gridIndex(vec3 position)
@@ -113,14 +113,14 @@ highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to)
     highp float drive_from = 0.0;
 
     highp float towards_density_overall = sqrt(0
-    $$+ density_to.density_$r_class_id$ * density_to.density_$r_class_id$ $$
+    //$$+ density_to.density_$r_class_id$ * density_to.density_$r_class_id$ $$
     );
     highp float from_density_overall = sqrt(0
-    $$+ density_from.density_$r_class_id$ * density_from.density_$r_class_id$ $$
+    //$$+ density_from.density_$r_class_id$ * density_from.density_$r_class_id$ $$
     );
 
-    $$drive_towards += importance[$r_class_id$] * (density_to.density_$r_class_id$/towards_density_overall);$$
-    $$drive_from += importance[$r_class_id$] * (density_from.density_$r_class_id$/from_density_overall);$$
+    //$$drive_towards += importance[$r_class_id$] * (density_to.density_$r_class_id$/towards_density_overall);$$
+    //$$drive_from += importance[$r_class_id$] * (density_from.density_$r_class_id$/from_density_overall);$$
 
     return float(towards_density_overall * (drive_towards - importance_similarity) - from_density_overall * (drive_from - importance_similarity));
 }
@@ -148,20 +148,20 @@ void main() {
         current_edge = readEdge(index);
         if (edge_importance_type == 0) {
             float t = mod(index, max_sample_points)/current_edge.samples;
-            $$importance[$r_class_id$] = (1.0 - t) * current_edge.start_importance_$r_class_id$/current_edge.start_importance_length + t * current_edge.end_importance_$r_class_id$/current_edge.end_importance_length;$$
+            //$$importance[$r_class_id$] = (1.0 - t) * current_edge.start_importance_$r_class_id$/current_edge.start_importance_length + t * current_edge.end_importance_$r_class_id$/current_edge.end_importance_length;$$
             overall_importance = ((1.0 - t) * current_edge.start_importance + t * current_edge.end_importance) * current_edge.importance;
         }
         if (edge_importance_type == 1) {
-            $$importance[$r_class_id$] = current_edge.start_importance_$r_class_id$/current_edge.start_importance_length;$$
+            //$$importance[$r_class_id$] = current_edge.start_importance_$r_class_id$/current_edge.start_importance_length;$$
             overall_importance = current_edge.start_importance * current_edge.importance;
         }
         if (edge_importance_type == 2) {
             highp float divisor = current_edge.start_importance_length + current_edge.end_importance_length;
-            $$importance[$r_class_id$] = (current_edge.start_importance_$r_class_id$ + current_edge.end_importance_$r_class_id$)/divisor;$$
+            //$$importance[$r_class_id$] = (current_edge.start_importance_$r_class_id$ + current_edge.end_importance_$r_class_id$)/divisor;$$
             overall_importance = (current_edge.start_importance + current_edge.end_importance) * current_edge.importance;
         }
         if (edge_importance_type == 3) {
-            $$importance[$r_class_id$] = current_edge.end_importance_$r_class_id$/current_edge.end_importance_length;$$
+            //$$importance[$r_class_id$] = current_edge.end_importance_$r_class_id$/current_edge.end_importance_length;$$
             overall_importance = current_edge.end_importance * current_edge.importance;
         }
 

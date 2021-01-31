@@ -1,4 +1,5 @@
 from typing import Dict, List, Tuple
+
 from utility.config import BaseConfig
 
 
@@ -21,7 +22,7 @@ class ProcessingConfig(BaseConfig):
                               ("prune_percentage", "Prune percentage", "float", 0.0),
                               ("node_bandwidth_reduction", "Node bandwidth reduction", "float", 0.95),
                               ("edge_bandwidth_reduction", "Edge bandwidth reduction", "float", 0.90),
-                              ("edge_importance_type", "Edge importance type", "int", 1)])
+                              ("edge_importance_type", "Edge importance type", "int", 0)])
 
         for key, label, valueType, value in setting_items:
             self.label[key] = label

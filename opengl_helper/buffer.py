@@ -1,9 +1,9 @@
+import logging
 import math
 from typing import List, Tuple
+
 import numpy as np
 from OpenGL.GL import *
-
-LOG_SOURCE: str = "BUFFER"
 
 
 def get_buffer_object_size(num_classes: int, additional_data: int) -> int:
@@ -46,8 +46,7 @@ class BufferObject:
         self.size = data.nbytes
         if self.ssbo:
             if data.nbytes > self.max_ssbo_size:
-                raise Exception("[%s] Data to big for SSBO (%d bytes, max %d bytes)." % (
-                    LOG_SOURCE, data.nbytes, self.max_ssbo_size))
+                raise Exception("Data to big for SSBO (%d bytes, max %d bytes)." % (data.nbytes, self.max_ssbo_size))
 
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.handle)
             glBufferData(GL_SHADER_STORAGE_BUFFER, data.nbytes, data, GL_STATIC_DRAW)
@@ -169,7 +168,7 @@ class OverflowingBufferObject:
             empty = np.zeros(int(self.max_ssbo_size / 4), dtype=dtype)
             buffer_count = math.ceil(
                 int(size / component_size) / int(self.max_ssbo_size / (component_size * self.object_size * 4)))
-            print("[%s] Data split into %i buffer" % (LOG_SOURCE, buffer_count))
+            logging.info("Data split into %i buffer" % buffer_count)
             for i in range(buffer_count):
                 if i >= len(self.handle):
                     self.handle.append(glGenBuffers(1))

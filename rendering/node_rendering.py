@@ -1,11 +1,14 @@
-from typing import List, Tuple, Callable
+from typing import List, Callable
 
 from OpenGL.GL import *
+
 from models.grid import Grid
-from opengl_helper.render_utility import VertexDataHandler, BaseRenderSet, generate_render_function, OGLRenderFunction
+from opengl_helper.data_set import BaseRenderSet
+from opengl_helper.render_utility import generate_render_function, OGLRenderFunction
 from opengl_helper.shader import ShaderSetting
+from opengl_helper.vertex_data_handler import VertexDataHandler
 from processing.node_processing import NodeProcessor
-from rendering.rendering import Renderer
+from rendering.renderer import Renderer
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.performance import track_time
@@ -66,7 +69,7 @@ class NodeRenderer(Renderer):
                                       ("view", cam.view, "mat4"),
                                       ("farthest_point_view_z", far, "float"),
                                       ("nearest_point_view_z", near, "float"),
-                                      ('show_class', show_class, 'int')])
+                                      ("show_class", show_class, "int")])
         current_set.set_uniform_labeled_data(config)
         current_set.render()
 

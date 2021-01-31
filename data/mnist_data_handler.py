@@ -1,15 +1,15 @@
+import logging
 import os
 from typing import List, Tuple, Any
-from tensorflow import keras
+
 import numpy as np
+from tensorflow import keras
 from tensorflow_core.python.keras.datasets import mnist
 
 from definitions import DATA_PATH
 
-LOG_SOURCE: str = "MNIST_DATA_HANDLER"
 
-
-def get_basic_data() -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Any, Any]:
+def get_basic_data(categorical: bool = False) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Any, Any]:
     num_classes: int = 10
     img_size: int = 28 * 28
 
@@ -19,10 +19,14 @@ def get_basic_data() -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Any, Any]:
     x_test = x_test.reshape(x_test.shape[0], img_size, 1)
     input_shape = (img_size, 1)
 
-    x_train = x_train.astype('float32')
-    x_test = x_test.astype('float32')
+    x_train = x_train.astype("float32")
+    x_test = x_test.astype("float32")
     x_train /= 255
     x_test /= 255
+
+    if categorical:
+        y_train = keras.utils.to_categorical(y_train, num_classes)
+        y_test = keras.utils.to_categorical(y_test, num_classes)
 
     return (x_train, y_train), (x_test, y_test), input_shape, num_classes
 
@@ -105,8 +109,8 @@ def get_unbalance_data(main_class: int, other_class_percentage: float, class_sel
 
 def split_mnist_data(class_selection: List[int] = None):
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
-    print("[%s] splitting %i train samples" % (LOG_SOURCE, x_train.shape[0]))
-    print("[%s] splitting %i test samples" % (LOG_SOURCE, x_test.shape[0]))
+    logging.info("splitting %i train examples" % x_train.shape[0])
+    logging.info("splitting %i test examples" % x_test.shape[0])
 
     separated_train_data: List[Tuple[np.array or List[any], np.array or List[any]]] = [([], []) for _ in
                                                                                        range(num_classes)]
@@ -154,22 +158,20 @@ def split_mnist_data(class_selection: List[int] = None):
             )
 
     for i, class_id in enumerate(class_selection):
-        print("[%s] %i train samples for class #%i" % (
-            LOG_SOURCE, processed_separated_train_data[i][0].shape[0], class_id))
-        print(
-            "[%s] %i test samples for class #%i" % (LOG_SOURCE, processed_separated_test_data[i][0].shape[0], class_id))
+        logging.info("%i train examples for class #%i" % (processed_separated_train_data[i][0].shape[0], class_id))
+        logging.info("%i test examples for class #%i" % (processed_separated_test_data[i][0].shape[0], class_id))
 
     data_path: str = DATA_PATH + "mnist"
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
-    if class_selection is None:
+    if len(class_selection) == num_classes:
         np.savez("%s/mnist_train_split" % data_path, processed_separated_train_data)
         np.savez("%s/mnist_test_split" % data_path, processed_separated_test_data)
     else:
-        np.savez("%s/mnist_train_split_%s" % (data_path, ''.join(str(e) + '_' for e in class_selection)),
+        np.savez("%s/mnist_train_split_%s" % (data_path, "".join(str(e) + "_" for e in class_selection)),
                  processed_separated_train_data)
-        np.savez("%s/mnist_test_split_%s" % (data_path, ''.join(str(e) + '_' for e in class_selection)),
+        np.savez("%s/mnist_test_split_%s" % (data_path, "".join(str(e) + "_" for e in class_selection)),
                  processed_separated_test_data)
 
-    print("[%s] saved split data to \"%s\"" % (LOG_SOURCE, data_path))
+    logging.info("saved split data to \"%s\"" % data_path)

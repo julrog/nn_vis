@@ -1,11 +1,11 @@
-from tensorflow.python.keras.datasets import mnist
-from sklearn.neighbors import KernelDensity
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.neighbors import KernelDensity
+from tensorflow.python.keras.datasets import mnist
 
-from automation.create_plot import save_plot
 from data.data_handler import ProcessedNNHandler
 from definitions import DATA_PATH
+from evaluation.create_plot import save_plot
 
 
 def configure_plt():
@@ -57,8 +57,8 @@ def plot_kernels():
     ax.legend()
 
 
-def plot_histogram():  # TODO: test
-    processed_nn: ProcessedNNHandler = ProcessedNNHandler(DATA_PATH + 'model/basic/nobeta_gammaone_l1__processed.npz')
+def plot_histogram(path: str):  # TODO: test
+    processed_nn: ProcessedNNHandler = ProcessedNNHandler(DATA_PATH + path)
     samples: np.array = processed_nn.get_all_samples()
     z_values: np.array = np.zeros(samples.shape[0])
     for i, sample in enumerate(samples):
