@@ -1,8 +1,10 @@
 from typing import List, Tuple, Dict, Callable
+
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
-from rendering.rendering_config import RenderingConfig
+
 from opengl_helper.texture import Texture
+from rendering.rendering_config import RenderingConfig
 
 
 def uniform_setter_function(uniform_setter: str) -> Callable:

@@ -1,5 +1,9 @@
-from typing import List
+import logging
+from typing import List, Dict, Tuple, Callable
+
 import numpy as np
+from OpenGL.GL import *
+
 from definitions import pairwise, ADDITIONAL_EDGE_BUFFER_DATA
 from models.edge import Edge
 from models.network import NetworkModel
@@ -9,25 +13,20 @@ from opengl_helper.compute_shader_handler import ComputeShaderHandler
 from opengl_helper.vertex_data_handler import VertexDataHandler
 from processing.advection_process import AdvectionProgress
 from utility.performance import track_time
-from OpenGL.GL import *
-
-LOG_SOURCE: str = "EDGE_PROCESSING"
 
 
 class EdgeProcessor:
     def __init__(self, sample_length: float, max_edges_per_buffer: int = 1000, edge_importance_type: int = 0):
-        self.init_compute_shader: ComputeShader = ComputeShaderHandler().create("init_edge_sampler",
-                                                                                "edge/initial_edge_sample.comp")
-        self.sample_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_sampler",
-                                                                                  "edge/edge_sample.comp")
-        self.noise_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_noise",
-                                                                                 "edge/sample_noise.comp")
-        self.smooth_compute_shader: ComputeShader = ComputeShaderHandler().create("sample_smooth",
-                                                                                  "edge/sample_smooth.comp")
-        self.limit_compute_shader: ComputeShader = ComputeShaderHandler().create("edge_limits",
-                                                                                 "edge/edge_limits.comp")
-        self.sample_copy_compute_shader: ComputeShader = ComputeShaderHandler().create("sample_copy",
-                                                                                       "edge/sample_copy.comp")
+        shader_settings: Dict[str, str] = {
+            "init_edge_sampler": "edge/initial_edge_sample.comp",
+            "edge_sampler": "edge/edge_sample.comp",
+            "edge_noise": "edge/sample_noise.comp",
+            "sample_smooth": "edge/sample_smooth.comp",
+            "edge_limits": "edge/edge_limits.comp",
+            "sample_copy": "edge/sample_copy.comp",
+        }
+        for shader_name, path in shader_settings.items():
+            ComputeShaderHandler().create(shader_name, path)
 
         self.max_edges_per_buffer: int = max_edges_per_buffer
         self.sample_buffer: List[List[SwappingBufferObject]] = []
@@ -69,9 +68,12 @@ class EdgeProcessor:
         else:
             self.max_sample_points = int((max_distance * 5.0) / self.sample_length) + 2
 
-        # generate and load initial data for the buffer
         if len(self.sample_buffer) > 0:
             self.delete()
+
+        self.fill_buffer(edges, network.num_classes)
+
+    def fill_buffer(self, edges: List[List[List[Edge]]], num_classes: int):
         for layer_data in edges:
             new_layer_sample_buffer: List[SwappingBufferObject] = []
             new_layer_edge_buffer: List[BufferObject] = []
@@ -82,7 +84,7 @@ class EdgeProcessor:
                                                                                render_data_offset=[0, 4])
 
                 object_size, render_data_offset, render_data_size = \
-                    get_buffer_settings(network.num_classes * 2, ADDITIONAL_EDGE_BUFFER_DATA)
+                    get_buffer_settings(num_classes * 2, ADDITIONAL_EDGE_BUFFER_DATA)
                 new_edge_buffer: BufferObject = BufferObject(ssbo=True, object_size=object_size,
                                                              render_data_size=render_data_size,
                                                              render_data_offset=render_data_offset)
@@ -113,9 +115,17 @@ class EdgeProcessor:
             self.edge_buffer.append(new_layer_edge_buffer)
             self.ssbo_handler.append(new_layer_ssbo_handler)
 
+    def set_uniform(self, compute_shader: ComputeShader, uniforms: List[str]):
+        uniform_data: List[Tuple[str, any, any]] = []
+        if "max_sample_points" in uniforms:
+            uniform_data.append(("max_sample_points", self.max_sample_points, "int"))
+        if "sample_length" in uniforms:
+            uniform_data.append(("sample_length", self.sample_length, "float"))
+        compute_shader.set_uniform_data(uniform_data)
+
     @track_time
     def resize_sample_storage(self, new_max_samples: int):
-        print("[%s] Resize buffer." % LOG_SOURCE)
+        logging.info("Resize buffer.")
 
         for i in range(len(self.sample_buffer)):
             for j in range(len(self.sample_buffer[i])):
@@ -137,97 +147,68 @@ class EdgeProcessor:
 
         self.max_sample_points = new_max_samples
 
-    @track_time
-    def init_sample_edge(self, sample_length: float = None):
-        if sample_length is not None:
-            self.sample_length = sample_length
-
-        self.init_compute_shader.set_uniform_data([
-            ('max_sample_points', self.max_sample_points, 'int'),
-            ('sample_length', self.sample_length, 'float')
-        ])
-
+    def run_compute(self, compute_shader: ComputeShader, compute_width_func: Callable, wait_for_compute: bool = False):
         for i in range(len(self.sample_buffer)):
             for j in range(len(self.sample_buffer[i])):
                 self.ssbo_handler[i][j].set()
-                self.init_compute_shader.compute(self.get_edge_count(i, j))
+                compute_shader.compute(compute_width_func(i, j))
                 self.sample_buffer[i][j].swap()
-                self.init_compute_shader.barrier()
-                self.ssbo_handler[i][j].set()
-                self.sample_copy_compute_shader.compute(self.get_buffer_points(i, j))
-                self.sample_buffer[i][j].swap()
-                self.sample_copy_compute_shader.barrier()
+                compute_shader.barrier()
+                if wait_for_compute:
+                    glFinish()
 
+    def copy(self):
+        copy: ComputeShader = ComputeShaderHandler().get("sample_copy")
+        self.set_uniform(copy, ["max_sample_points"])
+        self.run_compute(copy, self.get_buffer_points)
+
+    def set_edge_sample(self, compute_shader: ComputeShader, sample_length: float = None):
+        if sample_length is not None:
+            self.sample_length = sample_length
+        self.set_uniform(compute_shader, ["max_sample_points", "sample_length"])
+        self.run_compute(compute_shader, self.get_edge_count)
+        self.copy()
         self.sampled = True
+
+    @track_time
+    def init_sample_edge(self, sample_length: float = None):
+        init: ComputeShader = ComputeShaderHandler().get("init_edge_sampler")
+        self.set_edge_sample(init, sample_length)
 
     @track_time
     def sample_edges(self, sample_length: float = None):
-        if sample_length is not None:
-            self.sample_length = sample_length
-
-        self.sample_compute_shader.set_uniform_data([
-            ('max_sample_points', self.max_sample_points, 'int'),
-            ('sample_length', self.sample_length, 'float')
-        ])
-
-        for i in range(len(self.sample_buffer)):
-            for j in range(len(self.sample_buffer[i])):
-                self.ssbo_handler[i][j].set()
-                self.sample_compute_shader.compute(self.get_edge_count(i, j))
-                self.sample_buffer[i][j].swap()
-                self.sample_compute_shader.barrier()
-                self.ssbo_handler[i][j].set()
-                self.sample_copy_compute_shader.compute(self.get_buffer_points(i, j))
-                self.sample_buffer[i][j].swap()
-                self.sample_copy_compute_shader.barrier()
-
-        self.sampled = True
+        sample: ComputeShader = ComputeShaderHandler().get("edge_sampler")
+        self.set_edge_sample(sample, sample_length)
 
     @track_time
     def sample_noise(self, strength: float = 1.0, move_start_end: int = 0):
-        self.noise_compute_shader.set_uniform_data([
-            ('max_sample_points', self.max_sample_points, 'int'),
-            ('sample_length', self.sample_length, 'float'),
-            ('noise_strength', strength, 'float'),
-            ('move_start_end', move_start_end, 'int')
+        noise: ComputeShader = ComputeShaderHandler().get("edge_noise")
+        self.set_uniform(noise, ["max_sample_points", "sample_length"])
+        noise.set_uniform_data([
+            ("noise_strength", strength, "float"),
+            ("move_start_end", move_start_end, "int")
         ])
-
-        for i in range(len(self.sample_buffer)):
-            for j in range(len(self.sample_buffer[i])):
-                self.ssbo_handler[i][j].set()
-                self.noise_compute_shader.compute(self.get_edge_count(i, j))
-                self.sample_buffer[i][j].swap()
-        self.noise_compute_shader.barrier()
+        self.run_compute(noise, self.get_edge_count)
 
     @track_time
     def sample_smooth(self, advection_status: AdvectionProgress, wait_for_compute: bool = False):
-        self.smooth_compute_shader.set_uniform_data([
-            ('max_sample_points', self.max_sample_points, 'int'),
-            ('bandwidth_reduction', advection_status.get_bandwidth_reduction(), 'float')
-        ])
-
-        for i in range(len(self.sample_buffer)):
-            for j in range(len(self.sample_buffer[i])):
-                self.ssbo_handler[i][j].set()
-                self.smooth_compute_shader.compute(self.get_buffer_points(i, j))
-                self.sample_buffer[i][j].swap()
-                if wait_for_compute:
-                    glFinish()
-        self.smooth_compute_shader.barrier()
+        smooth: ComputeShader = ComputeShaderHandler().get("sample_smooth")
+        self.set_uniform(smooth, ["max_sample_points"])
+        smooth.set_uniform_data([("bandwidth_reduction", advection_status.get_bandwidth_reduction(), "float")])
+        self.run_compute(smooth, self.get_buffer_points, wait_for_compute)
 
     @track_time
     def check_limits(self, check_resize: bool = False):
-        self.limit_compute_shader.set_uniform_data([('max_sample_points', self.max_sample_points, 'int')])
+        limit: ComputeShader = ComputeShaderHandler().get("edge_limits")
+        self.set_uniform(limit, ["max_sample_points"])
         self.point_count = 0
         max_edge_samples: float = 0
         for i in range(len(self.edge_buffer)):
             for j in range(len(self.edge_buffer[i])):
                 self.ssbo_handler[i][j].set()
-                self.limit_compute_shader.compute(self.get_edge_count(i, j), barrier=True)
-
+                limit.compute(self.get_edge_count(i, j), barrier=True)
                 if check_resize:
                     limits: List[int] = np.frombuffer(self.edge_buffer[i][j].read(), dtype=np.float32)
-
                     for samples in pairwise(limits, 28):
                         self.point_count += samples
                         if samples > max_edge_samples:

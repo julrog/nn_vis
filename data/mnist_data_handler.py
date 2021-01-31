@@ -1,8 +1,9 @@
 import logging
 import os
 from typing import List, Tuple, Any
-from tensorflow import keras
+
 import numpy as np
+from tensorflow import keras
 from tensorflow_core.python.keras.datasets import mnist
 
 from definitions import DATA_PATH
@@ -108,8 +109,8 @@ def get_unbalance_data(main_class: int, other_class_percentage: float, class_sel
 
 def split_mnist_data(class_selection: List[int] = None):
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
-    logging.info("splitting %i train samples" % x_train.shape[0])
-    logging.info("splitting %i test samples" % x_test.shape[0])
+    logging.info("splitting %i train examples" % x_train.shape[0])
+    logging.info("splitting %i test examples" % x_test.shape[0])
 
     separated_train_data: List[Tuple[np.array or List[any], np.array or List[any]]] = [([], []) for _ in
                                                                                        range(num_classes)]
@@ -157,14 +158,14 @@ def split_mnist_data(class_selection: List[int] = None):
             )
 
     for i, class_id in enumerate(class_selection):
-        logging.info("%i train samples for class #%i" % (processed_separated_train_data[i][0].shape[0], class_id))
-        logging.info("%i test samples for class #%i" % (processed_separated_test_data[i][0].shape[0], class_id))
+        logging.info("%i train examples for class #%i" % (processed_separated_train_data[i][0].shape[0], class_id))
+        logging.info("%i test examples for class #%i" % (processed_separated_test_data[i][0].shape[0], class_id))
 
     data_path: str = DATA_PATH + "mnist"
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
-    if class_selection is None:
+    if len(class_selection) == num_classes:
         np.savez("%s/mnist_train_split" % data_path, processed_separated_train_data)
         np.savez("%s/mnist_test_split" % data_path, processed_separated_test_data)
     else:

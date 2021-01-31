@@ -1,5 +1,7 @@
 from typing import List, Callable
+
 from OpenGL.GL import *
+
 from models.grid import Grid
 from opengl_helper.data_set import LayeredRenderSet, BaseRenderSet
 from opengl_helper.render_utility import generate_render_function, OGLRenderFunction

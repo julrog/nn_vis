@@ -1,7 +1,8 @@
 import math
 import random
-import numpy as np
 from typing import List, Tuple
+
+import numpy as np
 from pyrr import Vector3
 
 from definitions import ADDITIONAL_NODE_BUFFER_DATA

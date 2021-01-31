@@ -2,8 +2,9 @@ import ntpath
 from tkinter import *
 from tkinter import filedialog, messagebox
 from typing import List, Dict
-from definitions import DATA_PATH
+
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
+from definitions import DATA_PATH
 from gui.frame_building import set_render_frame, set_architecture_frame, set_stat_frame, set_processing_frame
 from gui.general_setting import RadioButtons
 from gui.neural_network_setting import LayerSettings

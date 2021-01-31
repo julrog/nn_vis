@@ -1,5 +1,6 @@
 from tkinter import LabelFrame
 from typing import Dict
+
 from gui.general_setting import SettingEntry
 from processing.processing_config import ProcessingConfig
 

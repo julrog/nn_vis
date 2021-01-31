@@ -3,17 +3,17 @@
 struct Node
 {
     vec4 pos;
-    $$uint importance_$r_class_id$;$$
+    //$$uint importance_$r_class_id$;$$
     float overall_importance;
     float importance_length;
-    $$float padding_$r_nodebuffer_padding_id$;$$
+    //$$float padding_$r_nodebuffer_padding_id$;$$
 };
 
 struct DensityGrid
 {
     uint overall_density;
-    $$uint density_$r_class_id$;$$
-    $$uint padding_$r_densitybuffer_padding_id$;$$
+    //$$uint density_$r_class_id$;$$
+    //$$uint padding_$r_densitybuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -78,14 +78,14 @@ highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to, No
     highp float drive_from = 0.0;
 
     highp float towards_density_overall = sqrt(0
-    $$+ density_to.density_$r_class_id$ * density_to.density_$r_class_id$ $$
+    //$$+ density_to.density_$r_class_id$ * density_to.density_$r_class_id$ $$
     );
     highp float from_density_overall = sqrt(0
-    $$+ density_from.density_$r_class_id$ * density_to.density_$r_class_id$ $$
+    //$$+ density_from.density_$r_class_id$ * density_to.density_$r_class_id$ $$
     );
 
-    $$drive_towards += (node.importance_$r_class_id$ /node.importance_length) * (density_to.density_$r_class_id$ /towards_density_overall);$$
-    $$drive_from += (node.importance_$r_class_id$/node.importance_length) * (density_from.density_$r_class_id$/from_density_overall);$$
+    //$$drive_towards += (node.importance_$r_class_id$ /node.importance_length) * (density_to.density_$r_class_id$ /towards_density_overall);$$
+    //$$drive_from += (node.importance_$r_class_id$/node.importance_length) * (density_from.density_$r_class_id$/from_density_overall);$$
 
     return float(towards_density_overall * (drive_towards - importance_similarity) - from_density_overall * (drive_from - importance_similarity));
 }

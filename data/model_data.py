@@ -1,8 +1,10 @@
 import os
 from enum import Enum
 from typing import List, Dict
-from tensorflow_core.python.keras.models import Model
+
 from tensorflow import keras
+from tensorflow_core.python.keras.models import Model
+
 from definitions import DATA_PATH
 from utility.file import EvaluationFile
 

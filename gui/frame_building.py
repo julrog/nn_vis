@@ -1,8 +1,8 @@
 from tkinter import LabelFrame, IntVar, Tk, Button, Label, Checkbutton
 from typing import List, Callable, Dict, Tuple
 
-from gui.general_setting import RadioButtons, SettingField
 from gui.constants import STATISTIC_NAME, StatisticLink
+from gui.general_setting import RadioButtons, SettingField
 from gui.processing_setting import ProcessingSetting
 from gui.render_setting import RenderSettings
 from processing.processing_config import ProcessingConfig

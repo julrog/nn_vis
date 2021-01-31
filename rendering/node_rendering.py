@@ -1,9 +1,9 @@
 from typing import List, Callable
 
 from OpenGL.GL import *
+
 from models.grid import Grid
 from opengl_helper.data_set import BaseRenderSet
-
 from opengl_helper.render_utility import generate_render_function, OGLRenderFunction
 from opengl_helper.shader import ShaderSetting
 from opengl_helper.vertex_data_handler import VertexDataHandler

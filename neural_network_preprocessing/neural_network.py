@@ -1,10 +1,12 @@
 import logging
 import os
-import numpy as np
 from typing import List, Tuple, Dict
+
+import numpy as np
 from sklearn.metrics import classification_report
 from tensorflow import keras
 from tensorflow_core.python.keras import Model
+
 from data.model_data import ModelData
 from definitions import DATA_PATH
 from neural_network_preprocessing.importance import ImportanceType, get_importance_type_name

@@ -1,7 +1,9 @@
 from typing import Dict, Tuple
+
 import glfw
 from OpenGL.GL import *
 from pyrr import Vector3
+
 from utility.camera import Camera
 from utility.singleton import Singleton
 from utility.types import CameraPose
@@ -193,14 +195,16 @@ class WindowHandler(metaclass=Singleton):
         if not glfw.init():
             raise Exception("glfw can not be initialized!")
 
-    def create_window(self):
+    def create_window(self, hidden: bool = False):
+        if hidden:
+            glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
         window_config: WindowConfig = WindowConfig()
         window = Window(window_config)
 
-        if self.windows.get(window_config['title']):
-            self.windows[window_config['title']].destroy()
+        if self.windows.get(window_config["title"]):
+            self.windows[window_config["title"]].destroy()
 
-        self.windows[window_config['title']] = window
+        self.windows[window_config["title"]] = window
         return window
 
     def get_window(self, title: str):

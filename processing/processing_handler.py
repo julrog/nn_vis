@@ -1,9 +1,8 @@
-import logging
 import os.path
-from pyrr import Vector3
-from OpenGL.GL import *
 
-from utility.recording_config import RecordingConfig
+from OpenGL.GL import *
+from pyrr import Vector3
+
 from data.data_handler import ImportanceDataHandler
 from definitions import DATA_PATH
 from opengl_helper.frame_buffer import FrameBufferObject
@@ -12,6 +11,7 @@ from processing.network_processing import NetworkProcessor, NetworkProcess
 from processing.processing_config import ProcessingConfig
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
+from utility.recording_config import RecordingConfig
 from utility.types import ProcessRenderMode
 from utility.window import WindowHandler, Window
 
@@ -20,7 +20,7 @@ class ProcessingHandler:
     def __init__(self, network_name: str, importance_data_name: str):
         self.network_name: str = network_name
         self.importance_data_name: str = importance_data_name
-        window: Window = WindowHandler().create_window()
+        window: Window = WindowHandler().create_window(hidden=True)
         window.set_callbacks()
         window.activate()
 

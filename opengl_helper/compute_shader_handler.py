@@ -69,7 +69,7 @@ class ComputeShaderHandler(metaclass=Singleton):
                     new_line = new_line.replace("$r_edgebuffer_padding_id$", str(padding_id))
                     added = True
                 if added:
-                    parsed_lines = parsed_lines + new_line.replace("$$", "")
+                    parsed_lines = parsed_lines + new_line.replace("//$$", "").replace("$$", "")
 
             for padding_id in range(self.densitybuffer_padding):
                 new_line: str = processed_line
@@ -78,7 +78,7 @@ class ComputeShaderHandler(metaclass=Singleton):
                     new_line = new_line.replace("$r_densitybuffer_padding_id$", str(padding_id))
                     added = True
                 if added:
-                    parsed_lines = parsed_lines + new_line.replace("$$", "")
+                    parsed_lines = parsed_lines + new_line.replace("//$$", "").replace("$$", "")
 
             for padding_id in range(self.nodebuffer_padding):
                 new_line: str = processed_line
@@ -87,7 +87,7 @@ class ComputeShaderHandler(metaclass=Singleton):
                     new_line = new_line.replace("$r_nodebuffer_padding_id$", str(padding_id))
                     added = True
                 if added:
-                    parsed_lines = parsed_lines + new_line.replace("$$", "")
+                    parsed_lines = parsed_lines + new_line.replace("//$$", "").replace("$$", "")
 
             for class_id in range(self.num_classes):
                 new_line: str = processed_line
@@ -96,7 +96,7 @@ class ComputeShaderHandler(metaclass=Singleton):
                     new_line = new_line.replace("$r_class_id$", str(class_id))
                     added = True
                 if added:
-                    parsed_lines = parsed_lines + new_line.replace("$$", "")
+                    parsed_lines = parsed_lines + new_line.replace("//$$", "").replace("$$", "")
         else:
-            return processed_line
+            return processed_line.replace("//$", "")
         return parsed_lines

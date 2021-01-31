@@ -1,12 +1,13 @@
 import logging
-import numpy as np
 from typing import List, Any
+
+import numpy as np
+from sklearn.metrics import classification_report
 from tensorflow import keras
 from tensorflow_core.python.keras import Sequential
 from tensorflow_core.python.keras.layers import Flatten, Dense
 from tensorflow_core.python.keras.models import Model
 from tensorflow_core.python.layers.base import Layer
-from sklearn.metrics import classification_report
 
 from data.mnist_data_handler import get_prepared_data, get_unbalance_data
 from data.model_data import ModelData, ModelTrainType
@@ -52,8 +53,8 @@ def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learn
         (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_unbalance_data(main_class,
                                                                                             other_class_percentage,
                                                                                             class_selection)
-    logging.info("Train samples: %i" % x_train.shape[0])
-    logging.info("Test samples: %i" % x_test.shape[0])
+    logging.info("Train examples: %i" % x_train.shape[0])
+    logging.info("Test examples: %i" % x_test.shape[0])
 
     if class_selection is not None:
         num_classes = len(class_selection)
@@ -94,8 +95,8 @@ def evaluate_model(model_data: ModelData, x_train: Any, y_train: Any, x_test: An
 def calculate_performance_of_model(model_data: ModelData):
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_prepared_data()
 
-    logging.info("Train samples: %i" % x_train.shape[0])
-    logging.info("Test samples: %i" % x_test.shape[0])
+    logging.info("Train examples: %i" % x_train.shape[0])
+    logging.info("Test examples: %i" % x_test.shape[0])
 
     model_data.reload_model()
     model_data.model.compile(loss=keras.losses.categorical_crossentropy, optimizer=keras.optimizers.Adam(0.001),

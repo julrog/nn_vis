@@ -1,11 +1,11 @@
-from tensorflow.python.keras.datasets import mnist
-from sklearn.neighbors import KernelDensity
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.neighbors import KernelDensity
+from tensorflow.python.keras.datasets import mnist
 
-from samples.create_plot import save_plot
 from data.data_handler import ProcessedNNHandler
 from definitions import DATA_PATH
+from examples.create_plot import save_plot
 
 
 def configure_plt():

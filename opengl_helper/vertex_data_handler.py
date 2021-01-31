@@ -1,5 +1,6 @@
 import abc
 from typing import List, Tuple
+
 from OpenGL.GL import *
 
 from opengl_helper.buffer import BufferObject, OverflowingBufferObject

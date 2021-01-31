@@ -2,9 +2,9 @@ import math
 import os
 from typing import Dict, List
 
+from definitions import BASE_PATH, ADDITIONAL_NODE_BUFFER_DATA, ADDITIONAL_EDGE_BUFFER_DATA
 from opengl_helper.shader import RenderShader, ShaderSetting
 from utility.singleton import Singleton
-from definitions import BASE_PATH, ADDITIONAL_NODE_BUFFER_DATA, ADDITIONAL_EDGE_BUFFER_DATA
 
 SHADER_STATIC_VAR: List[str] = [
     "num_classes",
@@ -118,7 +118,7 @@ class RenderShaderHandler(metaclass=Singleton):
                     new_line = new_line.replace("$r_nodebuffer_group_location$", str(node_buffer_group + 1))
                     added = True
                 if added:
-                    parsed_lines = parsed_lines + new_line.replace("$$", "")
+                    parsed_lines = parsed_lines + new_line.replace("//$$", "").replace("$$", "")
 
             for edge_buffer_group in range(int(math.ceil((self.num_classes * 2 + ADDITIONAL_EDGE_BUFFER_DATA) / 4))):
                 new_line: str = processed_line
@@ -130,7 +130,7 @@ class RenderShaderHandler(metaclass=Singleton):
                     new_line = new_line.replace("$r_edgebuffer_group_location$", str(edge_buffer_group + 2))
                     added = True
                 if added:
-                    parsed_lines = parsed_lines + new_line.replace("$$", "")
+                    parsed_lines = parsed_lines + new_line.replace("//$$", "").replace("$$", "")
 
             for class_id in range(self.num_classes):
                 new_line: str = processed_line
@@ -154,7 +154,7 @@ class RenderShaderHandler(metaclass=Singleton):
                                                     class_id + self.num_classes + ADDITIONAL_EDGE_BUFFER_DATA))
                     added = True
                 if added:
-                    parsed_lines = parsed_lines + new_line.replace("$$", "")
+                    parsed_lines = parsed_lines + new_line.replace("//$$", "").replace("$$", "")
         else:
-            return processed_line
+            return processed_line.replace("//$", "")
         return parsed_lines

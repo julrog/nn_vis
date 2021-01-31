@@ -1,8 +1,10 @@
 import logging
 import math
-import numpy as np
 from typing import List, Tuple
+
+import numpy as np
 from pyrr import Vector3
+
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from definitions import ADDITIONAL_EDGE_BUFFER_DATA
 from models.edge import Edge, split_edges_for_buffer, create_edges_processed, create_edges_random, \
@@ -106,7 +108,7 @@ class NetworkModel:
         elif self.edge_importance_only:
             edges = create_edges_importance(self.layer_nodes, self.edge_data, self.num_classes, padding)
         else:
-            create_edges_processed(self.edge_data, self.sample_data)
+            edges = create_edges_processed(self.edge_data, self.sample_data)
 
         existing_edges: int = 0
         for layer_edge in edges:

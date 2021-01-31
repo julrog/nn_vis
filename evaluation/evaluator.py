@@ -1,11 +1,12 @@
 import logging
 import time
-import numpy as np
 from typing import Dict, List
-from data.data_handler import ImportanceDataHandler
-from data.model_data import ModelData
+
+import numpy as np
 from tensorflow import keras
 
+from data.data_handler import ImportanceDataHandler
+from data.model_data import ModelData
 from neural_network_preprocessing.importance import ImportanceCalculation, ImportanceType, get_importance_type_name
 
 

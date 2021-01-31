@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import List, Callable, Union
+
 from OpenGL.GL import *
 from OpenGL.constant import IntConstant, StringConstant, FloatConstant, LongConstant
 

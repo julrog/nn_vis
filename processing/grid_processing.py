@@ -1,6 +1,10 @@
+import logging
 import math
-from typing import List
+from typing import List, Dict, Tuple
+
 import numpy as np
+from OpenGL.GL import *
+
 from models.grid import Grid
 from opengl_helper.buffer import OverflowingBufferObject
 from opengl_helper.compute_shader import ComputeShader
@@ -10,10 +14,6 @@ from processing.advection_process import AdvectionProgress
 from processing.edge_processing import EdgeProcessor
 from processing.node_processing import NodeProcessor
 from utility.performance import track_time
-from OpenGL.GL import *
-
-
-LOG_SOURCE: str = "GRID_PROCESSING"
 
 
 class GridProcessor:
@@ -24,18 +24,16 @@ class GridProcessor:
         self.grid: Grid = grid
         self.grid_slice_size: int = grid.grid_cell_count[0] * grid.grid_cell_count[1]
 
-        self.position_compute_shader: ComputeShader = ComputeShaderHandler().create("grid_position",
-                                                                                    "grid/grid_position.comp")
-        self.clear_compute_shader: ComputeShader = ComputeShaderHandler().create("clear_grid",
-                                                                                 "grid/clear_grid.comp")
-        self.node_density_compute_shader: ComputeShader = ComputeShaderHandler().create("node_density",
-                                                                                        "grid/node_density_map.comp")
-        self.sample_density_compute_shader: ComputeShader = ComputeShaderHandler().create("sample_density",
-                                                                                          "grid/sample_density_map.comp")
-        self.node_advect_compute_shader: ComputeShader = ComputeShaderHandler().create("node_advect",
-                                                                                       "grid/node_advect.comp")
-        self.sample_advect_compute_shader: ComputeShader = ComputeShaderHandler().create("sample_advect",
-                                                                                         "grid/sample_advect.comp")
+        shader_settings: Dict[str, str] = {
+            "grid_position": "grid/grid_position.comp",
+            "clear_grid": "grid/clear_grid.comp",
+            "node_density": "grid/node_density_map.comp",
+            "sample_density": "grid/sample_density_map.comp",
+            "node_advect": "grid/node_advect.comp",
+            "sample_advect": "grid/sample_advect.comp",
+        }
+        for shader_name, path in shader_settings.items():
+            ComputeShaderHandler().create(shader_name, path)
 
         def split_function_generation(split_grid: Grid):
             size_xy_slice = split_grid.grid_cell_count[0] * split_grid.grid_cell_count[1] * 4
@@ -119,134 +117,122 @@ class GridProcessor:
             [(self.grid_density_buffer, 3)]) for j in range(len(self.edge_processor.sample_buffer[i]))] for i in range(
             len(self.edge_processor.sample_buffer))]
 
+    def set_uniform(self, compute_shader: ComputeShader, uniforms: List[str]):
+        uniform_data: List[Tuple[str, any, any]] = []
+        if "slice_size" in uniforms:
+            uniform_data.append(("slice_size", self.grid_slice_size, "int"))
+        if "slice_count" in uniforms:
+            uniform_data.append(("slice_count", self.position_buffer_slice_count, "int"))
+        if "grid_cell_size" in uniforms:
+            uniform_data.append(("grid_cell_size", self.grid.grid_cell_size, "vec3"))
+        if "grid_bounding_min" in uniforms:
+            uniform_data.append(("grid_bounding_min", self.grid.bounding_volume[0], "vec3"))
+        if "grid_bounding_max" in uniforms:
+            uniform_data.append(("grid_bounding_max", self.grid.bounding_volume[1], "vec3"))
+        if "grid_cell_count" in uniforms:
+            uniform_data.append(("grid_cell_count", self.grid.grid_cell_count, "ivec3"))
+        if "density_strength" in uniforms:
+            uniform_data.append(("density_strength", self.density_strength, "float"))
+        if "max_sample_points" in uniforms:
+            uniform_data.append(("max_sample_points", self.edge_processor.max_sample_points, "int"))
+        if "edge_importance_type" in uniforms:
+            uniform_data.append(("edge_importance_type", self.edge_processor.edge_importance_type, "int"))
+        compute_shader.set_uniform_data(uniform_data)
+
     @track_time
     def clear_buffer(self):
+        clear: ComputeShader = ComputeShaderHandler().get("clear_grid")
         for i in range(len(self.grid_density_buffer.handle)):
             self.density_ssbo_handler.set_buffer(i)
             self.density_ssbo_handler.set()
-            self.clear_compute_shader.compute(self.grid_density_buffer.get_objects(i))
-        self.clear_compute_shader.barrier()
+            clear.compute(self.grid_density_buffer.get_objects(i))
+        clear.barrier()
 
     @track_time
     def calculate_position(self):
-        print("[%s] Calculate grid positions." % LOG_SOURCE)
+        logging.info("Calculate grid positions.")
+        position: ComputeShader = ComputeShaderHandler().get("grid_position")
+        self.set_uniform(position,
+                         ["slice_size", "slice_count", "grid_cell_size", "grid_bounding_min", "grid_cell_count"])
         for i in range(len(self.grid_position_buffer.handle)):
             self.position_ssbo_handler.set_buffer(i)
             self.position_ssbo_handler.set()
-            self.position_compute_shader.set_uniform_data([
-                ('slice_size', self.grid_slice_size, 'int'),
-                ('slice_count', self.position_buffer_slice_count, 'int'),
-                ('current_buffer', i, 'int'),
-                ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
-                ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
-                ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
-            ])
-            self.position_compute_shader.compute(self.grid_position_buffer.get_objects(i))
-        self.position_compute_shader.barrier()
+            position.set_uniform_data([("current_buffer", i, "int")])
+            position.compute(self.grid_position_buffer.get_objects(i))
+        position.barrier()
 
     @track_time
     def calculate_node_density(self, advection_status: AdvectionProgress):
+        density: ComputeShader = ComputeShaderHandler().get("node_density")
+        self.set_uniform(density, ["density_strength", "grid_cell_size", "grid_bounding_min", "grid_cell_count"])
         self.node_density_ssbo_handler.set_buffer(0)
         self.node_density_ssbo_handler.set()
-
-        self.node_density_compute_shader.set_uniform_data([
-            ('density_strength', self.density_strength, 'float'),
-            ('bandwidth', advection_status.current_bandwidth, 'float'),
-            ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
-            ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
-            ('grid_cell_count', self.grid.grid_cell_count, 'ivec3')
-        ])
-
-        self.node_density_compute_shader.compute(len(self.node_processor.nodes))
-        self.node_density_compute_shader.barrier()
+        density.set_uniform_data([("bandwidth", advection_status.current_bandwidth, "float")])
+        density.compute(len(self.node_processor.nodes))
+        density.barrier()
 
     @track_time
     def calculate_edge_density(self, layer: int, advection_status: AdvectionProgress, wait_for_compute: bool = False):
+        density: ComputeShader = ComputeShaderHandler().get("sample_density")
+        self.set_uniform(density, ["max_sample_points", "slice_size", "slice_count", "density_strength",
+                                   "grid_cell_size", "grid_bounding_min", "grid_cell_count", "edge_importance_type"])
+        density.set_uniform_data([("bandwidth", advection_status.current_bandwidth, "float")])
         for i in range(len(self.grid_density_buffer.handle)):
-            self.sample_density_compute_shader.set_uniform_data([
-                ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
-                ('slice_size', self.grid_slice_size, 'int'),
-                ('slice_count', self.density_buffer_slice_count, 'int'),
-                ('current_buffer', i, 'int'),
-                ('density_strength', self.density_strength, 'float'),
-                ('bandwidth', advection_status.current_bandwidth, 'float'),
-                ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
-                ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
-                ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
-                ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')
-            ])
-
+            density.set_uniform_data([("current_buffer", i, "int")])
             for container in range(len(self.edge_processor.sample_buffer[layer])):
-                self.sample_density_compute_shader.set_uniform_data(
-                    [('grid_layer_offset', self.grid.layer_distance * layer, 'float')])
+                density.set_uniform_data([("grid_layer_offset", self.grid.layer_distance * layer, "float")])
                 self.sample_density_ssbo_handler[layer][container].set_buffer(i - 1)
                 self.sample_density_ssbo_handler[layer][container].set_range(3)
-                self.sample_density_compute_shader.compute(self.edge_processor.get_buffer_points(layer, container))
+                density.compute(self.edge_processor.get_buffer_points(layer, container))
                 if wait_for_compute:
                     glFinish()
-        self.sample_density_compute_shader.barrier()
+        density.barrier()
 
     @track_time
     def node_advect(self, advection_status: AdvectionProgress):
+        advect: ComputeShader = ComputeShaderHandler().get("node_advect")
+        self.set_uniform(advect, ["grid_cell_size", "grid_bounding_min", "grid_bounding_max", "grid_cell_count"])
+        advect.set_uniform_data([
+            ("advect_strength", advection_status.get_advection_strength(), "float"),
+            ("importance_similarity", advection_status.importance_similarity, "float")
+        ])
         self.node_advect_ssbo_handler.set_buffer(0)
         self.node_advect_ssbo_handler.set()
-
-        self.node_advect_compute_shader.set_uniform_data([
-            ('advect_strength', advection_status.get_advection_strength(), 'float'),
-            ('importance_similarity', advection_status.importance_similarity, 'float'),
-            ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
-            ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
-            ('grid_bounding_max', self.grid.bounding_volume[1], 'vec3'),
-            ('grid_cell_size', self.grid.grid_cell_size, 'vec3')
-        ])
-
-        self.node_advect_compute_shader.compute(self.node_processor.get_buffer_points())
-        self.node_advect_compute_shader.barrier()
+        advect.compute(self.node_processor.get_buffer_points())
+        advect.barrier()
         self.node_processor.node_buffer.swap()
 
     @track_time
     def sample_advect(self, layer: int, advection_status: AdvectionProgress, wait_for_compute: bool = False):
+        advect: ComputeShader = ComputeShaderHandler().get("sample_advect")
+        self.set_uniform(advect, ["max_sample_points", "slice_size", "slice_count", "grid_cell_size",
+                                  "grid_bounding_min", "grid_cell_count", "edge_importance_type"])
+        advect.set_uniform_data([
+            ("advect_strength", advection_status.get_advection_strength(), "float"),
+            ("importance_similarity", advection_status.importance_similarity, "float")
+        ])
         for i in range(len(self.grid_density_buffer.handle)):
-            self.sample_advect_compute_shader.set_uniform_data([
-                ('max_sample_points', self.edge_processor.max_sample_points, 'int'),
-                ('slice_size', self.grid_slice_size, 'int'),
-                ('slice_count', self.density_buffer_slice_count, 'int'),
-                ('current_buffer', i, 'int'),
-                ('advect_strength', advection_status.get_advection_strength(), 'float'),
-                ('importance_similarity', advection_status.importance_similarity, 'float'),
-                ('grid_cell_count', self.grid.grid_cell_count, 'ivec3'),
-                ('grid_bounding_min', self.grid.bounding_volume[0], 'vec3'),
-                ('grid_cell_size', self.grid.grid_cell_size, 'vec3'),
-                ('edge_importance_type', self.edge_processor.edge_importance_type, 'int')
-            ])
-
+            advect.set_uniform_data([("current_buffer", i, "int")])
             for container in range(len(self.edge_processor.sample_buffer[layer])):
-                self.sample_advect_compute_shader.set_uniform_data(
-                    [('grid_layer_offset', self.grid.layer_distance * layer, 'float')])
+                advect.set_uniform_data([("grid_layer_offset", self.grid.layer_distance * layer, "float")])
                 self.sample_advect_ssbo_handler[layer][container].set_buffer(i)
                 self.sample_advect_ssbo_handler[layer][container].set()
-                self.sample_advect_compute_shader.compute(self.edge_processor.get_buffer_points(layer, container))
+                advect.compute(self.edge_processor.get_buffer_points(layer, container))
                 self.edge_processor.sample_buffer[layer][container].swap()
                 if wait_for_compute:
                     glFinish()
-
-        self.sample_advect_compute_shader.barrier()
+        advect.barrier()
 
     def delete(self):
         self.grid_position_buffer.delete()
-
         self.grid_density_buffer.delete()
-
         self.position_ssbo_handler.delete()
-
         self.node_density_ssbo_handler.delete()
         for layer_ssbo_handler in self.sample_density_ssbo_handler:
             for container_ssbo_handler in layer_ssbo_handler:
                 container_ssbo_handler.delete()
         self.sample_density_ssbo_handler = []
-
         self.density_ssbo_handler.delete()
-
         for layer_ssbo_handler in self.sample_advect_ssbo_handler:
             for container_ssbo_handler in layer_ssbo_handler:
                 container_ssbo_handler.delete()

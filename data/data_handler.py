@@ -1,4 +1,5 @@
 from typing import List
+
 import numpy as np
 
 from definitions import ADDITIONAL_NODE_BUFFER_DATA, ADDITIONAL_EDGE_BUFFER_DATA

@@ -1,7 +1,9 @@
 import math
 from typing import Dict, Tuple, List
+
 from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader
+
 from opengl_helper.shader import BaseShader
 from opengl_helper.texture import Texture
 
