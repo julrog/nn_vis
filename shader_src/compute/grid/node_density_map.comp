@@ -3,7 +3,7 @@
 struct Node
 {
     vec4 pos;
-    //$$uint importance_$r_class_id$;$$
+    //$$float importance_$r_class_id$;$$
     float overall_importance;
     float importance_length;
     //$$float padding_$r_nodebuffer_padding_id$;$$

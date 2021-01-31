@@ -163,10 +163,10 @@ class GridProcessor:
 
     @track_time
     def calculate_node_density(self, advection_status: AdvectionProgress):
-        density: ComputeShader = ComputeShaderHandler().get("node_density")
-        self.set_uniform(density, ["density_strength", "grid_cell_size", "grid_bounding_min", "grid_cell_count"])
         self.node_density_ssbo_handler.set_buffer(0)
         self.node_density_ssbo_handler.set()
+        density: ComputeShader = ComputeShaderHandler().get("node_density")
+        self.set_uniform(density, ["density_strength", "grid_cell_size", "grid_bounding_min", "grid_cell_count"])
         density.set_uniform_data([("bandwidth", advection_status.current_bandwidth, "float")])
         density.compute(len(self.node_processor.nodes))
         density.barrier()
@@ -190,14 +190,14 @@ class GridProcessor:
 
     @track_time
     def node_advect(self, advection_status: AdvectionProgress):
+        self.node_advect_ssbo_handler.set_buffer(0)
+        self.node_advect_ssbo_handler.set()
         advect: ComputeShader = ComputeShaderHandler().get("node_advect")
         self.set_uniform(advect, ["grid_cell_size", "grid_bounding_min", "grid_bounding_max", "grid_cell_count"])
         advect.set_uniform_data([
             ("advect_strength", advection_status.get_advection_strength(), "float"),
             ("importance_similarity", advection_status.importance_similarity, "float")
         ])
-        self.node_advect_ssbo_handler.set_buffer(0)
-        self.node_advect_ssbo_handler.set()
         advect.compute(self.node_processor.get_buffer_points())
         advect.barrier()
         self.node_processor.node_buffer.swap()

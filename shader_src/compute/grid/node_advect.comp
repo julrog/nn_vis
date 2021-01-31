@@ -3,7 +3,7 @@
 struct Node
 {
     vec4 pos;
-    //$$uint importance_$r_class_id$;$$
+    //$$float importance_$r_class_id$;$$
     float overall_importance;
     float importance_length;
     //$$float padding_$r_nodebuffer_padding_id$;$$
@@ -81,7 +81,7 @@ highp float getGradientAxis(DensityGrid density_from, DensityGrid density_to, No
     //$$+ density_to.density_$r_class_id$ * density_to.density_$r_class_id$ $$
     );
     highp float from_density_overall = sqrt(0
-    //$$+ density_from.density_$r_class_id$ * density_to.density_$r_class_id$ $$
+    //$$+ density_from.density_$r_class_id$ * density_from.density_$r_class_id$ $$
     );
 
     //$$drive_towards += (node.importance_$r_class_id$ /node.importance_length) * (density_to.density_$r_class_id$ /towards_density_overall);$$

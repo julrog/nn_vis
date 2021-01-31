@@ -9,13 +9,15 @@ from matplotlib.axes import Axes
 from definitions import BASE_PATH
 from utility.file import EvaluationFile
 
-plt.rc("font", size=14)  # controls default text sizes
-plt.rc("axes", titlesize=14)  # fontsize of the axes title
-plt.rc("axes", labelsize=14)  # fontsize of the x and y labels
-plt.rc("xtick", labelsize=14)  # fontsize of the tick labels
-plt.rc("ytick", labelsize=14)  # fontsize of the tick labels
-plt.rc("legend", fontsize=14)  # legend fontsize
-plt.rc("figure", titlesize=14)  # fontsize of the figure title
+
+def setup_plot():
+    plt.rc("font", size=14)  # controls default text sizes
+    plt.rc("axes", titlesize=14)  # fontsize of the axes title
+    plt.rc("axes", labelsize=14)  # fontsize of the x and y labels
+    plt.rc("xtick", labelsize=14)  # fontsize of the tick labels
+    plt.rc("ytick", labelsize=14)  # fontsize of the tick labels
+    plt.rc("legend", fontsize=14)  # legend fontsize
+    plt.rc("figure", titlesize=14)  # fontsize of the figure title
 
 
 def load_data(name: str, importance_name: str, timed_name: bool = False) -> Dict[any, any]:
@@ -40,9 +42,9 @@ def create_importance_plot(filename: str, importance_name: str, timed_name: bool
     converted_data: List[List[any]] = []
     for percent, percent_data in data.items():
         for importance_type, importance_type_data in percent_data.items():
-            importance_type_name: str = "BN Node \u03B3 and Edge \u03B1" if importance_type == "bn_node_importance_added" \
-                else "BN Node \u03B3" if importance_type == "bn_node_importance_only" else "Edge \u03B1" if \
-                importance_type == "bn_edge_importance" else "None"
+            importance_type_name: str = "BN Node \u03B3 and Edge \u03B1" if importance_type == "BNN_EDGE" \
+                else "BN Node \u03B3" if importance_type == "BNN_ONLY" else "Edge \u03B1" if \
+                importance_type == "EDGE_ONLY" else "None"
             if importance_type_name is not "None":
                 plot_point: List[any] = [importance_type_name, int(percent),
                                          float(importance_type_data["train_accuracy"])]

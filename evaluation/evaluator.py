@@ -135,8 +135,11 @@ class ImportanceEvaluator:
         importance_prune_data["test_accuracy"] = str(test_score[1])
         importance_prune_data["train_class_accuracy"] = train_class_accuracy_report
         importance_prune_data["test_class_accuracy"] = test_class_accuracy_report
+        importance_type: str = get_importance_type_name(self.importance_type)
+        if self.relevant_classes is not None:
+            importance_type = importance_type + str(self.relevant_classes)
         self.model_data.store_data(
-            get_importance_type_name(self.importance_type) + str(self.relevant_classes),
+            importance_type,
             importance_prune_percent,
             self.importance_calculation.name,
             importance_prune_data)
