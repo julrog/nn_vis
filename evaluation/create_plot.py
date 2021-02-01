@@ -173,7 +173,7 @@ def create_importance_plot_compare_class_vs_all(filename: str, importance_name: 
     plot: Axes = df.plot(legend=True)
     plot.set_ylabel("Prediction Accuracy")
 
-    save_plot("class_compare_%s" % check_importance_type)
+    save_plot("%s_class_compare_%s_%i" % (importance_name, check_importance_type, class_index))
 
     if show:
         plt.show()
@@ -213,7 +213,7 @@ def create_importance_plot_compare_classes_vs_all(filename: str, importance_name
     for l in plot.lines:
         plt.setp(l, linewidth=3, alpha=0.7)
 
-    save_plot("class_compare_%s" % check_importance_type)
+    save_plot("%s_class_compare_%s" % (importance_name, check_importance_type))
 
     if show:
         plt.show()
