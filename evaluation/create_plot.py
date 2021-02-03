@@ -70,6 +70,7 @@ def create_importance_plot(filename: str, importance_name: str, timed_name: bool
 
     if show:
         plt.show()
+    plt.close()
 
 
 def create_importance_plot_compare_regularizer(filename: str, importance_names: List[str], check_importance_type: str,
@@ -77,8 +78,8 @@ def create_importance_plot_compare_regularizer(filename: str, importance_names: 
     plt.rcParams["legend.loc"] = "lower left"
     converted_data: List[List[any]] = []
     for importance_name in importance_names:
-        importance_label_name: str = "L1" if "l1_" in importance_name else "L1 + L2" if "l1l2_" in importance_name \
-            else "L2" if "l2_" in importance_name else "Without"
+        importance_label_name: str = "L2" if "_l2" in importance_name else "L1 + L2" if "l1l2" in importance_name \
+            else "L1" if "l1" in importance_name else "Without"
         data: Dict[any, any] = load_data(filename, importance_name, timed_name)
 
         for percent, percent_data in data.items():
@@ -105,10 +106,11 @@ def create_importance_plot_compare_regularizer(filename: str, importance_names: 
     plot.text(0.9, -0.025, "{:.0f}".format(90), color="red", transform=trans,
               va="bottom", ha="center")
 
-    save_plot("compare_%s" % check_importance_type)
+    save_plot("regularizer_compare_%s" % check_importance_type)
 
     if show:
         plt.show()
+    plt.close()
 
 
 def create_importance_plot_compare_bn_parameter(filename: str, importance_names: List[str], check_importance_type: str,
@@ -142,6 +144,7 @@ def create_importance_plot_compare_bn_parameter(filename: str, importance_names:
 
     if show:
         plt.show()
+    plt.close()
 
 
 def create_importance_plot_compare_class_vs_all(filename: str, importance_name: str, class_index: int,
@@ -177,6 +180,7 @@ def create_importance_plot_compare_class_vs_all(filename: str, importance_name: 
 
     if show:
         plt.show()
+    plt.close()
 
 
 def create_importance_plot_compare_classes_vs_all(filename: str, importance_name: str, check_importance_type: str,
@@ -217,3 +221,4 @@ def create_importance_plot_compare_classes_vs_all(filename: str, importance_name
 
     if show:
         plt.show()
+    plt.close()

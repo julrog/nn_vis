@@ -1,5 +1,8 @@
+import logging
 import os
 from typing import List
+
+from progressbar import ProgressBar
 
 from data.mnist_data_handler import split_mnist_data, get_prepared_data
 from data.model_data import ModelData
@@ -10,6 +13,7 @@ from evaluation.evaluator import ImportanceEvaluator
 from neural_network_preprocessing.create_mnist_model import create
 from neural_network_preprocessing.importance import ImportanceType, get_importance_type_name, ImportanceCalculation
 from neural_network_preprocessing.neural_network import ProcessedNetwork
+from utility.log_handling import setup_logger
 
 
 def create_importance_data(model_data: ModelData, importance_type: ImportanceType):
@@ -21,16 +25,17 @@ def create_importance_data(model_data: ModelData, importance_type: ImportanceTyp
     model_data.save_data()
 
 
-def evaluate_importance(name: str, importance_calculation: ImportanceCalculation):
-    model_data: ModelData = ModelData(name)
+def evaluate_importance(model_data: ModelData, importance_type: ImportanceType, importance_calculation: ImportanceCalculation):
     model_data.reload_model()
     importance_handler: ImportanceEvaluator = ImportanceEvaluator(model_data)
-    importance_handler.setup(importance_calculation)
+    importance_handler.setup(importance_type, importance_calculation)
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_prepared_data(model_data.get_class_selection())
     importance_handler.set_train_and_test_data(x_train, y_train, x_test, y_test)
     importance_handler.create_evaluation_data(10)
 
 
+setup_logger("evaluation")
+logging.info("Evaluation will take some time...")
 setup_plot()
 
 name: str = "default_all"
@@ -58,16 +63,21 @@ importance_calculations: List[ImportanceCalculation] = [
     ImportanceCalculation.EDGE_ONLY
 ]
 
-for importance_type in importance_types:
-    create_importance_data(model_data, importance_type)
-    for importance_calculation in importance_calculations:
-        evaluate_importance(name, importance_calculation)
+bar: ProgressBar = ProgressBar(max_value=len(importance_calculations) * len(importance_types))
+bar.start()
+count: int = 0
+for it in importance_types:
+    create_importance_data(model_data, it)
+    for ic in importance_calculations:
+        evaluate_importance(model_data, it, ic)
 
-    importance_type_name: str = get_importance_type_name(importance_type)
-    create_importance_plot("default_all", importance_type_name, True, False)
-    for importance_calculation in importance_calculations:
-        create_importance_plot_compare_classes_vs_all(name, importance_type_name, importance_calculation.name,
+    importance_type_name: str = get_importance_type_name(it)
+    create_importance_plot(name, importance_type_name, True, False)
+    for ic in importance_calculations:
+        create_importance_plot_compare_classes_vs_all(name, importance_type_name, ic.name,
                                                       False, True, False)
+        count += 1
+        bar.update(count)
 create_importance_plot_compare_regularizer(name, ["nobeta_gammaone", "nobeta_gammaone_l1", "nobeta_gammaone_l2",
                                                   "nobeta_gammaone_l1l2"], "BNN_EDGE", True, False)
 create_importance_plot_compare_bn_parameter(name, ["nobeta_gammaone_l1", "beta_gammaone_l1", "beta_gammazero_l1",
