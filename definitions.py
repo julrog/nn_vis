@@ -15,7 +15,6 @@ def pairwise(it, size: int):
             for _ in range(size - 1):
                 next(it)
         except StopIteration:
-            # no more elements in the iterator
             return
 
 
@@ -25,5 +24,4 @@ def vec4wise(it):
         try:
             yield next(it), next(it), next(it), next(it),
         except StopIteration:
-            # no more elements in the iterator
             return

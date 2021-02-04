@@ -11,13 +11,13 @@ from utility.file import EvaluationFile
 
 
 def setup_plot():
-    plt.rc("font", size=14)  # controls default text sizes
-    plt.rc("axes", titlesize=14)  # fontsize of the axes title
-    plt.rc("axes", labelsize=14)  # fontsize of the x and y labels
-    plt.rc("xtick", labelsize=14)  # fontsize of the tick labels
-    plt.rc("ytick", labelsize=14)  # fontsize of the tick labels
-    plt.rc("legend", fontsize=14)  # legend fontsize
-    plt.rc("figure", titlesize=14)  # fontsize of the figure title
+    plt.rc("font", size=14)
+    plt.rc("axes", titlesize=14)
+    plt.rc("axes", labelsize=14)
+    plt.rc("xtick", labelsize=14)
+    plt.rc("ytick", labelsize=14)
+    plt.rc("legend", fontsize=14)
+    plt.rc("figure", titlesize=14)
 
 
 def load_data(name: str, importance_name: str, timed_name: bool = False) -> Dict[any, any]:

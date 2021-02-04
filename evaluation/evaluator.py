@@ -125,9 +125,9 @@ class ImportanceEvaluator:
         logging.info("Train loss: %f, Train accuracy: %f" % (train_score[0], train_score[1]))
         logging.info("Test loss: %f, Test accuracy: %f" % (test_score[0], test_score[1]))
 
-        truth_train: np.array = np.argmax(self.y_train, axis=1)  # Convert one-hot to index
+        truth_train: np.array = np.argmax(self.y_train, axis=1)
         prediction_train: np.array = self.model_data.model.predict_classes(self.x_train)
-        truth_test: np.array = np.argmax(self.y_test, axis=1)  # Convert one-hot to index
+        truth_test: np.array = np.argmax(self.y_test, axis=1)
         prediction_test: np.array = self.model_data.model.predict_classes(self.x_test)
 
         train_class_accuracy_report: Dict[str, any] = self.accuracy_report(truth_train, prediction_train)

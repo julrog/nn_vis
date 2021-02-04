@@ -34,7 +34,7 @@ class Edge:
 
     def random_importance_init(self, num_classes: int, padding: int, start_node: Node, end_node: Node, layer_id: int,
                                layer_edge_id: int):
-        importance: float = 1.0  # random.random()
+        importance: float = random.random()
         self.data = [2.0, layer_id, layer_edge_id, importance, start_node.data[num_classes + 5],
                      end_node.data[num_classes + 5], start_node.data[num_classes + 4], end_node.data[num_classes + 4]]
         self.data.extend(start_node.data[4:(num_classes + 4)])
