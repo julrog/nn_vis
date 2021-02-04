@@ -23,12 +23,12 @@ class CameraPose(IntEnum):
 
 
 CAMERA_POSE_POSITION: List[Vector3] = [
-    Vector3([3.0, 0.0, 0.0]),
-    Vector3([0.0, 0.0, 2.5]),
-    Vector3([0.0, 0.0, -2.5]),
-    Vector3([-2.75, -1.0, 1.25]),
-    Vector3([-2.5, 0.0, 2.5]),
-    Vector3([-2.0, 2.0, -2.0]),
-    Vector3([-2.0, 2.0, 2.0]),
+    Vector3([3.0, 0.0, 0.0]),       #z
+    Vector3([0.0, 0.0, 2.5]),       #x
+    Vector3([0.0, 0.0, -2.5]),      #xz
+    Vector3([-2.75, -1.0, 1.25]),   #x
+    Vector3([-2.5, 0.0, 2.5]),      #x
+    Vector3([-2.0, 2.0, -2.0]),     #xz
+    Vector3([-2.0, 2.0, 2.0]),      #x
     Vector3([-3.5, 0.0, 0.0])
 ]

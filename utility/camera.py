@@ -65,10 +65,10 @@ class Camera:
         self.pitch += y_offset * self.rotation_speed
 
         if constrain_pitch:
-            if self.pitch > 45.0:
-                self.pitch = 45.0
-            if self.pitch < -45.0:
-                self.pitch = -45.0
+            if self.pitch > 60.0:
+                self.pitch = 60.0
+            if self.pitch < -60.0:
+                self.pitch = -60.0
 
     def update_camera_vectors(self):
         if not self.rotate_around_base:
@@ -113,17 +113,18 @@ class Camera:
         self.move_vector.z = 0 if self.move_vector.z == direction.z else self.move_vector.z
 
     def set_position(self, camera_position_index: CameraPose):
+        self.move_vector = Vector3([0, 0, 0])
         self.camera_up = Vector3([0.0, 1.0, 0.0])
         self.camera_pos = CAMERA_POSE_POSITION[camera_position_index]
         self.camera_pos = self.base + self.camera_pos
         self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
-        self.set_yaw_pitch_from_front(False)
+        self.set_yaw_pitch_from_front(not camera_position_index == 0)
         self.camera_right = Vector3(vector.normalise(np.cross(self.camera_up, self.camera_front)))
 
     def set_yaw_pitch_from_front(self, use_x: bool = True):
         try:
             self.pitch = degrees(asin(self.camera_front.y))
-            if use_x:
+            if not use_x:
                 self.yaw = degrees(acos(self.camera_front.x / cos(radians(self.pitch))))
             else:
                 self.yaw = degrees(asin(self.camera_front.z / cos(radians(self.pitch))))

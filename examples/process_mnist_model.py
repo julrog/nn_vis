@@ -2,7 +2,7 @@ import os.path
 from typing import List
 
 from data.mnist_data_handler import split_mnist_data
-from data.model_data import ModelData
+from data.model_data import ModelData, ModelTrainType
 from definitions import DATA_PATH
 from neural_network_preprocessing.create_mnist_model import create
 from neural_network_preprocessing.importance import ImportanceType, get_importance_type_name
@@ -14,11 +14,11 @@ from utility.recording_config import RecordingConfig
 setup_logger("sample_processing")
 
 # -------------------------------------------------change these settings-----------------------------------------------#
-name: str = "regularized_all"
+name: str = "untrained_all"
 class_selection: List[int] or None = None  # [0, 1, 2, 3, 4]
 importance_type: ImportanceType = ImportanceType(ImportanceType.GAMMA | ImportanceType.L1)
 
-basic_model_data: ModelData = create(name=name, batch_size=128, epochs=15, layer_data=[81, 49], regularized=True,
+basic_model_data: ModelData = create(name=name, batch_size=128, epochs=15, layer_data=[81, 49], regularized=False, train_type=ModelTrainType.UNTRAINED,
                                      class_selection=class_selection)
 # ---------------------------------------------------------------------------------------------------------------------#
 
