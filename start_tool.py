@@ -73,7 +73,7 @@ def compute_render(some_name: str):
         window.cam.base = network_processor.get_node_mid()
         window.cam.set_position(CameraPose.LEFT)
 
-        fps: float = 60
+        fps: float = 120
         frame_count: int = 0
         to_pause_time: float = 0
         last_frame_count: int = 0
