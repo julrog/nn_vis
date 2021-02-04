@@ -1,3 +1,4 @@
+import logging
 import os
 from enum import Enum
 from typing import List, Dict
@@ -15,10 +16,15 @@ class ModelTrainType(Enum):
     UNBALANCED = 2
 
 
+SUPPORTED_LAYER: List[str] = ["Dense"]
+IGNORED_LAYER: List[str] = ["Flatten"]
+
+
 class ModelData:
     def __init__(self, name: str, description: str = None, model: Model = None):
         self.name: str = name
         self.model: Model = model if model is not None else keras.models.load_model(self.get_model_path())
+        self.check_model_supported_layer()
         self.description: str = description
         self.data: dict = dict()
         self.data["name"] = self.name
@@ -86,6 +92,7 @@ class ModelData:
 
     def reload_model(self):
         self.model = keras.models.load_model(self.get_model_path())
+        self.check_model_supported_layer()
 
     def get_model_path(self) -> str:
         return DATA_PATH + "model/" + self.name + "/tf_model"
@@ -95,3 +102,8 @@ class ModelData:
 
     def save_data(self):
         self.data_file.write_data()
+
+    def check_model_supported_layer(self):
+        for index, layer in enumerate(self.model.layers):
+            if layer.__class__.__name__ not in SUPPORTED_LAYER and layer.__class__.__name__ not in IGNORED_LAYER:
+                raise Exception("'%s' layer type of model not supported!" % layer.__class__.__name__)
