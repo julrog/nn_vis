@@ -53,8 +53,11 @@ The parameters used in the shaders rendering the neural network can be changed b
 
 ## Processing
 <img align="center" src="./docs/images/own_pipeline.png" />
-The above pipeline explains the bundling process of a neural network through my code.
+The above pipeline explains the bundling process of a neural network through my code. 
+
+
 <img align="center" src="./docs/images/comparisson_processing.jpg" />
+This image shows the different stages in the processing pipeline.
 
 ### Parameters
 The processing can be influenced by the following parameters. The default values are in general derived from empircally tested values of related work regarding edge bundling methods. Some values have a high impact on the processing time.
