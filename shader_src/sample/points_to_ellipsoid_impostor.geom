@@ -44,7 +44,7 @@ void main()
         vec3 line_front = normalize(cross(line_right, line_up));
         line_up = normalize(cross(line_right, line_front));
 
-        float line_direction_scale = 1.0 + (10.0 * vs_importance[0]);
+        float line_direction_scale = 1.0 + 1.5 * vs_importance[0];
         if(vs_edge[0] == 1.0) line_direction_scale = 1.0;
 
         vec3 line_right_offset = (ellipsoid_position - position_cam_a) * line_direction_scale;

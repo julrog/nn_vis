@@ -16,7 +16,6 @@ layout(binding = 1) restrict writeonly buffer sample_output
 };
 
 uniform int work_group_offset;
-uniform int max_sample_points;
 
 vec4 read(highp uint index)
 {

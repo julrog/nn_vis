@@ -1,8 +1,4 @@
-from typing import List
-
 from OpenGL.GL import *
-
-LOG_SOURCE: str = "FRAMEBUFFER"
 
 
 class FrameBufferObject:

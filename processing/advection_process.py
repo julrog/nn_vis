@@ -26,6 +26,14 @@ class AdvectionProgress:
         if self.current_bandwidth < self.limit:
             self.limit_reached = True
 
+    def get_max_iterations(self) -> int:
+        iteration: int = 0
+        current_bandwidth: float = self.bandwidth
+        while current_bandwidth > self.limit:
+            current_bandwidth = self.bandwidth * math.pow(self.bandwidth_reduction, iteration)
+            iteration += 1
+        return iteration
+
     def get_advection_strength(self) -> float:
         return self.current_bandwidth * self.advection_direction
 

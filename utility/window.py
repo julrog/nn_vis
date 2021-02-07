@@ -1,51 +1,55 @@
 from typing import Dict, Tuple
+
 import glfw
 from OpenGL.GL import *
 from pyrr import Vector3
 
 from utility.camera import Camera
 from utility.singleton import Singleton
+from utility.types import CameraPose
+from utility.window_config import WindowConfig
 
 
 class Window:
-    def __init__(self, settings: Dict[str, any]):
-        self.settings: Dict[str, any] = settings
+    def __init__(self, config: WindowConfig):
+        self.config: WindowConfig = config
 
         # glfw.window_hint(glfw.DECORATED, glfw.FALSE)
-        self.window_handle = glfw.create_window(settings["width"], settings["height"], settings["title"],
-                                                None,
-                                                settings.get("share"))
+        self.window_handle = glfw.create_window(config["width"], config["height"], config["title"], None, None)
 
         if not self.window_handle:
             raise Exception("glfw window can not be created!")
-        self.width: float = settings["width"]
-        self.height: float = settings["height"]
         self.active: bool = False
-        self.cam: Camera = Camera(self.width, self.height, Vector3([0.0, 0.0, 0.0]))
+        self.cam: Camera = Camera(self.config["width"],
+                                  self.config["height"],
+                                  Vector3([0.0, 0.0, 0.0]),
+                                  rotation=self.config["camera_rotation"],
+                                  rotation_speed=self.config["camera_rotation_speed"])
 
-        self.last_mouse_pos: Tuple[int, int] = (int(self.width / 2), int(self.height / 2))
+        self.last_mouse_pos: Tuple[int, int] = (int(self.config["width"] / 2), int(self.config["height"] / 2))
         self.mouse_set: bool = False
         self.freeze: bool = True
         self.gradient: bool = True
         self.mouse_captured: bool = False
         self.focused: bool = True
         self.screenshot: bool = False
-        self.screenshot_series: int = 0
         self.record: bool = False
         self.frame_id: int = 0
 
-    def set_position(self, x: float, y: float):
-        glfw.set_window_pos(self.window_handle, x, y)
-
     def set_size(self, width: float, height: float):
-        self.width = width
-        self.height = height
+        self.config["width"] = width
+        self.config["height"] = height
         if self.active:
             glViewport(0, 0, width, height)
         self.cam.set_size(width, height)
 
     def set_callbacks(self):
         def resize_clb(glfw_window, width, height):
+            self.config["screen_width"] = width
+            self.config["screen_height"] = height
+            self.config.store()
+
+        def frame_resize_clb(glfw_window, width, height):
             self.set_size(width, height)
 
         def mouse_look_clb(glfw_window, x_pos, y_pos):
@@ -62,17 +66,27 @@ class Window:
             self.last_mouse_pos = (x_pos, y_pos)
             self.cam.process_mouse_movement(x_offset, y_offset)
 
-        def mouse_button_callback(glfw_window, button: int, action: int, mods: int):
+        def mouse_button_clb(glfw_window, button: int, action: int, mods: int):
             if not self.focused:
                 return
             if button == glfw.MOUSE_BUTTON_RIGHT and action == glfw.PRESS:
                 self.toggle_mouse_capture()
 
-        def focus_callback(glfw_window, focused: int):
+        def focus_clb(glfw_window, focused: int):
             if focused:
                 self.focused = True
             else:
                 self.focused = False
+
+        def window_pos_clb(glfw_window, x_pos: int, y_pos: int):
+            if len(glfw.get_monitors()) >= 1:
+                for monitor_id, monitor in enumerate(glfw.get_monitors()):
+                    m_x, m_y, width, height = glfw.get_monitor_workarea(monitor)
+                    if m_x <= x_pos < m_x + width and m_y <= y_pos < m_y + height:
+                        self.config["monitor_id"] = monitor_id
+            self.config["screen_x"] = x_pos
+            self.config["screen_y"] = y_pos
+            self.config.store()
 
         def key_input_clb(glfw_window, key, scancode, action, mode):
             if not self.focused:
@@ -100,50 +114,56 @@ class Window:
                 self.freeze = not self.freeze
             if key == glfw.KEY_G and action == glfw.RELEASE:
                 self.gradient = not self.gradient
+            if key == glfw.KEY_H and action == glfw.RELEASE:
+                self.cam.rotate_around_base = not self.cam.rotate_around_base
+                self.config["camera_rotation"] = self.cam.rotate_around_base
+                self.config.store()
 
             if key == glfw.KEY_K and action == glfw.RELEASE:
                 self.screenshot = True
-            if key == glfw.KEY_L and action == glfw.RELEASE:
-                self.screenshot_series = 8
             if key == glfw.KEY_R and action == glfw.RELEASE:
                 self.record = not self.record
 
             if key == glfw.KEY_0 and action == glfw.RELEASE:
-                self.cam.set_position(0)
+                self.cam.set_position(CameraPose.LEFT)
             if key == glfw.KEY_1 and action == glfw.RELEASE:
-                self.cam.set_position(1)
+                self.cam.set_position(CameraPose.FRONT)
             if key == glfw.KEY_2 and action == glfw.RELEASE:
-                self.cam.set_position(2)
+                self.cam.set_position(CameraPose.RIGHT)
             if key == glfw.KEY_3 and action == glfw.RELEASE:
-                self.cam.set_position(3)
+                self.cam.set_position(CameraPose.BACK_RIGHT)
             if key == glfw.KEY_4 and action == glfw.RELEASE:
-                self.cam.set_position(4)
+                self.cam.set_position(CameraPose.BACK_RIGHT)
             if key == glfw.KEY_5 and action == glfw.RELEASE:
-                self.cam.set_position(5)
+                self.cam.set_position(CameraPose.UPPER_BACK_LEFT)
             if key == glfw.KEY_6 and action == glfw.RELEASE:
-                self.cam.set_position(6)
+                self.cam.set_position(CameraPose.UPPER_BACK_RIGHT)
             if key == glfw.KEY_7 and action == glfw.RELEASE:
-                self.cam.set_position(7)
+                self.cam.set_position(CameraPose.LOWER_BACK_RIGHT)
             if key == glfw.KEY_8 and action == glfw.RELEASE:
-                self.cam.set_position(8)
+                self.cam.set_position(CameraPose.BACK)
             if key == glfw.KEY_9 and action == glfw.RELEASE:
-                self.cam.set_position(9)
+                self.cam.set_position(CameraPose.LEFT)
 
         glfw.set_window_size_callback(self.window_handle, resize_clb)
+        glfw.set_framebuffer_size_callback(self.window_handle, frame_resize_clb)
         glfw.set_cursor_pos_callback(self.window_handle, mouse_look_clb)
         glfw.set_key_callback(self.window_handle, key_input_clb)
-        glfw.set_mouse_button_callback(self.window_handle, mouse_button_callback)
-        glfw.set_window_focus_callback(self.window_handle, focus_callback)
+        glfw.set_mouse_button_callback(self.window_handle, mouse_button_clb)
+        glfw.set_window_focus_callback(self.window_handle, focus_clb)
+        glfw.set_window_pos_callback(self.window_handle, window_pos_clb)
 
     def activate(self):
-        if self.settings.get("monitor") is not None and 0 < self.settings.get("monitor") < len(glfw.get_monitors()):
-            monitor = glfw.get_monitors()[self.settings.get("monitor")]
-            m_x, m_y = glfw.get_monitor_pos(monitor)
-            glfw.set_window_pos(self.window_handle, m_x, m_y)
+        if self.config["monitor_id"] is not None and 0 <= self.config["monitor_id"] < len(glfw.get_monitors()):
+            glfw.set_window_pos(self.window_handle, self.config["screen_x"], self.config["screen_y"])
+        elif self.config["monitor_id"] is not None:
+            self.config["screen_x"] = 0
+            self.config["screen_y"] = 0
+            glfw.set_window_pos(self.window_handle, 0, 0)
 
         glfw.make_context_current(self.window_handle)
         glfw.set_input_mode(self.window_handle, glfw.CURSOR, glfw.CURSOR_NORMAL)
-        glViewport(0, 0, self.width, self.height)
+        glViewport(0, 0, self.config["width"], self.config["height"])
         self.active = True
 
     def is_active(self) -> bool:
@@ -175,19 +195,16 @@ class WindowHandler(metaclass=Singleton):
         if not glfw.init():
             raise Exception("glfw can not be initialized!")
 
-    def create_window(self, title: str, width: float, height: float, monitor: int = None):
-        settings: Dict[str, any] = dict()
-        settings["title"] = title
-        settings["width"] = width
-        settings["height"] = height
-        if monitor is not None:
-            settings["monitor"] = monitor
-        window = Window(settings)
+    def create_window(self, hidden: bool = False):
+        if hidden:
+            glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
+        window_config: WindowConfig = WindowConfig()
+        window = Window(window_config)
 
-        if self.windows.get(title):
-            self.windows[title].destroy()
+        if self.windows.get(window_config["title"]):
+            self.windows[window_config["title"]].destroy()
 
-        self.windows[title] = window
+        self.windows[window_config["title"]] = window
         return window
 
     def get_window(self, title: str):

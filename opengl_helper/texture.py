@@ -1,6 +1,6 @@
 from OpenGL.GL import *
 
-LOG_SOURCE: str = "TEXTURE"
+from utility.singleton import Singleton
 
 
 class Texture:
@@ -24,7 +24,7 @@ class Texture:
     def bind_as_texture(self, position=None):
         if position is None:
             if self.texture_position is -1:
-                raise Exception("[%s] No texture position configured" % LOG_SOURCE)
+                raise Exception("No texture position configured.")
         else:
             self.texture_position = position
         self.texture_handler.activate(self.texture_position)
@@ -33,7 +33,7 @@ class Texture:
     def bind_as_image(self, flag: str, position=None):
         if position is None:
             if self.image_position is -1:
-                raise Exception("[%s] No image position configured!" % LOG_SOURCE)
+                raise Exception("No image position configured!")
         else:
             self.image_position = position
         ogl_flag = GL_WRITE_ONLY if flag is "write" else GL_READ_ONLY if flag is "read" else GL_READ_WRITE
@@ -48,20 +48,11 @@ class Texture:
         glDeleteTextures(1, [self.ogl_handle])
 
 
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
 class TextureHandler(metaclass=Singleton):
     def __init__(self):
         self.max_textures: int = glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
 
     def activate(self, position: int):
         if position < 0 or position > self.max_textures:
-            raise Exception("[%s] OGL Texture position '%d' not available." % (LOG_SOURCE, position))
+            raise Exception("OGL Texture position '%d' not available." % position)
         glActiveTexture(GL_TEXTURE0 + position)

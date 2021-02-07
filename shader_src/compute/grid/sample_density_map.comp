@@ -8,17 +8,8 @@ struct SamplePoint
 struct DensityGrid
 {
     uint overall_density;
-    uint density_0;
-    uint density_1;
-    uint density_2;
-    uint density_3;
-    uint density_4;
-    uint density_5;
-    uint density_6;
-    uint density_7;
-    uint density_8;
-    uint density_9;
-    uint fill;
+    //$$uint density_$r_class_id$;$$
+    //$$uint padding_$r_densitybuffer_padding_id$;$$
 };
 
 struct EdgeData
@@ -31,26 +22,9 @@ struct EdgeData
     float end_importance_length;
     float start_importance;
     float end_importance;
-    float start_importance_0;
-    float start_importance_1;
-    float start_importance_2;
-    float start_importance_3;
-    float start_importance_4;
-    float start_importance_5;
-    float start_importance_6;
-    float start_importance_7;
-    float start_importance_8;
-    float start_importance_9;
-    float end_importance_0;
-    float end_importance_1;
-    float end_importance_2;
-    float end_importance_3;
-    float end_importance_4;
-    float end_importance_5;
-    float end_importance_6;
-    float end_importance_7;
-    float end_importance_8;
-    float end_importance_9;
+    //$$float start_importance_$r_class_id$;$$
+    //$$float end_importance_$r_class_id$;$$
+    //$$float padding_$r_edgebuffer_padding_id$;$$
 };
 
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -97,7 +71,7 @@ uniform vec3 grid_bounding_min;
 const float cell_scale = 1.36602540378;
 
 EdgeData current_edge;
-float importance[10];
+//$float importance[$num_classes$];
 float overall_importance;
 
 vec4 read(highp uint index)
@@ -151,44 +125,17 @@ highp float density_estimation(vec3 position, float cell_length, vec3 center, ve
 
 void apply_density(EdgeData current_edge, highp int index, float scale) {
     atomicAdd(grid[index].overall_density, int(scale * overall_importance));
-    atomicAdd(grid[index].density_0, int(scale * importance[0]));
-    atomicAdd(grid[index].density_1, int(scale * importance[1]));
-    atomicAdd(grid[index].density_2, int(scale * importance[2]));
-    atomicAdd(grid[index].density_3, int(scale * importance[3]));
-    atomicAdd(grid[index].density_4, int(scale * importance[4]));
-    atomicAdd(grid[index].density_5, int(scale * importance[5]));
-    atomicAdd(grid[index].density_6, int(scale * importance[6]));
-    atomicAdd(grid[index].density_7, int(scale * importance[7]));
-    atomicAdd(grid[index].density_8, int(scale * importance[8]));
-    atomicAdd(grid[index].density_9, int(scale * importance[9]));
+    //$$atomicAdd(grid[index].density_$r_class_id$, int(scale * importance[$r_class_id$]));$$
 }
 
 void apply_density_prev(EdgeData current_edge, highp int index, float scale) {
     atomicAdd(prev_grid[index].overall_density, int(scale * overall_importance));
-    atomicAdd(prev_grid[index].density_0, int(scale * importance[0]));
-    atomicAdd(prev_grid[index].density_1, int(scale * importance[1]));
-    atomicAdd(prev_grid[index].density_2, int(scale * importance[2]));
-    atomicAdd(prev_grid[index].density_3, int(scale * importance[3]));
-    atomicAdd(prev_grid[index].density_4, int(scale * importance[4]));
-    atomicAdd(prev_grid[index].density_5, int(scale * importance[5]));
-    atomicAdd(prev_grid[index].density_6, int(scale * importance[6]));
-    atomicAdd(prev_grid[index].density_7, int(scale * importance[7]));
-    atomicAdd(prev_grid[index].density_8, int(scale * importance[8]));
-    atomicAdd(prev_grid[index].density_9, int(scale * importance[9]));
+    //$$atomicAdd(prev_grid[index].density_$r_class_id$, int(scale * importance[$r_class_id$]));$$
 }
 
 void apply_density_next(EdgeData current_edge, highp int index, float scale) {
     atomicAdd(next_grid[index].overall_density, int(scale * overall_importance));
-    atomicAdd(next_grid[index].density_0, int(scale * importance[0]));
-    atomicAdd(next_grid[index].density_1, int(scale * importance[1]));
-    atomicAdd(next_grid[index].density_2, int(scale * importance[2]));
-    atomicAdd(next_grid[index].density_3, int(scale * importance[3]));
-    atomicAdd(next_grid[index].density_4, int(scale * importance[4]));
-    atomicAdd(next_grid[index].density_5, int(scale * importance[5]));
-    atomicAdd(next_grid[index].density_6, int(scale * importance[6]));
-    atomicAdd(next_grid[index].density_7, int(scale * importance[7]));
-    atomicAdd(next_grid[index].density_8, int(scale * importance[8]));
-    atomicAdd(next_grid[index].density_9, int(scale * importance[9]));
+    //$$atomicAdd(next_grid[index].density_$r_class_id$, int(scale * importance[$r_class_id$]));$$
 }
 
 void main() {
@@ -201,56 +148,20 @@ void main() {
         current_edge = readEdge(index);
         if (edge_importance_type == 0) {
             float t = mod(index, max_sample_points)/current_edge.samples;
-            importance[0] = (1.0 - t) * current_edge.start_importance_0/current_edge.start_importance_length + t * current_edge.end_importance_0/current_edge.end_importance_length;
-            importance[1] = (1.0 - t) * current_edge.start_importance_1/current_edge.start_importance_length + t * current_edge.end_importance_1/current_edge.end_importance_length;
-            importance[2] = (1.0 - t) * current_edge.start_importance_2/current_edge.start_importance_length + t * current_edge.end_importance_2/current_edge.end_importance_length;
-            importance[3] = (1.0 - t) * current_edge.start_importance_3/current_edge.start_importance_length + t * current_edge.end_importance_3/current_edge.end_importance_length;
-            importance[4] = (1.0 - t) * current_edge.start_importance_4/current_edge.start_importance_length + t * current_edge.end_importance_4/current_edge.end_importance_length;
-            importance[5] = (1.0 - t) * current_edge.start_importance_5/current_edge.start_importance_length + t * current_edge.end_importance_5/current_edge.end_importance_length;
-            importance[6] = (1.0 - t) * current_edge.start_importance_6/current_edge.start_importance_length + t * current_edge.end_importance_6/current_edge.end_importance_length;
-            importance[7] = (1.0 - t) * current_edge.start_importance_7/current_edge.start_importance_length + t * current_edge.end_importance_7/current_edge.end_importance_length;
-            importance[8] = (1.0 - t) * current_edge.start_importance_8/current_edge.start_importance_length + t * current_edge.end_importance_8/current_edge.end_importance_length;
-            importance[9] = (1.0 - t) * current_edge.start_importance_9/current_edge.start_importance_length + t * current_edge.end_importance_9/current_edge.end_importance_length;
+            //$$importance[$r_class_id$] = (1.0 - t) * current_edge.start_importance_$r_class_id$/current_edge.start_importance_length + t * current_edge.end_importance_$r_class_id$/current_edge.end_importance_length;$$
             overall_importance = ((1.0 - t) * current_edge.start_importance + t * current_edge.end_importance) * current_edge.importance;
         }
         if (edge_importance_type == 1) {
-            importance[0] = current_edge.start_importance_0/current_edge.start_importance_length;
-            importance[1] = current_edge.start_importance_1/current_edge.start_importance_length;
-            importance[2] = current_edge.start_importance_2/current_edge.start_importance_length;
-            importance[3] = current_edge.start_importance_3/current_edge.start_importance_length;
-            importance[4] = current_edge.start_importance_4/current_edge.start_importance_length;
-            importance[5] = current_edge.start_importance_5/current_edge.start_importance_length;
-            importance[6] = current_edge.start_importance_6/current_edge.start_importance_length;
-            importance[7] = current_edge.start_importance_7/current_edge.start_importance_length;
-            importance[8] = current_edge.start_importance_8/current_edge.start_importance_length;
-            importance[9] = current_edge.start_importance_9/current_edge.start_importance_length;
+            //$$importance[$r_class_id$] = current_edge.start_importance_$r_class_id$/current_edge.start_importance_length;$$
             overall_importance = current_edge.start_importance * current_edge.importance;
         }
         if (edge_importance_type == 2) {
             highp float divisor = current_edge.start_importance_length + current_edge.end_importance_length;
-            importance[0] = (current_edge.start_importance_0 + current_edge.end_importance_0)/divisor;
-            importance[1] = (current_edge.start_importance_1 + current_edge.end_importance_1)/divisor;
-            importance[2] = (current_edge.start_importance_2 + current_edge.end_importance_2)/divisor;
-            importance[3] = (current_edge.start_importance_3 + current_edge.end_importance_3)/divisor;
-            importance[4] = (current_edge.start_importance_4 + current_edge.end_importance_4)/divisor;
-            importance[5] = (current_edge.start_importance_5 + current_edge.end_importance_5)/divisor;
-            importance[6] = (current_edge.start_importance_6 + current_edge.end_importance_6)/divisor;
-            importance[7] = (current_edge.start_importance_7 + current_edge.end_importance_7)/divisor;
-            importance[8] = (current_edge.start_importance_8 + current_edge.end_importance_8)/divisor;
-            importance[9] = (current_edge.start_importance_9 + current_edge.end_importance_9)/divisor;
+            //$$importance[$r_class_id$] = (current_edge.start_importance_$r_class_id$ + current_edge.end_importance_$r_class_id$)/divisor;$$
             overall_importance = (current_edge.start_importance + current_edge.end_importance) * current_edge.importance;
         }
         if (edge_importance_type == 3) {
-            importance[0] = current_edge.end_importance_0/current_edge.end_importance_length;
-            importance[1] = current_edge.end_importance_1/current_edge.end_importance_length;
-            importance[2] = current_edge.end_importance_2/current_edge.end_importance_length;
-            importance[3] = current_edge.end_importance_3/current_edge.end_importance_length;
-            importance[4] = current_edge.end_importance_4/current_edge.end_importance_length;
-            importance[5] = current_edge.end_importance_5/current_edge.end_importance_length;
-            importance[6] = current_edge.end_importance_6/current_edge.end_importance_length;
-            importance[7] = current_edge.end_importance_7/current_edge.end_importance_length;
-            importance[8] = current_edge.end_importance_8/current_edge.end_importance_length;
-            importance[9] = current_edge.end_importance_9/current_edge.end_importance_length;
+            //$$importance[$r_class_id$] = current_edge.end_importance_$r_class_id$/current_edge.end_importance_length;$$
             overall_importance = current_edge.end_importance * current_edge.importance;
         }
 
