@@ -62,7 +62,7 @@ The processing can be influenced by the following parameters. The default values
 }
 ```
 |Name|Recommended|Range|Description|Performance Impact|
-|---|---|---|---|
+|---|---|---|---|---|
 |edge_bandwidth_reduction|0.9|0 - 1.0|reduction of advection range every iteration for edge samples|high|
 |node_bandwidth_reduction|0.95|0 - 1.0|reduction of advection range every iteration for nodes|low|
 |edge_importance_type|0|{0,1,2,3}|the calculation type for edge importance|low|
@@ -75,11 +75,14 @@ The processing can be influenced by the following parameters. The default values
 
 ### Importance
 Each classification is represented by one color. Nodes and egdes are colored according to their importance in the network for correctly predicting the associated class. The validity of the importance is proven by pruning the model parameters in order of their calculated importance.
-<img align="center" src="./docs/evaluation/importance_compare_with_weight.svg" />
-The plot shows that pruning unimportant parameters does not influence the prediction accuracy of the model as much as the important parameters.
 
-Also by pruning based on importance of specific classes shows the accuracy is preserved for the exact classes in following plot. The accuracy for the focused class is always higher compared to the overall accuracy.
-<img align="center" src="./docs/evaluation/importance_class_compare.svg" />
+Overall Importance Pruning             |  Class Importance Pruning
+:-------------------------:|:-------------------------:
+![](./docs/evaluation/importance_compare_with_weight.svg)  |  ![](./docs/evaluation/importance_class_compare.svg)
+
+The left plot shows that pruning unimportant parameters does not influence the prediction accuracy of the model as much as the important parameters.
+
+Also by pruning based on importance of specific classes shows the accuracy is preserved for the exact classes in the right plot. The accuracy for the focused class is always higher compared to the overall accuracy.
 
 ## Used System
 
