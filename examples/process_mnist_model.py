@@ -14,11 +14,11 @@ from utility.recording_config import RecordingConfig
 setup_logger("sample_processing")
 
 # -------------------------------------------------change these settings-----------------------------------------------#
-name: str = "untrained_all"
+name: str = "default"
 class_selection: List[int] or None = None  # [0, 1, 2, 3, 4]
 importance_type: ImportanceType = ImportanceType(ImportanceType.GAMMA | ImportanceType.L1)
 
-basic_model_data: ModelData = create(name=name, batch_size=128, epochs=15, layer_data=[81, 49], regularized=False, train_type=ModelTrainType.UNTRAINED,
+basic_model_data: ModelData = create(name=name, batch_size=128, epochs=15, layer_data=[81, 49], regularized=False,
                                      class_selection=class_selection)
 # ---------------------------------------------------------------------------------------------------------------------#
 

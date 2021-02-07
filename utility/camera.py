@@ -120,6 +120,7 @@ class Camera:
         self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
         self.set_yaw_pitch_from_front(not camera_position_index == 0)
         self.camera_right = Vector3(vector.normalise(np.cross(self.camera_up, self.camera_front)))
+        self.yaw_offset = 0.0
 
     def set_yaw_pitch_from_front(self, use_x: bool = True):
         try:

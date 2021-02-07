@@ -55,11 +55,16 @@ class Node:
         for i in range(num_classes):
             if i == position_max_0:
                 random_value: float = random.random()
+                second_try: float = random.random()
+                random_value = (random_value if random_value > second_try else second_try)
                 importance_sum += random_value
                 importance_squared_sum += random_value * random_value
                 self.data.append(random_value)
             else:
-                random_value: float = random.random() / 5.0
+                random_value: float = random.random()
+                second_try: float = random.random()
+                random_value = (random_value if random_value < second_try else second_try)
+                random_value = random_value * random_value
                 importance_sum += random_value
                 importance_squared_sum += random_value * random_value
                 self.data.append(random_value)

@@ -16,9 +16,9 @@ class ProcessingConfig(BaseConfig):
 
     def set_defaults(self):
         setting_items: List[Tuple[str, str, str, any]] = []
-        setting_items.extend([("layer_distance", "Layer distance", "float", 1.0),
+        setting_items.extend([("layer_distance", "Layer distance", "float", 0.5),
                               ("layer_width", "Layer width", "float", 1.0),
-                              ("sampling_rate", "Sampling rate", "float", 10.0),
+                              ("sampling_rate", "Sampling rate", "float", 15.0),
                               ("prune_percentage", "Prune percentage", "float", 0.0),
                               ("node_bandwidth_reduction", "Node bandwidth reduction", "float", 0.95),
                               ("edge_bandwidth_reduction", "Edge bandwidth reduction", "float", 0.90),
