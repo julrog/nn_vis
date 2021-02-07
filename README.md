@@ -3,7 +3,7 @@
 Visualization of neural network architectures and parameters.
 </p>
 <p align="center">
-<img align="center" src="./docs/all_red_blue.gif" />
+<img align="center" src="./docs/images/all_red_blue.gif" />
 </p>
 
 ## Description
@@ -94,6 +94,6 @@ Also by pruning based on importance of specific classes shows the accuracy is pr
 * **Processing Times** - Pocessing of a fully connected neural network with following nodes per layer: 784, 81, 49, 10 takes 12 minutes. So the one-time calculations are not in real-time.
 
 ## Other Visualizations
-<img align="center" src="./docs/colored_lines.jpg" />
-<img align="center" src="./docs/spheres.jpg" />
-<img align="center" src="./docs/transparent_spheres.jpg" />
+<img align="center" src="./docs/images/colored_lines.jpg" />
+<img align="center" src="./docs/images/spheres.jpg" />
+<img align="center" src="./docs/images/transparent_spheres.jpg" />
