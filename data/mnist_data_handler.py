@@ -4,7 +4,7 @@ from typing import List, Tuple, Any
 
 import numpy as np
 from tensorflow import keras
-from tensorflow_core.python.keras.datasets import mnist
+from tensorflow.python.keras.datasets import mnist
 
 from definitions import DATA_PATH
 

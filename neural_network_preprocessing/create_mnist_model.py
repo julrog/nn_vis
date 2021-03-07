@@ -4,10 +4,9 @@ from typing import List, Any
 import numpy as np
 from sklearn.metrics import classification_report
 from tensorflow import keras
-from tensorflow_core.python.keras import Sequential
-from tensorflow_core.python.keras.layers import Flatten, Dense
-from tensorflow_core.python.keras.models import Model
-from tensorflow_core.python.layers.base import Layer
+from tensorflow.python.keras import Sequential, Model
+from tensorflow.python.keras.engine.base_layer import Layer
+from tensorflow.python.keras.layers import Flatten, Dense
 
 from data.mnist_data_handler import get_prepared_data, get_unbalance_data
 from data.model_data import ModelData, ModelTrainType
