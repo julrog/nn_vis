@@ -109,6 +109,8 @@ Also by pruning based on importance of specific classes shows the accuracy is pr
 
 ### Notes
 * **Processing Times** - Pocessing of a fully connected neural network with following nodes per layer: 784, 81, 49, 10 takes 12 minutes. So the one-time calculations are not in real-time.
+* **Python Version** - Tested on 3.7 and 3.8
+* **Dependencies** - check `reauirements.txt`
 
 ## Other Visualizations
 <img align="center" src="./docs/images/colored_lines.jpg" />
