@@ -1,3 +1,7 @@
+import sys
+import os.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(sys.modules[__name__].__file__), "..")))
+
 import logging
 import os
 from typing import List

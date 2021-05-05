@@ -1,3 +1,7 @@
+import sys
+import os.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(sys.modules[__name__].__file__), "..")))
+
 from data.mnist_data_handler import get_prepared_data
 from data.model_data import ModelData
 from evaluation.evaluator import ImportanceEvaluator
