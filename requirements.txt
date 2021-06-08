@@ -4,7 +4,7 @@ numpy==1.19.3
 tensorflow==2.4.1
 pandas==1.2.0
 pyrr==0.10.3
-Pillow==8.1.1
+Pillow==8.2.0
 progressbar2==3.53.1
 PyOpenGL==3.1.5
 scikit_learn==0.24.0
