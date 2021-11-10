@@ -1,7 +1,7 @@
 glfw==2.0.0
 matplotlib==3.3.3
 numpy==1.19.3
-tensorflow==2.4.1
+tensorflow==2.5.2
 pandas==1.2.0
 pyrr==0.10.3
 Pillow==8.1.1
