@@ -1,4 +1,4 @@
-#version 440
+#version 410
 
 layout(location = 0) in vec4 position;
 //$$layout(location = $r_nodebuffer_group_location$) in vec4 node_data_$r_nodebuffer_group_id$;$$

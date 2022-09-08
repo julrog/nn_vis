@@ -1,4 +1,4 @@
-#version 440
+#version 410
 
 flat in float vs_discard;
 

@@ -1,4 +1,5 @@
-#version 440
+#version 410
+#extension GL_ARB_conservative_depth : enable
 
 flat in mat4 gs_local_ellipsoid_transformation;
 flat in mat4 gs_local_ellipsoid_transformation_inverse;

@@ -1,4 +1,4 @@
-#version 440
+#version 410
 
 layout(points) in;
 in vec3 vs_normal[];
