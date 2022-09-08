@@ -1,4 +1,5 @@
-#version 440
+#version 410
+#extension GL_ARB_conservative_depth : enable
 
 flat in vec3  gs_sphere_position;
 flat in float gs_sphere_radius;

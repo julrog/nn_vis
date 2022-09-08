@@ -4,9 +4,8 @@ from typing import List, Any
 import numpy as np
 from sklearn.metrics import classification_report
 from tensorflow import keras
-from tensorflow.python.keras import Sequential, Model
-from tensorflow.python.keras.engine.base_layer import Layer
-from tensorflow.python.keras.layers import Flatten, Dense
+from tensorflow.keras import Sequential, Model
+from tensorflow.keras.layers import Flatten, Dense, Layer
 
 from data.mnist_data_handler import get_prepared_data, get_unbalance_data
 from data.model_data import ModelData, ModelTrainType
@@ -84,7 +83,9 @@ def evaluate_model(model_data: ModelData, x_train: Any, y_train: Any, x_test: An
         train_score[0], train_score[1], test_score[0], test_score[1]))
 
     c_y_test = np.argmax(y_test, axis=1)
-    prediction_test = model_data.model.predict_classes(x_test)
+    
+    predict_x = model_data.model.predict(x_test)
+    prediction_test = np.argmax(predict_x,axis=1)
     c_report: any = classification_report(c_y_test, prediction_test, output_dict=True)
     model_data.set_initial_performance(test_score[0], test_score[1], train_score[0], train_score[1], c_report)
 

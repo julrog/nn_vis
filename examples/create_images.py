@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(sys.modules[__name_
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.neighbors import KernelDensity
-from tensorflow.python.keras.datasets import mnist
+from tensorflow.keras.datasets import mnist
 
 from data.data_handler import ProcessedNNHandler
 from definitions import DATA_PATH

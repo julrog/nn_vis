@@ -5,7 +5,7 @@ from typing import List, Tuple, Dict
 import numpy as np
 from sklearn.metrics import classification_report
 from tensorflow import keras
-from tensorflow.python.keras import Model
+from tensorflow.keras import Model
 
 from data.model_data import ModelData
 from definitions import DATA_PATH

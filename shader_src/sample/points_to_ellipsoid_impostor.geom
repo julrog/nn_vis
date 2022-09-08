@@ -1,4 +1,4 @@
-#version 440
+#version 410
 
 layout(points) in;
 in vec4 vs_next_position[];
