@@ -104,12 +104,12 @@ Also by pruning based on importance of specific classes shows the accuracy is pr
 ## Used System
 
 * Windows 10
-* NVIDIA GeForce GTX 1660 SUPER
+* NVIDIA GeForce RTX 3080
 * AMD Ryzen 7 3700X
 
 ### Notes
-* **Processing Times** - Pocessing of a fully connected neural network with following nodes per layer: 784, 81, 49, 10 takes 12 minutes. So the one-time calculations are not in real-time.
-* **Python Version** - Tested on 3.7 and 3.8
+* **Processing Times** - Pocessing of a fully connected neural network with following nodes per layer: 784, 81, 49, 10 takes 3-4 minutes. So the one-time calculations are not in real-time.
+* **Python Version** - Tested on 3.9 (3.7 and 3.8 was tested with older python dependencies)
 * **Dependencies** - check `requirements.txt`
 
 ## Other Visualizations
