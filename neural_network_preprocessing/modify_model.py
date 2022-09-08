@@ -1,10 +1,10 @@
 from typing import Union, List
 
 import numpy as np
-from tensorflow.python.keras import Model
-from tensorflow.python.keras.layers import BatchNormalization, Dense
-from tensorflow.python.keras.regularizers import l1, l2, l1_l2
-from tensorflow.python.keras import Input
+from tensorflow.keras import Model
+from tensorflow.keras.layers import BatchNormalization, Dense
+from tensorflow.keras.regularizers import l1, l2, l1_l2
+from tensorflow.keras import Input
 
 from neural_network_preprocessing.importance import ImportanceType
 
