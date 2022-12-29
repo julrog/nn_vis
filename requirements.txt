@@ -1,6 +1,6 @@
 glfw==2.0.0
 matplotlib==3.3.3
-numpy==1.22.0
+numpy==1.23.5
 tensorflow==2.9.2
 pandas==1.2.0
 pyrr==0.10.3
