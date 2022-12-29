@@ -57,7 +57,10 @@ class OptionGui:
         self.processing_setting.set()
         self.generate()
 
-        self.gui_root.mainloop()
+        try:
+            self.gui_root.mainloop()
+        except(KeyboardInterrupt):
+            print('Closing')
         self.settings["Closed"] = True
 
     def handle_configure(self, event):
