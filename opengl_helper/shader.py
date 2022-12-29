@@ -8,27 +8,32 @@ from rendering.rendering_config import RenderingConfig
 
 
 def uniform_setter_function(uniform_setter: str) -> Callable:
-    if uniform_setter is "float":
+    if uniform_setter == "float":
+
         def uniform_func(location: int, data: float):
             glUniform1f(location, data)
 
         return uniform_func
-    if uniform_setter is "vec3":
+    if uniform_setter == "vec3":
+
         def uniform_func(location: int, data: List[float]):
             glUniform3fv(location, 1, data)
 
         return uniform_func
-    if uniform_setter is "mat4":
+    if uniform_setter == "mat4":
+
         def uniform_func(location: int, data: List[float]):
             glUniformMatrix4fv(location, 1, GL_FALSE, data)
 
         return uniform_func
-    if uniform_setter is "int":
+    if uniform_setter == "int":
+
         def uniform_func(location: int, data: int):
             glUniform1i(location, data)
 
         return uniform_func
-    if uniform_setter is "ivec3":
+    if uniform_setter == "ivec3":
+
         def uniform_func(location: int, data: List[int]):
             glUniform3iv(location, 1, data)
 
@@ -37,14 +42,20 @@ def uniform_setter_function(uniform_setter: str) -> Callable:
 
 
 class ShaderSetting:
-    def __init__(self, id_name: str, shader_paths: List[str], uniform_labels: List[str] = None):
+    def __init__(
+        self, id_name: str, shader_paths: List[str], uniform_labels: List[str] = None
+    ):
         self.id_name: str = id_name
         if len(shader_paths) < 2 or len(shader_paths) > 3:
-            raise Exception("Can't handle number of shaders for a program (either 2 or 3 with geometry shader).")
+            raise Exception(
+                "Can't handle number of shaders for a program (either 2 or 3 with geometry shader)."
+            )
         self.vertex: str = shader_paths[0]
         self.fragment: str = shader_paths[1]
         self.geometry: str = None if len(shader_paths) < 3 else shader_paths[2]
-        self.uniform_labels: List[str] = uniform_labels if uniform_labels is not None else []
+        self.uniform_labels: List[str] = (
+            uniform_labels if uniform_labels is not None else []
+        )
 
 
 class BaseShader:
@@ -67,7 +78,7 @@ class BaseShader:
                     uniform_data.append((shader_name, config[setting], "float"))
             self.set_uniform_data(uniform_data)
 
-    def set_uniform_data(self, data: List[Tuple[str, any, any]]):
+    def set_uniform_data(self, data: List[Tuple[str, any, str]]):
         program_is_set: bool = False
         for uniform_name, uniform_data, uniform_setter in data:
             if uniform_name not in self.uniform_ignore_labels:
@@ -75,15 +86,24 @@ class BaseShader:
                     if not program_is_set:
                         glUseProgram(self.shader_handle)
                         program_is_set = True
-                    uniform_location = glGetUniformLocation(self.shader_handle, uniform_name)
+                    uniform_location = glGetUniformLocation(
+                        self.shader_handle, uniform_name
+                    )
                     if uniform_location != -1:
                         self.uniform_cache[uniform_name] = (
-                            uniform_location, uniform_data, uniform_setter_function(uniform_setter))
+                            uniform_location,
+                            uniform_data,
+                            uniform_setter_function(uniform_setter),
+                        )
                     else:
                         self.uniform_ignore_labels.append(uniform_name)
                 else:
                     uniform_location, _, setter = self.uniform_cache[uniform_name]
-                    self.uniform_cache[uniform_name] = (uniform_location, uniform_data, setter)
+                    self.uniform_cache[uniform_name] = (
+                        uniform_location,
+                        uniform_data,
+                        setter,
+                    )
 
     def set_textures(self, textures: List[Tuple[Texture, str, int]]):
         self.textures: List[Tuple[Texture, str, int]] = textures
@@ -93,16 +113,25 @@ class BaseShader:
 
 
 class RenderShader(BaseShader):
-    def __init__(self, vertex_src: str, fragment_src: str, geometry_src: str = None,
-                 uniform_labels: List[str] = None):
+    def __init__(
+        self,
+        vertex_src: str,
+        fragment_src: str,
+        geometry_src: str = None,
+        uniform_labels: List[str] = None,
+    ):
         BaseShader.__init__(self)
         if geometry_src is None:
-            self.shader_handle = compileProgram(compileShader(vertex_src, GL_VERTEX_SHADER),
-                                                compileShader(fragment_src, GL_FRAGMENT_SHADER))
+            self.shader_handle = compileProgram(
+                compileShader(vertex_src, GL_VERTEX_SHADER),
+                compileShader(fragment_src, GL_FRAGMENT_SHADER),
+            )
         else:
-            self.shader_handle = compileProgram(compileShader(vertex_src, GL_VERTEX_SHADER),
-                                                compileShader(fragment_src, GL_FRAGMENT_SHADER),
-                                                compileShader(geometry_src, GL_GEOMETRY_SHADER))
+            self.shader_handle = compileProgram(
+                compileShader(vertex_src, GL_VERTEX_SHADER),
+                compileShader(fragment_src, GL_FRAGMENT_SHADER),
+                compileShader(geometry_src, GL_GEOMETRY_SHADER),
+            )
         if uniform_labels is not None:
             self.set_uniform_label(uniform_labels)
 
@@ -111,5 +140,9 @@ class RenderShader(BaseShader):
             texture.bind_as_texture(texture_position)
         glUseProgram(self.shader_handle)
 
-        for uniform_location, uniform_data, uniform_setter in self.uniform_cache.values():
+        for (
+            uniform_location,
+            uniform_data,
+            uniform_setter,
+        ) in self.uniform_cache.values():
             uniform_setter(uniform_location, uniform_data)

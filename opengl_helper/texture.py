@@ -13,17 +13,33 @@ class Texture:
         self.texture_position: int = -1
         self.image_position: int = -1
 
-    def setup(self, position: int = None, data=None):
+    def setup(
+        self,
+        position: int = None,
+        data=None,
+        internalformat=GL_RGBA32F,
+        data_type=GL_FLOAT,
+    ):
         self.bind_as_texture(position)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, self.width, self.height, 0, GL_RGBA, GL_FLOAT, data)
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            internalformat,
+            self.width,
+            self.height,
+            0,
+            GL_RGBA,
+            data_type,
+            data,
+        )
 
-    def bind_as_texture(self, position=None):
+    def bind_as_texture(self, position: int = None):
         if position is None:
-            if self.texture_position is -1:
+            if self.texture_position == -1:
                 raise Exception("No texture position configured.")
         else:
             self.texture_position = position
@@ -32,12 +48,20 @@ class Texture:
 
     def bind_as_image(self, flag: str, position=None):
         if position is None:
-            if self.image_position is -1:
+            if self.image_position == -1:
                 raise Exception("No image position configured!")
         else:
             self.image_position = position
-        ogl_flag = GL_WRITE_ONLY if flag is "write" else GL_READ_ONLY if flag is "read" else GL_READ_WRITE
-        glBindImageTexture(self.image_position, self.ogl_handle, 0, GL_FALSE, 0, ogl_flag, GL_RGBA32F)
+        ogl_flag = (
+            GL_WRITE_ONLY
+            if flag == "write"
+            else GL_READ_ONLY
+            if flag == "read"
+            else GL_READ_WRITE
+        )
+        glBindImageTexture(
+            self.image_position, self.ogl_handle, 0, GL_FALSE, 0, ogl_flag, GL_RGBA32F
+        )
 
     def read(self):
         self.bind_as_texture()
