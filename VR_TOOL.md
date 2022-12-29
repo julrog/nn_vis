@@ -1,4 +1,10 @@
-# VR TOOL
+<h1 align="center">VR TOOL</h2>
+<p align="center">
+<img align="center" src="./docs/images/vr_tool.gif" />
+</p>
+<p align="center">
+Visualization of neural network architectures and parameters in VR.
+</p>
 
 This tool can be used to render a processed neural network in VR.
 
