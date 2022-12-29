@@ -19,11 +19,12 @@ out vec3 gs_local_cuboid_hit_position;
 
 uniform mat4 projection;
 uniform float object_radius;
+uniform float scale;
 
 void draw_vertex(vec3 position, vec3 right, vec3 up, vec3 front, vec3 offset)
 {
     vec3 hit_position = position;
-    hit_position = hit_position + (offset.x) * right + (offset.x * normalize(right) + offset.y * up + offset.z * front) * object_radius * vs_importance[0];
+    hit_position = hit_position + (offset.x) * right + (offset.x * normalize(right) + offset.y * up + offset.z * front) * object_radius * scale * vs_importance[0];
     gs_local_cuboid_hit_position = vec3(gs_local_ellipsoid_transformation * vec4(hit_position, 1.0));// output
     gl_Position = projection * vec4(hit_position, 1.0);// output
 
@@ -48,7 +49,7 @@ void main()
         if(vs_edge[0] == 1.0) line_direction_scale = 1.0;
 
         vec3 line_right_offset = (ellipsoid_position - position_cam_a) * line_direction_scale;
-        line_right_offset = (length(line_right_offset) + object_radius * vs_importance[0]) * normalize(line_right_offset);
+        line_right_offset = (length(line_right_offset) + object_radius * scale * vs_importance[0]) * normalize(line_right_offset);
 
         mat4 local_ellipsoid_coord = mat4(0.0);
         local_ellipsoid_coord[0][0] = line_right.x;
@@ -95,9 +96,9 @@ void main()
         gs_local_ellipsoid_transformation = local_ellipsoid_coord * local_ellipsoid_translation;// output
         gs_local_ellipsoid_transformation_inverse = from_local_ellipsoid_translation * from_local_ellipsoid_coord;// output
         gs_local_ray_origin = vec3(gs_local_ellipsoid_transformation * vec4(0.0, 0.0, 0.0, 1.0));// output
-        gs_ellipsoid_radius = vec3(length(line_right_offset), object_radius * vs_importance[0], object_radius * vs_importance[0]);// output
+        gs_ellipsoid_radius = vec3(length(line_right_offset), object_radius * scale * vs_importance[0], object_radius * scale * vs_importance[0]);// output
 
-        if (gs_ellipsoid_radius.x > object_radius * vs_importance[0]) {
+        if (gs_ellipsoid_radius.x > object_radius * scale * vs_importance[0]) {
             draw_vertex(ellipsoid_position, line_right_offset, line_up, line_front, vec3(-1.0, 1.0, -1.0));
             draw_vertex(ellipsoid_position, line_right_offset, line_up, line_front, vec3(1.0, 1.0, -1.0));
             draw_vertex(ellipsoid_position, line_right_offset, line_up, line_front, vec3(-1.0, -1.0, -1.0));

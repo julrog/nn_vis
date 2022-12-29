@@ -14,6 +14,7 @@ out vec3 gs_cube_hit_position;
 
 uniform mat4 projection;
 uniform float object_radius;
+uniform float scale;
 
 void draw_vertex(vec3 offset)
 {
@@ -26,7 +27,7 @@ void draw_vertex(vec3 offset)
 void main()
 {
     gs_sphere_position = gl_in[0].gl_Position.xyz;// output
-    gs_sphere_size = vs_importance[0] * object_radius;
+    gs_sphere_size = vs_importance[0] * object_radius * scale;
     gs_color = vs_color[0];
 
     if (vs_discard[0] == 0.0) {

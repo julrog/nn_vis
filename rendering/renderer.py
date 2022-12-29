@@ -7,7 +7,7 @@ from opengl_helper.shader_handler import RenderShaderHandler
 from opengl_helper.vertex_data_handler import BaseDataHandler, OverflowingVertexDataHandler, LayeredVertexDataHandler, \
     VertexDataHandler
 from rendering.rendering_config import RenderingConfig
-from utility.camera import Camera
+from utility.camera import BaseCamera
 
 
 class Renderer:
@@ -39,7 +39,7 @@ class Renderer:
                                             self.element_count_funcs[name])
 
     @abc.abstractmethod
-    def render(self, set_name: str, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
+    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig = None, show_class: int = 0):
         return
 
     @abc.abstractmethod

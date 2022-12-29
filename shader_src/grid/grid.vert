@@ -8,6 +8,7 @@ flat out float vs_discard;
 
 uniform mat4 projection;
 uniform mat4 view;
+uniform float scale;
 
 void main()
 {
@@ -17,5 +18,5 @@ void main()
     } else {
         vs_discard = 0.0;
     }
-	gl_Position = projection * view * vec4(position.xyz, 1.0);
+	gl_Position = projection * view * vec4(position.xyz * scale, 1.0);
 }

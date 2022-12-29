@@ -9,10 +9,11 @@ flat out float gs_density;
 
 uniform mat4 projection;
 uniform mat4 view;
+uniform float scale;
 
 void draw_vertex(vec3 position, vec3 offset)
 {
-    gl_Position = projection * view * vec4(position + gs_density * offset, 1.0);
+    gl_Position = projection * view * vec4((position + gs_density * offset) * scale, 1.0);
 
     EmitVertex();
 }

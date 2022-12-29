@@ -14,6 +14,7 @@ uniform int max_sample_points;
 uniform float importance_threshold = 0;
 uniform int edge_importance_type = 0;
 uniform int show_class = -1;
+uniform float scale;
 
 //$$const vec3 color_$r_class_id$ = $r_class_color$;$$
 
@@ -24,7 +25,7 @@ void main()
     //$} else {
         vs_discard = 0.0;
 
-        gl_Position = projection * view * vec4(position.xyz, 1.0);
+        gl_Position = projection * view * vec4(position.xyz * scale, 1.0);
 
         //$float importance[$num_classes$];
         if (edge_importance_type == 0) {
