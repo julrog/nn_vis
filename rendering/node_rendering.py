@@ -10,7 +10,7 @@ from opengl_helper.vertex_data_handler import VertexDataHandler
 from processing.node_processing import NodeProcessor
 from rendering.renderer import Renderer
 from rendering.rendering_config import RenderingConfig
-from utility.camera import Camera
+from utility.camera import BaseCamera
 from utility.performance import track_time
 
 
@@ -59,7 +59,7 @@ class NodeRenderer(Renderer):
         self.create_sets(self.data_handler)
 
     @track_time
-    def render(self, set_name: str, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
+    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig = None, show_class: int = 0):
         current_set: BaseRenderSet = self.sets[set_name]
         near: float = 0.0
         far: float = 0.0
@@ -67,6 +67,7 @@ class NodeRenderer(Renderer):
             near, far = self.grid.get_near_far_from_view(cam.view)
         current_set.set_uniform_data([("projection", cam.projection, "mat4"),
                                       ("view", cam.view, "mat4"),
+                                      ("scale", cam.object_scale, "float"),
                                       ("farthest_point_view_z", far, "float"),
                                       ("nearest_point_view_z", near, "float"),
                                       ("show_class", show_class, "int")])

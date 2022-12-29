@@ -8,8 +8,8 @@ from utility.types import CameraPose, CAMERA_POSE_POSITION
 
 
 def look_at(position: Vector3, target: Vector3, world_up: Vector3) -> Matrix44:
-    z_axis: Vector3 = vector.normalise(position - target)
-    x_axis: Vector3 = vector.normalise(vector3.cross(vector.normalise(world_up), z_axis))
+    z_axis: Vector3 = vector.normalize(position - target)
+    x_axis: Vector3 = vector.normalize(vector3.cross(vector.normalize(world_up), z_axis))
     y_axis: Vector3 = vector3.cross(z_axis, x_axis)
 
     translation: Matrix44 = Matrix44.identity()
@@ -30,10 +30,19 @@ def look_at(position: Vector3, target: Vector3, world_up: Vector3) -> Matrix44:
 
     return rotation * translation
 
+class BaseCamera:
+    def __init__(self, width: float, height: float) -> None:
+        self.width: float = width
+        self.height: float = height
+        self.object_scale: float = 1.0
+        self.projection: Matrix44 = Matrix44.identity()
+        self.view: Matrix44 = Matrix44.identity()
+        
 
-class Camera:
+class Camera(BaseCamera):
     def __init__(self, width: float, height: float, base: Vector3, move_speed: float = 0.1,
                  rotation: bool = False, rotation_speed: float = -0.25):
+        super().__init__(width, height)
         self.base: Vector3 = base
         self.camera_pos: Vector3 = self.base + Vector3([-3.0, 0.0, 0.0])
         self.camera_front: Vector3 = Vector3([1.0, 0.0, 0.0])
@@ -79,7 +88,7 @@ class Camera:
 
             self.camera_front = vector.normalize(front)
             self.camera_right = vector.normalize(vector3.cross(self.camera_front, Vector3([0.0, 1.0, 0.0])))
-            self.camera_up = vector.normalise(vector3.cross(self.camera_right, self.camera_front))
+            self.camera_up = vector.normalize(vector3.cross(self.camera_right, self.camera_front))
             self.camera_pos = self.camera_pos + self.camera_right * self.move_vector.x * self.move_speed
             self.camera_pos = self.camera_pos + self.camera_up * self.move_vector.y * self.move_speed
             self.camera_pos = self.camera_pos + self.camera_front * self.move_vector.z * self.move_speed
@@ -94,7 +103,7 @@ class Camera:
 
             self.camera_front = vector.normalize(front)
             self.camera_right = vector.normalize(vector3.cross(self.camera_front, Vector3([0.0, 1.0, 0.0])))
-            self.camera_up = vector.normalise(vector3.cross(self.camera_right, self.camera_front))
+            self.camera_up = vector.normalize(vector3.cross(self.camera_right, self.camera_front))
             self.camera_pos = self.camera_pos + self.camera_right * self.move_vector.x * self.move_speed
             self.camera_pos = self.camera_pos + self.camera_up * self.move_vector.y * self.move_speed
             self.camera_pos = self.camera_pos + self.camera_front * self.move_vector.z * self.move_speed
@@ -117,9 +126,9 @@ class Camera:
         self.camera_up = Vector3([0.0, 1.0, 0.0])
         self.camera_pos = CAMERA_POSE_POSITION[camera_position_index]
         self.camera_pos = self.base + self.camera_pos
-        self.camera_front = Vector3(vector.normalise(self.base - self.camera_pos))
+        self.camera_front = Vector3(vector.normalize(self.base - self.camera_pos))
         self.set_yaw_pitch_from_front(not camera_position_index == 0)
-        self.camera_right = Vector3(vector.normalise(np.cross(self.camera_up, self.camera_front)))
+        self.camera_right = Vector3(vector.normalize(np.cross(self.camera_up, self.camera_front)))
         self.yaw_offset = 0.0
 
     def set_yaw_pitch_from_front(self, use_x: bool = True):

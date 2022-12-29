@@ -8,6 +8,7 @@ flat out float vs_size;
 
 uniform mat4 projection;
 uniform mat4 view;
+uniform float scale;
 
 void main()
 {
@@ -16,6 +17,6 @@ void main()
     } else {
         vs_discard = 0.0;
     }
-    gl_Position = projection * view * vec4(position.xyz, 1.0);
+    gl_Position = projection * view * vec4(position.xyz * scale, 1.0);
     //vs_size = node_data_$nodebuffer_length$;
 }

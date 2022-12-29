@@ -17,6 +17,7 @@ uniform float importance_threshold = 0;
 uniform float importance_max = 1.0;
 uniform int edge_importance_type = 0;
 uniform int show_class = -1;
+uniform float scale;
 
 //$$const vec3 color_$r_class_id$ = $r_class_color$;$$
 
@@ -33,9 +34,9 @@ void main()
         if(position.w > 1.0) vs_edge = 1.0;
         //$if(mod(gl_InstanceID + 1, max_sample_points) >= edge_data_$edgebuffer_samples$ - 2.0) vs_edge = 1.0;
 
-        vs_next_position = view * vec4(next_position.xyz, 1.0);
-        gl_Position = view * vec4(position.xyz, 1.0);
-        vec4 new_normal = view * vec4((position.xyz + vec3(0.0, 1.0, 0.0)), 1.0);
+        vs_next_position = view * vec4(next_position.xyz * scale, 1.0);
+        gl_Position = view * vec4(position.xyz * scale, 1.0);
+        vec4 new_normal = view * vec4((position.xyz * scale + vec3(0.0, 1.0, 0.0)), 1.0);
         vs_normal = normalize(vec3(new_normal.xyz - gl_Position.xyz));
 
         //$float importance[$num_classes$];

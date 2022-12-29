@@ -9,7 +9,7 @@ from opengl_helper.vertex_data_handler import OverflowingVertexDataHandler
 from processing.grid_processing import GridProcessor
 from rendering.renderer import Renderer
 from rendering.rendering_config import RenderingConfig
-from utility.camera import Camera
+from utility.camera import BaseCamera
 from utility.performance import track_time
 
 
@@ -48,10 +48,11 @@ class GridRenderer(Renderer):
         self.create_sets(self.data_handler)
 
     @track_time
-    def render(self, set_name: str, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
+    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig = None, show_class: int = 0):
         current_set: BaseRenderSet = self.sets[set_name]
         current_set.set_uniform_data([("projection", cam.projection, "mat4"),
-                                      ("view", cam.view, "mat4")])
+                                      ("view", cam.view, "mat4"),
+                                      ("scale", cam.object_scale, "float")])
         current_set.set_uniform_labeled_data(config)
         current_set.render()
 

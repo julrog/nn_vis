@@ -10,7 +10,7 @@ from opengl_helper.vertex_data_handler import LayeredVertexDataHandler, VertexDa
 from processing.edge_processing import EdgeProcessor
 from rendering.renderer import Renderer
 from rendering.rendering_config import RenderingConfig
-from utility.camera import Camera
+from utility.camera import BaseCamera
 from utility.performance import track_time
 
 
@@ -78,7 +78,7 @@ class EdgeRenderer(Renderer):
         self.importance_threshold: float = 0.0
 
     @track_time
-    def render(self, set_name: str, cam: Camera, config: RenderingConfig = None, show_class: int = 0):
+    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig = None, show_class: int = 0):
         current_set: BaseRenderSet = self.sets[set_name]
         if isinstance(current_set, LayeredRenderSet):
             current_set.set_buffer_divisor([(0, 1), (1, self.edge_processor.max_sample_points)])
@@ -88,6 +88,7 @@ class EdgeRenderer(Renderer):
             near, far = self.grid.get_near_far_from_view(cam.view)
         current_set.set_uniform_data([("projection", cam.projection, "mat4"),
                                       ("view", cam.view, "mat4"),
+                                      ("scale", cam.object_scale, "float"),
                                       ("farthest_point_view_z", far, "float"),
                                       ("nearest_point_view_z", near, "float"),
                                       ("object_radius", self.edge_processor.sample_length * 0.5, "float"),

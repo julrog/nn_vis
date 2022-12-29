@@ -13,6 +13,7 @@ uniform mat4 view;
 uniform int show_class = 0;
 uniform float importance_threshold = 0;
 uniform float importance_max = 1.0;
+uniform float scale;
 
 //$$const vec3 color_$r_class_id$ = $r_class_color$;$$
 
@@ -22,10 +23,10 @@ void main()
         vs_discard = 1.0;
     //$} else {
         vs_discard = 0.0;
-        gl_Position = view * vec4(position.xyz, 1.0);
-        vec4 new_normal = view * vec4((position.xyz + vec3(0.0, 1.0, 0.0)), 1.0);
+        gl_Position = view * vec4(position.xyz * scale, 1.0);
+        vec4 new_normal = view * vec4((position.xyz * scale + vec3(0.0, 1.0, 0.0)), 1.0);
         vs_normal = normalize(vec3(new_normal.xyz - gl_Position.xyz));
-        //$vs_size = node_data_$nodebuffer_length$;
+        //$vs_size = node_data_$nodebuffer_length$ * scale;
         //$vs_importance = node_data_$nodebuffer_average$;
 
         //$float importance[$num_classes$];

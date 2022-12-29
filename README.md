@@ -6,6 +6,9 @@
 Visualization of neural network architectures and parameters.
 </p>
 
+## News
+(30.12.2022) Added VR support (see [VR_TOOL.md](./VR_TOOL.md))
+
 ## Description
 This project was done for my master thesis. A general description can be taken from the thesis:
 
@@ -22,6 +25,10 @@ Multiple scripts are located in `examples`, which can be adapted to create and p
 
 ## Rendering Tool
 The visualization tool `start_tool.py` can be used to render and/or process neural networks. Instead of existing ones, you can also generate random networks and process them of various sizes. For neural networks the visualization results in a more structured view of a neural network in regards to their trained parameters compared to the most common ones.
+
+### VR
+
+See [VR_TOOL.md](./VR_TOOL.md)) for more info.
 
 ### Example
 <img align="center" src="./docs/images/compare_network_parameters.jpg" />

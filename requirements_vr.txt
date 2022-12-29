@@ -8,3 +8,4 @@ Pillow==9.0.1
 progressbar2==3.53.1
 PyOpenGL==3.1.5
 scikit_learn==0.24.0
+openvr

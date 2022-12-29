@@ -1,0 +1,75 @@
+{
+  "default_bindings": [
+    {
+      "controller_type": "generic",
+      "binding_url": "bindings_generic.json"
+    }
+  ],
+  "actions": [
+    {
+      "name": "/actions/demo/in/shrink",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/grow",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/grip_left",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/grip_right",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/rotate_class_mode",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/rotate_render_mode",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/reset",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/demo/in/rotate_model",
+      "type": "vector2"
+    },
+    {
+      "name": "/actions/demo/in/hand_right",
+      "type": "pose"
+    },
+    {
+      "name": "/actions/demo/in/hand_left",
+      "type": "pose"
+    },
+    {
+      "name": "/actions/demo/out/haptic_left",
+      "type": "vibration"
+    },
+    {
+      "name": "/actions/demo/out/haptic_right",
+      "type": "vibration"
+    }
+  ],
+  "localization": [
+    {
+      "language_tag": "en_US",
+      "/actions/demo/in/shrink": "Shrink model",
+      "/actions/demo/in/grow": "Grow model",
+      "/actions/demo/in/grip_left": "Grip model and render at the left hand",
+      "/actions/demo/in/grip_right": "Grip model and render at the right hand",
+      "/actions/demo/in/rotate_model": "Rotate model",
+      "/actions/demo/in/reset": "Reset model position and orientation",
+      "/actions/demo/in/rotate_class_mode": "Rotate highlighting mode for classes",
+      "/actions/demo/in/rotate_render_mode": "Rotate between visualization methods",
+      "/actions/demo/in/hand_right": "Right Hand Pose",
+      "/actions/demo/in/hand_left": "Left Hand Pose",
+      "/actions/demo/out/haptic_left": "Left Haptic Feedback",
+      "/actions/demo/out/haptic_right": "Right Haptic Feedback"
+    }
+  ]
+}
