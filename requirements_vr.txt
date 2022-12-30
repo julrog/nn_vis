@@ -3,7 +3,7 @@ matplotlib==3.3.3
 numpy==1.23.5
 openvr
 pandas==1.2.0
-Pillow==9.0.1
+Pillow==9.3.0
 progressbar2==3.53.1
 PyOpenGL==3.1.5
 pyrr==0.10.3
