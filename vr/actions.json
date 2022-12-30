@@ -1,10 +1,4 @@
 {
-  "default_bindings": [
-    {
-      "controller_type": "generic",
-      "binding_url": "bindings_generic.json"
-    }
-  ],
   "actions": [
     {
       "name": "/actions/demo/in/shrink",
@@ -55,21 +49,27 @@
       "type": "vibration"
     }
   ],
+  "default_bindings": [
+    {
+      "binding_url": "bindings_generic.json",
+      "controller_type": "generic"
+    }
+  ],
   "localization": [
     {
-      "language_tag": "en_US",
-      "/actions/demo/in/shrink": "Shrink model",
-      "/actions/demo/in/grow": "Grow model",
       "/actions/demo/in/grip_left": "Grip model and render at the left hand",
       "/actions/demo/in/grip_right": "Grip model and render at the right hand",
-      "/actions/demo/in/rotate_model": "Rotate model",
+      "/actions/demo/in/grow": "Grow model",
+      "/actions/demo/in/hand_left": "Left Hand Pose",
+      "/actions/demo/in/hand_right": "Right Hand Pose",
       "/actions/demo/in/reset": "Reset model position and orientation",
       "/actions/demo/in/rotate_class_mode": "Rotate highlighting mode for classes",
+      "/actions/demo/in/rotate_model": "Rotate model",
       "/actions/demo/in/rotate_render_mode": "Rotate between visualization methods",
-      "/actions/demo/in/hand_right": "Right Hand Pose",
-      "/actions/demo/in/hand_left": "Left Hand Pose",
+      "/actions/demo/in/shrink": "Shrink model",
       "/actions/demo/out/haptic_left": "Left Haptic Feedback",
-      "/actions/demo/out/haptic_right": "Right Haptic Feedback"
+      "/actions/demo/out/haptic_right": "Right Haptic Feedback",
+      "language_tag": "en_US"
     }
   ]
 }

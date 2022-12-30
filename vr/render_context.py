@@ -2,7 +2,7 @@ from typing import List
 
 import glfw
 import numpy as np
-from OpenGL.GL import *
+from OpenGL.GL import glViewport
 
 from vr.camera import VRCamera
 
@@ -10,17 +10,17 @@ from vr.camera import VRCamera
 class VROpenGLContext:
     def __init__(self, width: int, height: int) -> None:
         if not glfw.init():
-            raise Exception("glfw can not be initialized!")
+            raise Exception('glfw can not be initialized!')
         glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
 
         self.width: int = width
         self.height: int = height
 
         self.handle = glfw.create_window(
-            self.width, self.height, "NNVis Render", None, None
+            self.width, self.height, 'NNVis Render', None, None
         )
         if not self.handle:
-            raise Exception("glfw window can not be created!")
+            raise Exception('glfw window can not be created!')
         self.active: bool = False
         self.cam: List[VRCamera] = [
             VRCamera(self.width, self.height),

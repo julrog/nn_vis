@@ -1,18 +1,21 @@
 import abc
-from typing import List, Dict, Callable
+from typing import Callable, Dict, List
 
-from opengl_helper.data_set import BaseRenderSet, OverflowingRenderSet, LayeredRenderSet, RenderSet
+from opengl_helper.data_set import (BaseRenderSet, LayeredRenderSet,
+                                    OverflowingRenderSet, RenderSet)
 from opengl_helper.shader import RenderShader, ShaderSetting
 from opengl_helper.shader_handler import RenderShaderHandler
-from opengl_helper.vertex_data_handler import BaseDataHandler, OverflowingVertexDataHandler, LayeredVertexDataHandler, \
-    VertexDataHandler
+from opengl_helper.vertex_data_handler import (BaseDataHandler,
+                                               LayeredVertexDataHandler,
+                                               OverflowingVertexDataHandler,
+                                               VertexDataHandler)
 from rendering.rendering_config import RenderingConfig
 from utility.camera import BaseCamera
 
 
 class Renderer:
     def __init__(self):
-        __metaclass__ = abc.ABCMeta
+        __metaclass__ = abc.ABCMeta  # noqa F841
         self.shaders: Dict[str, RenderShader] = dict()
         self.sets: Dict[str, BaseRenderSet] = dict()
         self.render_funcs: Dict[str, Callable] = dict()
@@ -22,7 +25,8 @@ class Renderer:
     def set_shader(self, shader_settings: List[ShaderSetting]):
         shader_handler: RenderShaderHandler = RenderShaderHandler()
         for shader_setting in shader_settings:
-            self.shaders[shader_setting.id_name] = shader_handler.create(shader_setting)
+            self.shaders[shader_setting.id_name] = shader_handler.create(
+                shader_setting)
 
     def create_sets(self, data_handler: BaseDataHandler):
         if isinstance(data_handler, OverflowingVertexDataHandler):

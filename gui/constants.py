@@ -10,4 +10,5 @@ class StatisticLink(Enum):
     FPS = 4
 
 
-STATISTIC_NAME: List[str] = ["Edges", "Samples", "Grid Cells", "Pruned Edges", "FPS"]
+STATISTIC_NAME: List[str] = ['Edges', 'Samples',
+                             'Grid Cells', 'Pruned Edges', 'FPS']

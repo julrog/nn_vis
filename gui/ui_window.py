@@ -1,11 +1,11 @@
 import ntpath
-from tkinter import *
-from tkinter import filedialog, messagebox
-from typing import List, Dict
+from tkinter import Label, LabelFrame, Tk, filedialog, messagebox
+from typing import Any, Dict, List
 
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from definitions import DATA_PATH
-from gui.frame_building import set_render_frame, set_architecture_frame, set_stat_frame, set_processing_frame
+from gui.frame_building import (set_architecture_frame, set_processing_frame,
+                                set_render_frame, set_stat_frame)
 from gui.general_setting import RadioButtons
 from gui.neural_network_setting import LayerSettings
 from gui.processing_setting import ProcessingSetting
@@ -16,15 +16,16 @@ from utility.window_config import WindowConfig
 
 class OptionGui:
     def __init__(self):
-        self.window_config: WindowConfig = WindowConfig("ui")
+        self.window_config: WindowConfig = WindowConfig('ui')
 
         self.gui_root: Tk = Tk()
         self.layer_settings: List[LayerSettings] = []
-        self.settings: Dict[any, any] = {"Closed": False, "current_layer_data": []}
+        self.settings: Dict[Any, Any] = {
+            'Closed': False, 'current_layer_data': []}
         self.render_config: RenderingConfig = RenderingConfig()
         self.processing_config: ProcessingConfig = ProcessingConfig()
 
-        self.gui_root.title("NNVIS Options")
+        self.gui_root.title('NNVIS Options')
 
         set_stat_frame(self.gui_root, self.settings)
 
@@ -41,9 +42,10 @@ class OptionGui:
         self.action_buttons: RadioButtons = action_buttons
         self.processing_setting: ProcessingSetting = processing_setting
 
-        self.gui_root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.gui_root.geometry("+%d+%d" % (self.window_config["screen_x"], self.window_config["screen_y"]))
-        self.gui_root.bind("<Configure>", self.handle_configure)
+        self.gui_root.protocol('WM_DELETE_WINDOW', self.on_closing)
+        self.gui_root.geometry(
+            '+%d+%d' % (self.window_config['screen_x'], self.window_config['screen_y']))
+        self.gui_root.bind('<Configure>', self.handle_configure)
 
     def start(self, layer_data: List[int] = None):
         if layer_data is None:
@@ -59,34 +61,35 @@ class OptionGui:
 
         try:
             self.gui_root.mainloop()
-        except(KeyboardInterrupt):
+        except (KeyboardInterrupt):
             print('Closing')
-        self.settings["Closed"] = True
+        self.settings['Closed'] = True
 
     def handle_configure(self, event):
-        self.window_config["screen_x"] = self.gui_root.winfo_x()
-        self.window_config["screen_y"] = self.gui_root.winfo_y()
+        self.window_config['screen_x'] = self.gui_root.winfo_x()
+        self.window_config['screen_y'] = self.gui_root.winfo_y()
         self.window_config.store()
 
     def save_processed_nn_file(self):
         filename = filedialog.asksaveasfilename()
         if not filename:
             return
-        self.settings["save_processed_nn_path"] = filename + ".pro.npz"
-        self.settings["save_file"] = True
+        self.settings['save_processed_nn_path'] = filename + '.pro.npz'
+        self.settings['save_file'] = True
 
     def open_processed_nn_file(self):
-        filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
-                                              filetypes=(("processed nn files", "*.pro.npz"),))
+        filename = filedialog.askopenfilename(initialdir=DATA_PATH, title='Select A File',
+                                              filetypes=(('processed nn files', '*.pro.npz'),))
         data_loader: ProcessedNNHandler = ProcessedNNHandler(filename)
-        self.settings["network_name"] = ntpath.basename(filename) + "_processed"
+        self.settings['network_name'] = ntpath.basename(
+            filename) + '_processed'
         self.update_layer(data_loader.layer_data, processed_nn=data_loader)
 
     def open_importance_file(self):
-        filename = filedialog.askopenfilename(initialdir=DATA_PATH, title="Select A File",
-                                              filetypes=(("importance files", "*.imp.npz"),))
+        filename = filedialog.askopenfilename(initialdir=DATA_PATH, title='Select A File',
+                                              filetypes=(('importance files', '*.imp.npz'),))
         data_loader: ImportanceDataHandler = ImportanceDataHandler(filename)
-        self.settings["network_name"] = ntpath.basename(filename) + "_raw"
+        self.settings['network_name'] = ntpath.basename(filename) + '_raw'
         self.update_layer(data_loader.layer_data, importance_data=data_loader)
 
     def update_layer(self, layer_data: List[int], importance_data: ImportanceDataHandler = None,
@@ -101,7 +104,8 @@ class OptionGui:
 
     def add_layer(self, nodes: int = 9):
         layer_id: int = len(self.layer_settings)
-        self.layer_settings.append(LayerSettings(self.architecture_frame, layer_id, 5, 0, self.remove_layer))
+        self.layer_settings.append(LayerSettings(
+            self.architecture_frame, layer_id, 5, 0, self.remove_layer))
         self.layer_settings[layer_id].set_neurons(nodes)
 
     def clear_layer(self):
@@ -123,17 +127,17 @@ class OptionGui:
         layer_data: List[int] = []
         for ls in self.layer_settings:
             layer_data.append(ls.get_neurons())
-        self.settings["current_layer_data"] = layer_data
-        self.settings["importance_data"] = importance_data
-        self.settings["processed_nn"] = processed_nn
+        self.settings['current_layer_data'] = layer_data
+        self.settings['importance_data'] = importance_data
+        self.settings['processed_nn'] = processed_nn
         self.processing_setting.update_config()
-        self.settings["update_model"] = True
+        self.settings['update_model'] = True
         self.processing_config.store()
 
     def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):
         if stop_action:
             self.action_buttons.press(0)
-        self.settings[setting_type + "_" + sub_type] = value
+        self.settings[setting_type + '_' + sub_type] = value
 
     def change_render_config(self, name: str, value: int, stop_action: bool = False):
         if stop_action:
@@ -146,13 +150,13 @@ class OptionGui:
         self.processing_config.store()
 
     def on_closing(self):
-        if messagebox.askokcancel("Quit", "Do you want to quit?"):
-            self.settings["Closed"] = True
+        if messagebox.askokcancel('Quit', 'Do you want to quit?'):
+            self.settings['Closed'] = True
 
     def set_classes(self, num_classes: int):
-        show_class_names: List[str] = ["Independent", "All"]
+        show_class_names: List[str] = ['Independent', 'All']
         for class_id in range(num_classes):
-            show_class_names.append("Class " + str(class_id))
+            show_class_names.append('Class ' + str(class_id))
         self.class_show_options.set_buttons(show_class_names)
 
     def destroy(self):

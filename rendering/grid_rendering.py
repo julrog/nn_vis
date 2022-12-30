@@ -1,9 +1,10 @@
-from typing import List, Callable
+from typing import Callable, List
 
-from OpenGL.GL import *
+from OpenGL.GL import GL_POINTS
 
 from opengl_helper.data_set import BaseRenderSet
-from opengl_helper.render_utility import generate_render_function, OGLRenderFunction
+from opengl_helper.render_utility import (OGLRenderFunction,
+                                          generate_render_function)
 from opengl_helper.shader import ShaderSetting
 from opengl_helper.vertex_data_handler import OverflowingVertexDataHandler
 from processing.grid_processing import GridProcessor
@@ -19,11 +20,11 @@ class GridRenderer(Renderer):
         self.grid_processor: GridProcessor = grid_processor
 
         shader_settings: List[ShaderSetting] = []
-        shader_settings.extend([ShaderSetting("grid_point", ["grid/grid.vert", "basic/discard_screen_color.frag"],
-                                              ["screen_width", "screen_height"]),
-                                ShaderSetting("grid_cube", ["grid/grid_impostor.vert", "basic/screen_color.frag",
-                                                            "grid/point_to_cube_impostor.geom"],
-                                              ["screen_width", "screen_height"])
+        shader_settings.extend([ShaderSetting('grid_point', ['grid/grid.vert', 'basic/discard_screen_color.frag'],
+                                              ['screen_width', 'screen_height']),
+                                ShaderSetting('grid_cube', ['grid/grid_impostor.vert', 'basic/screen_color.frag',
+                                                            'grid/point_to_cube_impostor.geom'],
+                                              ['screen_width', 'screen_height'])
                                 ])
         self.set_shader(shader_settings)
 
@@ -38,21 +39,23 @@ class GridRenderer(Renderer):
 
             return element_count_func
 
-        self.render_funcs["grid_point"] = generate_render_function(OGLRenderFunction.ARRAYS, GL_POINTS, 10.0,
+        self.render_funcs['grid_point'] = generate_render_function(OGLRenderFunction.ARRAYS, GL_POINTS, 10.0,
                                                                    depth_test=True)
-        self.render_funcs["grid_cube"] = generate_render_function(OGLRenderFunction.ARRAYS, GL_POINTS,
+        self.render_funcs['grid_cube'] = generate_render_function(OGLRenderFunction.ARRAYS, GL_POINTS,
                                                                   depth_test=True)
-        self.element_count_funcs["grid_point"] = generate_element_count_func(grid_processor)
-        self.element_count_funcs["grid_cube"] = generate_element_count_func(grid_processor)
+        self.element_count_funcs['grid_point'] = generate_element_count_func(
+            grid_processor)
+        self.element_count_funcs['grid_cube'] = generate_element_count_func(
+            grid_processor)
 
         self.create_sets(self.data_handler)
 
     @track_time
     def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig = None, show_class: int = 0):
         current_set: BaseRenderSet = self.sets[set_name]
-        current_set.set_uniform_data([("projection", cam.projection, "mat4"),
-                                      ("view", cam.view, "mat4"),
-                                      ("scale", cam.object_scale, "float")])
+        current_set.set_uniform_data([('projection', cam.projection, 'mat4'),
+                                      ('view', cam.view, 'mat4'),
+                                      ('scale', cam.object_scale, 'float')])
         current_set.set_uniform_labeled_data(config)
         current_set.render()
 

@@ -89,7 +89,8 @@ class VRCamera(BaseCamera):
         self.rotation = Matrix44(rotation)
 
     def update_projection(self, projection: np.ndarray) -> None:
-        self.projection: Matrix44 = Matrix44(convert_projection_matrix(projection))
+        self.projection: Matrix44 = Matrix44(
+            convert_projection_matrix(projection))
 
     def update_eye_to_head(self, eye_to_head: np.ndarray) -> None:
         self.head_to_eye: Matrix44 = Matrix44(
@@ -97,15 +98,18 @@ class VRCamera(BaseCamera):
         )
 
     def update_head(self, head_to_world: np.ndarray) -> None:
-        world_to_head = Matrix44(np.linalg.inv(convert_view_matrix(head_to_world)))
+        world_to_head = Matrix44(np.linalg.inv(
+            convert_view_matrix(head_to_world)))
         self.eye_view = self.head_to_eye * world_to_head
 
     def apply_input(
         self, scaling: float, rotation: List[float], grabbed: bool, reset: bool = False
     ) -> None:
         self.object_scale *= scaling
-        self.input_rotation_angle[0] = rotation[0] / 10.0  # make rotation slower
-        self.input_rotation_angle[1] = rotation[1] / 10.0  # make rotation slower
+        self.input_rotation_angle[0] = rotation[0] / \
+            10.0  # make rotation slower
+        self.input_rotation_angle[1] = rotation[1] / \
+            10.0  # make rotation slower
 
         # change rotation matrix only with actual changes
         if abs(rotation[0]) > 0 or abs(rotation[1]) > 0:

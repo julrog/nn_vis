@@ -1,19 +1,19 @@
 import os.path
 
-from OpenGL.GL import *
+from OpenGL.GL import glViewport
 from pyrr import Vector3
 
 from data.data_handler import ImportanceDataHandler
 from definitions import DATA_PATH
 from opengl_helper.frame_buffer import FrameBufferObject
 from opengl_helper.screenshot import create_screenshot
-from processing.network_processing import NetworkProcessor, NetworkProcess
+from processing.network_processing import NetworkProcess, NetworkProcessor
 from processing.processing_config import ProcessingConfig
 from rendering.rendering_config import RenderingConfig
 from utility.camera import Camera
 from utility.recording_config import RecordingConfig
 from utility.types import ProcessRenderMode
-from utility.window import WindowHandler, Window
+from utility.window import Window, WindowHandler
 
 
 class ProcessingHandler:
@@ -24,14 +24,15 @@ class ProcessingHandler:
         window.set_callbacks()
         window.activate()
 
-        importance_data_path: str = DATA_PATH + "model/%s/%s.imp.npz" % (self.network_name,
+        importance_data_path: str = DATA_PATH + 'model/%s/%s.imp.npz' % (self.network_name,
                                                                          self.importance_data_name)
 
         if not os.path.exists(importance_data_path):
             raise Exception("Importance data '%s' for model '%s' is not yet created." % (self.network_name,
                                                                                          self.importance_data_name))
 
-        importance_data: ImportanceDataHandler = ImportanceDataHandler(importance_data_path)
+        importance_data: ImportanceDataHandler = ImportanceDataHandler(
+            importance_data_path)
 
         config: ProcessingConfig = ProcessingConfig()
         self.processor: NetworkProcessor = NetworkProcessor(importance_data.layer_data,
@@ -54,7 +55,7 @@ class ProcessingHandler:
         self.processor.reset_edges()
         self.process_loop()
 
-        self.processor.save_model(DATA_PATH + "model/%s/%s.pro.npz" % (self.network_name,
+        self.processor.save_model(DATA_PATH + 'model/%s/%s.pro.npz' % (self.network_name,
                                                                        self.importance_data_name))
         self.clean_up()
 
@@ -66,42 +67,45 @@ class ProcessingHandler:
 class RecordingProcessingHandler(ProcessingHandler):
     def __init__(self, network_name: str, importance_data_name: str, recording_config: RecordingConfig):
         super().__init__(network_name, importance_data_name)
-        self.screenshot_name: str = "processed_network"
+        self.screenshot_name: str = 'processed_network'
         self.recording_config = recording_config
         self.frame_buffer: FrameBufferObject or None = None
-        if self.recording_config["screenshot_mode"]:
-            self.frame_buffer = FrameBufferObject(self.recording_config["screenshot_width"],
-                                                  self.recording_config["screenshot_height"])
+        if self.recording_config['screenshot_mode']:
+            self.frame_buffer = FrameBufferObject(self.recording_config['screenshot_width'],
+                                                  self.recording_config['screenshot_height'])
         self.cam: Camera = self.setup_cam()
 
     def setup_cam(self) -> Camera:
-        cam: Camera = Camera(self.recording_config["screenshot_width"],
-                             self.recording_config["screenshot_height"],
+        cam: Camera = Camera(self.recording_config['screenshot_width'],
+                             self.recording_config['screenshot_height'],
                              Vector3([0.0, 0.0, 0.0]),
-                             rotation_speed=self.recording_config["camera_rotation_speed"])
-        glViewport(0, 0, self.recording_config["screenshot_width"], self.recording_config["screenshot_height"])
-        cam.set_size(self.recording_config["screenshot_width"], self.recording_config["screenshot_height"])
+                             rotation_speed=self.recording_config['camera_rotation_speed'])
+        glViewport(0, 0, self.recording_config['screenshot_width'],
+                   self.recording_config['screenshot_height'])
+        cam.set_size(self.recording_config['screenshot_width'],
+                     self.recording_config['screenshot_height'])
         cam.update_base(self.processor.get_node_mid())
         return cam
 
     def generate_images(self):
-        for show_class in self.recording_config["class_list"]:
-            for cam_pos in self.recording_config["camera_pose_list"]:
+        for show_class in self.recording_config['class_list']:
+            for cam_pos in self.recording_config['camera_pose_list']:
                 self.cam.set_position(cam_pos)
                 self.cam.update()
                 self.render(show_class)
                 create_screenshot(self.frame_buffer.width, self.frame_buffer.height,
-                                  self.screenshot_name + "_class_" + str(show_class) + "_cam_" + str(cam_pos),
+                                  self.screenshot_name + '_class_' +
+                                  str(show_class) + '_cam_' + str(cam_pos),
                                   frame_buffer=self.frame_buffer)
 
     def viewed_node_process(self):
         self.processor.process(NetworkProcess.NODE_ADVECT)
-        if self.recording_config["screenshot_mode"] & ProcessRenderMode.NODE_ITERATIONS:
+        if self.recording_config['screenshot_mode'] & ProcessRenderMode.NODE_ITERATIONS:
             self.cam.update_base(self.processor.get_node_mid())
             self.generate_images()
 
     def viewed_edge_process(self):
-        if self.recording_config["screenshot_mode"] & (ProcessRenderMode.SMOOTHING | ProcessRenderMode.EDGE_ITERATIONS):
+        if self.recording_config['screenshot_mode'] & (ProcessRenderMode.SMOOTHING | ProcessRenderMode.EDGE_ITERATIONS):
             edge_smoothing: bool = self.processor.edge_smoothing
             if edge_smoothing:
                 self.processor.edge_smoothing = False
@@ -114,7 +118,7 @@ class RecordingProcessingHandler(ProcessingHandler):
                     self.generate_images()
         else:
             self.processor.process(NetworkProcess.EDGE_ADVECT)
-            if self.recording_config["screenshot_mode"] & ProcessRenderMode.EDGE_ITERATIONS:
+            if self.recording_config['screenshot_mode'] & ProcessRenderMode.EDGE_ITERATIONS:
                 self.generate_images()
 
     def viewed_process_loop(self):
@@ -125,7 +129,7 @@ class RecordingProcessingHandler(ProcessingHandler):
         self.processor.reset_edges()
         self.generate_images()
 
-        self.cam.rotate_around_base = self.recording_config["camera_rotation"]
+        self.cam.rotate_around_base = self.recording_config['camera_rotation']
         self.viewed_edge_process()
         while not self.processor.action_finished:
             self.viewed_edge_process()
@@ -140,22 +144,24 @@ class RecordingProcessingHandler(ProcessingHandler):
 
     def process(self):
         self.processor.reset_edges()
-        if not self.recording_config["screenshot_mode"] or self.recording_config[
-            "screenshot_mode"] is ProcessRenderMode.FINAL:
+        if not self.recording_config['screenshot_mode'] or self.recording_config[
+                'screenshot_mode'] is ProcessRenderMode.FINAL:
             self.process_loop()
         else:
             self.frame_buffer.bind()
             self.viewed_process_loop()
 
-        self.processor.save_model(DATA_PATH + "model/%s/%s.pro.npz" % (self.network_name, self.importance_data_name))
+        self.processor.save_model(DATA_PATH + 'model/%s/%s.pro.npz' %
+                                  (self.network_name, self.importance_data_name))
 
-        if self.recording_config["screenshot_mode"]:
+        if self.recording_config['screenshot_mode']:
             if self.frame_buffer is not None:
                 self.frame_buffer.bind()
-                self.cam.set_position(self.recording_config["camera_pose_final"])
+                self.cam.set_position(
+                    self.recording_config['camera_pose_final'])
                 self.render(0)
-                create_screenshot(self.recording_config["screenshot_width"], self.recording_config["screenshot_height"],
-                                  "network", frame_buffer=self.frame_buffer)
+                create_screenshot(self.recording_config['screenshot_width'], self.recording_config['screenshot_height'],
+                                  'network', frame_buffer=self.frame_buffer)
 
         if self.frame_buffer is not None:
             self.frame_buffer.delete()

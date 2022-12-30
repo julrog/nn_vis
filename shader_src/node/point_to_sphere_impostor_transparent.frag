@@ -58,4 +58,3 @@ void main()
     float ray_depth = distance(real_hit_position, real_hit_position_back) / (2.0 * gs_sphere_radius);
     frag_color = calculate_transparency_color(real_position_screen.z, ray_depth);
 }
-

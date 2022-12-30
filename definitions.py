@@ -1,8 +1,8 @@
 import os
 
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-DATA_PATH = BASE_PATH + "/storage/data/"
-SCREENSHOT_PATH = BASE_PATH + "/storage/screenshots/"
+DATA_PATH = BASE_PATH + '/storage/data/'
+SCREENSHOT_PATH = BASE_PATH + '/storage/screenshots/'
 ADDITIONAL_NODE_BUFFER_DATA: int = 6
 ADDITIONAL_EDGE_BUFFER_DATA: int = 8
 

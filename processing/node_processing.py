@@ -15,14 +15,16 @@ from utility.performance import track_time
 
 class NodeProcessor:
     def __init__(self, network: NetworkModel):
-        ComputeShaderHandler().create("node_noise", "node/node_noise.comp")
+        ComputeShaderHandler().create('node_noise', 'node/node_noise.comp')
 
         object_size, render_data_offset, render_data_size = \
-            get_buffer_settings(network.num_classes, ADDITIONAL_NODE_BUFFER_DATA)
+            get_buffer_settings(network.num_classes,
+                                ADDITIONAL_NODE_BUFFER_DATA)
         self.node_buffer: SwappingBufferObject = SwappingBufferObject(ssbo=True, object_size=object_size,
                                                                       render_data_offset=render_data_offset,
                                                                       render_data_size=render_data_size)
-        self.ssbo_handler: VertexDataHandler = VertexDataHandler([(self.node_buffer, 0)])
+        self.ssbo_handler: VertexDataHandler = VertexDataHandler(
+            [(self.node_buffer, 0)])
 
         self.nodes: List[Node] = network.get_nodes()
 
@@ -47,8 +49,9 @@ class NodeProcessor:
 
     @track_time
     def node_noise(self, sample_length: float, strength: float = 1.0):
-        noise: ComputeShader = ComputeShaderHandler().get("node_noise")
-        noise.set_uniform_data([("noise_strength", strength, "float"), ("sample_length", sample_length, "float")])
+        noise: ComputeShader = ComputeShaderHandler().get('node_noise')
+        noise.set_uniform_data(
+            [('noise_strength', strength, 'float'), ('sample_length', sample_length, 'float')])
         self.ssbo_handler.set()
         noise.compute(len(self.nodes), barrier=True)
         self.node_buffer.swap()
@@ -59,10 +62,12 @@ class NodeProcessor:
         if raw:
             return buffer_data
 
-        node_data = buffer_data.reshape((len(self.nodes), self.node_buffer.object_size))
+        node_data = buffer_data.reshape(
+            (len(self.nodes), self.node_buffer.object_size))
         node_count = len(self.nodes)
         for i in range(node_count):
-            self.nodes[i].reset_position(Vector3([node_data[i][0], node_data[i][1], node_data[i][2]]))
+            self.nodes[i].reset_position(
+                Vector3([node_data[i][0], node_data[i][1], node_data[i][2]]))
 
         return buffer_data
 

@@ -1,4 +1,4 @@
-from enum import IntFlag, auto, Enum
+from enum import Enum, IntFlag, auto
 
 
 class ImportanceType(IntFlag):
@@ -9,15 +9,17 @@ class ImportanceType(IntFlag):
 
 
 def get_importance_type_name(importance_type: ImportanceType) -> str:
-    name: str = ""
-    name = name + ("beta_" if importance_type & ImportanceType.CENTERING else "nobeta_")
-    name = name + ("gammaone" if importance_type & ImportanceType.GAMMA else "gammazero")
+    name: str = ''
+    name = name + ('beta_' if importance_type &
+                   ImportanceType.CENTERING else 'nobeta_')
+    name = name + ('gammaone' if importance_type &
+                   ImportanceType.GAMMA else 'gammazero')
     if importance_type & ImportanceType.L1:
-        name = name + '_' + "l1"
+        name = name + '_' + 'l1'
     if importance_type & ImportanceType.L1 and importance_type & ImportanceType.L2:
-        name = name + "l2"
+        name = name + 'l2'
     elif importance_type & ImportanceType.L2:
-        name = name + '_' + "l2"
+        name = name + '_' + 'l2'
     return name
 
 
