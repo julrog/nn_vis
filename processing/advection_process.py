@@ -18,10 +18,13 @@ class AdvectionProgress:
 
     def iterate(self):
         self.iteration += 1
-        self.current_bandwidth = self.bandwidth * math.pow(self.bandwidth_reduction, self.iteration)
+        self.current_bandwidth = self.bandwidth * \
+            math.pow(self.bandwidth_reduction, self.iteration)
 
-        self.importance_similarity = 1.0 - (self.current_bandwidth - self.limit) / (self.bandwidth - self.limit)
-        self.importance_similarity = math.sqrt(max(self.importance_similarity, 0.00))
+        self.importance_similarity = 1.0 - \
+            (self.current_bandwidth - self.limit) / (self.bandwidth - self.limit)
+        self.importance_similarity = math.sqrt(
+            max(self.importance_similarity, 0.00))
 
         if self.current_bandwidth < self.limit:
             self.limit_reached = True
@@ -30,7 +33,8 @@ class AdvectionProgress:
         iteration: int = 0
         current_bandwidth: float = self.bandwidth
         while current_bandwidth > self.limit:
-            current_bandwidth = self.bandwidth * math.pow(self.bandwidth_reduction, iteration)
+            current_bandwidth = self.bandwidth * \
+                math.pow(self.bandwidth_reduction, iteration)
             iteration += 1
         return iteration
 

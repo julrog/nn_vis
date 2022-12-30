@@ -43,4 +43,3 @@ void main()
     vec4 real_position_screen = projection * vec4(real_hit_position, 1.0);
     gl_FragDepth = 0.5 * (real_position_screen.z / real_position_screen.w) + 0.5;
 }
-

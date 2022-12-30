@@ -1,7 +1,7 @@
 from typing import Dict, Tuple
 
 import glfw
-from OpenGL.GL import *
+from OpenGL.GL import glViewport
 from pyrr import Vector3
 
 from utility.camera import Camera
@@ -15,18 +15,20 @@ class Window:
         self.config: WindowConfig = config
 
         # glfw.window_hint(glfw.DECORATED, glfw.FALSE)
-        self.window_handle = glfw.create_window(config["width"], config["height"], config["title"], None, None)
+        self.window_handle = glfw.create_window(
+            config['width'], config['height'], config['title'], None, None)
 
         if not self.window_handle:
-            raise Exception("glfw window can not be created!")
+            raise Exception('glfw window can not be created!')
         self.active: bool = False
-        self.cam: Camera = Camera(self.config["width"],
-                                  self.config["height"],
+        self.cam: Camera = Camera(self.config['width'],
+                                  self.config['height'],
                                   Vector3([0.0, 0.0, 0.0]),
-                                  rotation=self.config["camera_rotation"],
-                                  rotation_speed=self.config["camera_rotation_speed"])
+                                  rotation=self.config['camera_rotation'],
+                                  rotation_speed=self.config['camera_rotation_speed'])
 
-        self.last_mouse_pos: Tuple[int, int] = (int(self.config["width"] / 2), int(self.config["height"] / 2))
+        self.last_mouse_pos: Tuple[int, int] = (
+            int(self.config['width'] / 2), int(self.config['height'] / 2))
         self.mouse_set: bool = False
         self.freeze: bool = True
         self.gradient: bool = True
@@ -37,16 +39,16 @@ class Window:
         self.frame_id: int = 0
 
     def set_size(self, width: float, height: float):
-        self.config["width"] = width
-        self.config["height"] = height
+        self.config['width'] = width
+        self.config['height'] = height
         if self.active:
             glViewport(0, 0, width, height)
         self.cam.set_size(width, height)
 
     def set_callbacks(self):
         def resize_clb(glfw_window, width, height):
-            self.config["screen_width"] = width
-            self.config["screen_height"] = height
+            self.config['screen_width'] = width
+            self.config['screen_height'] = height
             self.config.store()
 
         def frame_resize_clb(glfw_window, width, height):
@@ -81,11 +83,12 @@ class Window:
         def window_pos_clb(glfw_window, x_pos: int, y_pos: int):
             if len(glfw.get_monitors()) >= 1:
                 for monitor_id, monitor in enumerate(glfw.get_monitors()):
-                    m_x, m_y, width, height = glfw.get_monitor_workarea(monitor)
+                    m_x, m_y, width, height = glfw.get_monitor_workarea(
+                        monitor)
                     if m_x <= x_pos < m_x + width and m_y <= y_pos < m_y + height:
-                        self.config["monitor_id"] = monitor_id
-            self.config["screen_x"] = x_pos
-            self.config["screen_y"] = y_pos
+                        self.config['monitor_id'] = monitor_id
+            self.config['screen_x'] = x_pos
+            self.config['screen_y'] = y_pos
             self.config.store()
 
         def key_input_clb(glfw_window, key, scancode, action, mode):
@@ -116,7 +119,7 @@ class Window:
                 self.gradient = not self.gradient
             if key == glfw.KEY_H and action == glfw.RELEASE:
                 self.cam.rotate_around_base = not self.cam.rotate_around_base
-                self.config["camera_rotation"] = self.cam.rotate_around_base
+                self.config['camera_rotation'] = self.cam.rotate_around_base
                 self.config.store()
 
             if key == glfw.KEY_K and action == glfw.RELEASE:
@@ -146,7 +149,8 @@ class Window:
                 self.cam.set_position(CameraPose.LEFT)
 
         glfw.set_window_size_callback(self.window_handle, resize_clb)
-        glfw.set_framebuffer_size_callback(self.window_handle, frame_resize_clb)
+        glfw.set_framebuffer_size_callback(
+            self.window_handle, frame_resize_clb)
         glfw.set_cursor_pos_callback(self.window_handle, mouse_look_clb)
         glfw.set_key_callback(self.window_handle, key_input_clb)
         glfw.set_mouse_button_callback(self.window_handle, mouse_button_clb)
@@ -154,16 +158,18 @@ class Window:
         glfw.set_window_pos_callback(self.window_handle, window_pos_clb)
 
     def activate(self):
-        if self.config["monitor_id"] is not None and 0 <= self.config["monitor_id"] < len(glfw.get_monitors()):
-            glfw.set_window_pos(self.window_handle, self.config["screen_x"], self.config["screen_y"])
-        elif self.config["monitor_id"] is not None:
-            self.config["screen_x"] = 0
-            self.config["screen_y"] = 0
+        if self.config['monitor_id'] is not None and 0 <= self.config['monitor_id'] < len(glfw.get_monitors()):
+            glfw.set_window_pos(
+                self.window_handle, self.config['screen_x'], self.config['screen_y'])
+        elif self.config['monitor_id'] is not None:
+            self.config['screen_x'] = 0
+            self.config['screen_y'] = 0
             glfw.set_window_pos(self.window_handle, 0, 0)
 
         glfw.make_context_current(self.window_handle)
-        glfw.set_input_mode(self.window_handle, glfw.CURSOR, glfw.CURSOR_NORMAL)
-        glViewport(0, 0, self.config["width"], self.config["height"])
+        glfw.set_input_mode(self.window_handle,
+                            glfw.CURSOR, glfw.CURSOR_NORMAL)
+        glViewport(0, 0, self.config['width'], self.config['height'])
         self.active = True
 
     def is_active(self) -> bool:
@@ -181,10 +187,12 @@ class Window:
     def toggle_mouse_capture(self):
         if self.mouse_captured:
             self.mouse_set = False
-            glfw.set_input_mode(self.window_handle, glfw.CURSOR, glfw.CURSOR_NORMAL)
+            glfw.set_input_mode(self.window_handle,
+                                glfw.CURSOR, glfw.CURSOR_NORMAL)
         else:
             self.mouse_set = False
-            glfw.set_input_mode(self.window_handle, glfw.CURSOR, glfw.CURSOR_DISABLED)
+            glfw.set_input_mode(self.window_handle,
+                                glfw.CURSOR, glfw.CURSOR_DISABLED)
         self.mouse_captured = not self.mouse_captured
 
 
@@ -193,7 +201,7 @@ class WindowHandler(metaclass=Singleton):
         self.windows: Dict[str, Window] = dict()
 
         if not glfw.init():
-            raise Exception("glfw can not be initialized!")
+            raise Exception('glfw can not be initialized!')
 
     def create_window(self, hidden: bool = False):
         if hidden:
@@ -201,16 +209,16 @@ class WindowHandler(metaclass=Singleton):
         window_config: WindowConfig = WindowConfig()
         window = Window(window_config)
 
-        if self.windows.get(window_config["title"]):
-            self.windows[window_config["title"]].destroy()
+        if self.windows.get(window_config['title']):
+            self.windows[window_config['title']].destroy()
 
-        self.windows[window_config["title"]] = window
+        self.windows[window_config['title']] = window
         return window
 
     def get_window(self, title: str):
         window = self.windows[title]
         if not window:
-            raise Exception("Requested window does not exist!")
+            raise Exception('Requested window does not exist!')
         return window
 
     def destroy(self):

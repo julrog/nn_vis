@@ -3,7 +3,7 @@ import threading
 import time
 from typing import List, Tuple
 
-from OpenGL.GL import *
+from OpenGL.GL import GL_MAJOR_VERSION, GL_MINOR_VERSION, glGetIntegerv
 
 from gui.constants import StatisticLink
 from gui.ui_window import OptionGui
@@ -15,7 +15,7 @@ from vr.vr_handler import VRHandler
 
 global options_gui
 options_gui = OptionGui()
-setup_logger("tool")
+setup_logger('tool')
 
 RENDER_MODES: List[Tuple[int, int]] = [(3, 2), (4, 1), (1, 1), (2, 2)]
 
@@ -28,7 +28,7 @@ def compute_render(_: str):
     vr_handler: VRHandler = VRHandler()
 
     logging.info(
-        "OpenGL Version: %d.%d"
+        'OpenGL Version: %d.%d'
         % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION))
     )
 
@@ -37,28 +37,28 @@ def compute_render(_: str):
     @track_time(track_recursive=False)
     def frame():
         if (
-            "trigger_network_sample" in options_gui.settings
-            and options_gui.settings["trigger_network_sample"] > 0
+            'trigger_network_sample' in options_gui.settings
+            and options_gui.settings['trigger_network_sample'] > 0
         ):
             network_processor.reset_edges()
-            options_gui.settings["trigger_network_sample"] = 0
+            options_gui.settings['trigger_network_sample'] = 0
 
         if network_processor is not None:
-            network_processor.process(options_gui.settings["action_state"])
+            network_processor.process(options_gui.settings['action_state'])
 
             if vr_handler.update():
                 if vr_handler.input_handler.rotate_class:
-                    options_gui.settings["show_class"] = (
-                        options_gui.settings["show_class"] + 1
+                    options_gui.settings['show_class'] = (
+                        options_gui.settings['show_class'] + 1
                     ) % (network_processor.layer_nodes[-1] + 2)
                 if vr_handler.input_handler.rotate_render:
                     vr_handler.input_handler.current_render_mode = (
                         vr_handler.input_handler.current_render_mode + 1
                     ) % len(RENDER_MODES)
-                    options_gui.render_config["edge_render_mode"] = RENDER_MODES[
+                    options_gui.render_config['edge_render_mode'] = RENDER_MODES[
                         vr_handler.input_handler.current_render_mode
                     ][0]
-                    options_gui.render_config["node_render_mode"] = RENDER_MODES[
+                    options_gui.render_config['node_render_mode'] = RENDER_MODES[
                         vr_handler.input_handler.current_render_mode
                     ][1]
                 for cam, target in zip(vr_handler.context.cam, vr_handler.targets):
@@ -67,7 +67,7 @@ def compute_render(_: str):
                     network_processor.render(
                         cam,
                         options_gui.render_config,
-                        options_gui.settings["show_class"],
+                        options_gui.settings['show_class'],
                     )
                     vr_handler.submit_target_texture(target)
 
@@ -91,21 +91,22 @@ def compute_render(_: str):
         vr_handler.context.swap()
 
     while options_gui is None or (
-        len(options_gui.settings["current_layer_data"]) == 0
-        and not options_gui.settings["Closed"]
+        len(options_gui.settings['current_layer_data']) == 0
+        and not options_gui.settings['Closed']
     ):
         vr_handler.update()
         time.sleep(5)
 
-    if not options_gui.settings["Closed"]:
+    if not options_gui.settings['Closed']:
         print(
-            "Start building network: " + str(options_gui.settings["current_layer_data"])
+            'Start building network: ' +
+            str(options_gui.settings['current_layer_data'])
         )
         network_processor = NetworkProcessor(
-            options_gui.settings["current_layer_data"],
+            options_gui.settings['current_layer_data'],
             options_gui.processing_config,
-            importance_data=options_gui.settings["importance_data"],
-            processed_nn=options_gui.settings["processed_nn"],
+            importance_data=options_gui.settings['importance_data'],
+            processed_nn=options_gui.settings['processed_nn'],
         )
         vr_handler.context.cam[0].base = network_processor.get_node_mid()
         vr_handler.context.cam[1].base = network_processor.get_node_mid()
@@ -118,22 +119,24 @@ def compute_render(_: str):
         check_time: float = time.perf_counter()
         last_time: float = time.perf_counter()
 
-        while vr_handler.context.is_active() and not options_gui.settings["Closed"]:
-            if options_gui.settings["update_model"]:
-                options_gui.settings["update_model"] = False
+        while vr_handler.context.is_active() and not options_gui.settings['Closed']:
+            if options_gui.settings['update_model']:
+                options_gui.settings['update_model'] = False
                 network_processor.delete()
                 print(
-                    "Rebuilding network: "
-                    + str(options_gui.settings["current_layer_data"])
+                    'Rebuilding network: '
+                    + str(options_gui.settings['current_layer_data'])
                 )
                 network_processor = NetworkProcessor(
-                    options_gui.settings["current_layer_data"],
+                    options_gui.settings['current_layer_data'],
                     options_gui.processing_config,
-                    importance_data=options_gui.settings["importance_data"],
-                    processed_nn=options_gui.settings["processed_nn"],
+                    importance_data=options_gui.settings['importance_data'],
+                    processed_nn=options_gui.settings['processed_nn'],
                 )
-                vr_handler.context.cam[0].base = network_processor.get_node_mid()
-                vr_handler.context.cam[1].base = network_processor.get_node_mid()
+                vr_handler.context.cam[0].base = network_processor.get_node_mid(
+                )
+                vr_handler.context.cam[1].base = network_processor.get_node_mid(
+                )
 
             frame()
 
@@ -141,7 +144,7 @@ def compute_render(_: str):
             if time.perf_counter() - check_time > 1.0:
                 options_gui.settings[StatisticLink.FPS].set(
                     float(
-                        "{:.2f}".format(
+                        '{:.2f}'.format(
                             float(frame_count - checked_frame_count)
                             / (time.perf_counter() - check_time)
                         )
@@ -150,13 +153,13 @@ def compute_render(_: str):
                 checked_frame_count = frame_count
                 check_time = time.perf_counter()
             if (
-                "save_file" in options_gui.settings.keys()
-                and options_gui.settings["save_file"]
+                'save_file' in options_gui.settings.keys()
+                and options_gui.settings['save_file']
             ):
                 network_processor.save_model(
-                    options_gui.settings["save_processed_nn_path"]
+                    options_gui.settings['save_processed_nn_path']
                 )
-                options_gui.settings["save_file"] = False
+                options_gui.settings['save_file'] = False
 
             current_time: float = time.perf_counter()
             elapsed_time: float = current_time - last_time

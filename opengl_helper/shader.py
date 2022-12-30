@@ -1,6 +1,9 @@
-from typing import List, Tuple, Dict, Callable
+from typing import Any, Callable, Dict, List, Tuple
 
-from OpenGL.GL import *
+from OpenGL.GL import (GL_FALSE, GL_FRAGMENT_SHADER, GL_GEOMETRY_SHADER,
+                       GL_VERTEX_SHADER, glGetUniformLocation, glUniform1f,
+                       glUniform1i, glUniform3fv, glUniform3iv,
+                       glUniformMatrix4fv, glUseProgram)
 from OpenGL.GL.shaders import compileProgram, compileShader
 
 from opengl_helper.texture import Texture
@@ -8,37 +11,38 @@ from rendering.rendering_config import RenderingConfig
 
 
 def uniform_setter_function(uniform_setter: str) -> Callable:
-    if uniform_setter == "float":
+    if uniform_setter == 'float':
 
         def uniform_func(location: int, data: float):
             glUniform1f(location, data)
 
         return uniform_func
-    if uniform_setter == "vec3":
+    if uniform_setter == 'vec3':
 
         def uniform_func(location: int, data: List[float]):
             glUniform3fv(location, 1, data)
 
         return uniform_func
-    if uniform_setter == "mat4":
+    if uniform_setter == 'mat4':
 
         def uniform_func(location: int, data: List[float]):
             glUniformMatrix4fv(location, 1, GL_FALSE, data)
 
         return uniform_func
-    if uniform_setter == "int":
+    if uniform_setter == 'int':
 
         def uniform_func(location: int, data: int):
             glUniform1i(location, data)
 
         return uniform_func
-    if uniform_setter == "ivec3":
+    if uniform_setter == 'ivec3':
 
         def uniform_func(location: int, data: List[int]):
             glUniform3iv(location, 1, data)
 
         return uniform_func
-    raise Exception("Uniform setter function for '%s' not defined." % uniform_setter)
+    raise Exception(
+        "Uniform setter function for '%s' not defined." % uniform_setter)
 
 
 class ShaderSetting:
@@ -62,7 +66,7 @@ class BaseShader:
     def __init__(self):
         self.shader_handle: int = 0
         self.textures: List[Tuple[Texture, str, int]] = []
-        self.uniform_cache: Dict[str, Tuple[int, any, Callable]] = dict()
+        self.uniform_cache: Dict[str, Tuple[int, Any, Callable]] = dict()
         self.uniform_labels: List[str] = []
         self.uniform_ignore_labels: List[str] = []
 
@@ -75,10 +79,11 @@ class BaseShader:
             uniform_data = []
             for setting, shader_name in config.shader_name.items():
                 if setting in self.uniform_labels:
-                    uniform_data.append((shader_name, config[setting], "float"))
+                    uniform_data.append(
+                        (shader_name, config[setting], 'float'))
             self.set_uniform_data(uniform_data)
 
-    def set_uniform_data(self, data: List[Tuple[str, any, str]]):
+    def set_uniform_data(self, data: List[Tuple[str, Any, str]]):
         program_is_set: bool = False
         for uniform_name, uniform_data, uniform_setter in data:
             if uniform_name not in self.uniform_ignore_labels:

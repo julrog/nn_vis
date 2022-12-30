@@ -8,50 +8,51 @@ from definitions import BASE_PATH
 
 
 class HandInput:
-    def __init__(self, side: str = "right") -> None:
+    def __init__(self, side: str = 'right') -> None:
         self.side: str = side
         self.action_hand_source: int = openvr.VRInput().getInputSourceHandle(
-            f"/user/hand/{self.side}"
+            f'/user/hand/{self.side}'
         )
         self.action_pose: int = openvr.VRInput().getActionHandle(
-            f"/actions/demo/in/hand_{self.side}"
+            f'/actions/demo/in/hand_{self.side}'
         )
         self.action_haptic: int = openvr.VRInput().getActionHandle(
-            f"/actions/demo/out/haptic_{self.side}"
+            f'/actions/demo/out/haptic_{self.side}'
         )
         self.action_grip: int = openvr.VRInput().getActionHandle(
-            f"/actions/demo/in/grip_{self.side}"
+            f'/actions/demo/in/grip_{self.side}'
         )
 
 
 class VRInputHandler:
     def __init__(self) -> None:
-        control_manifest_path: str = os.path.join(BASE_PATH, "vr", "actions.json")
+        control_manifest_path: str = os.path.join(
+            BASE_PATH, 'vr', 'actions.json')
         openvr.VRInput().setActionManifestPath(control_manifest_path)
 
         self.action_set_demo: int = openvr.VRInput().getActionSetHandle(
-            f"/actions/demo"
+            '/actions/demo'
         )
         self.action_rotate_model: int = openvr.VRInput().getActionHandle(
-            "/actions/demo/in/rotate_model"
+            '/actions/demo/in/rotate_model'
         )
         self.action_shrink: int = openvr.VRInput().getActionHandle(
-            "/actions/demo/in/shrink"
+            '/actions/demo/in/shrink'
         )
         self.action_grow: int = openvr.VRInput().getActionHandle(
-            "/actions/demo/in/grow"
+            '/actions/demo/in/grow'
         )
         self.action_reset: int = openvr.VRInput().getActionHandle(
-            "/actions/demo/in/reset"
+            '/actions/demo/in/reset'
         )
         self.action_rotate_class: int = openvr.VRInput().getActionHandle(
-            "/actions/demo/in/rotate_class_mode"
+            '/actions/demo/in/rotate_class_mode'
         )
         self.action_rotate_render: int = openvr.VRInput().getActionHandle(
-            "/actions/demo/in/rotate_render_mode"
+            '/actions/demo/in/rotate_render_mode'
         )
 
-        self.hands: List[HandInput] = [HandInput("left"), HandInput("right")]
+        self.hands: List[HandInput] = [HandInput('left'), HandInput('right')]
 
         self.scaling: int = 0
         self.grabbed: int = 0
@@ -89,8 +90,10 @@ class VRInputHandler:
             self.scaling = 1.0
 
     def update_grabbing_action(self) -> None:
-        left_grip_pressed: bool = self.get_pressed_action(self.hands[0].action_grip)
-        right_grip_pressed: bool = self.get_pressed_action(self.hands[1].action_grip)
+        left_grip_pressed: bool = self.get_pressed_action(
+            self.hands[0].action_grip)
+        right_grip_pressed: bool = self.get_pressed_action(
+            self.hands[1].action_grip)
 
         if left_grip_pressed:
             self.grabbed = -1

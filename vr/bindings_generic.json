@@ -1,139 +1,139 @@
 {
-   "bindings": {
-      "/actions/demo": {
-         "poses": [
-            {
-               "output": "/actions/demo/in/hand_left",
-               "path": "/user/hand/left/pose/raw"
-            },
-            {
-               "output": "/actions/demo/in/hand_right",
-               "path": "/user/hand/right/pose/raw"
+  "bindings": {
+    "/actions/demo": {
+      "haptics": [
+        {
+          "output": "/actions/demo/out/haptic_right",
+          "path": "/user/hand/right/output/haptic"
+        },
+        {
+          "output": "/actions/demo/out/haptic_left",
+          "path": "/user/hand/left/output/haptic"
+        }
+      ],
+      "poses": [
+        {
+          "output": "/actions/demo/in/hand_left",
+          "path": "/user/hand/left/pose/raw"
+        },
+        {
+          "output": "/actions/demo/in/hand_right",
+          "path": "/user/hand/right/pose/raw"
+        }
+      ],
+      "sources": [
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/grow"
             }
-         ],
-         "haptics": [
-            {
-               "output": "/actions/demo/out/haptic_right",
-               "path": "/user/hand/right/output/haptic"
-            },
-            {
-               "output": "/actions/demo/out/haptic_left",
-               "path": "/user/hand/left/output/haptic"
+          },
+          "mode": "button",
+          "path": "/user/hand/right/input/trigger"
+        },
+        {
+          "inputs": {
+            "position": {
+              "output": "/actions/demo/in/rotate_model"
             }
-         ],
-         "sources": [
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/grow"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/right/input/trigger"
-            },
-            {
-               "inputs": {
-                  "position": {
-                     "output": "/actions/demo/in/rotate_model"
-                  }
-               },
-               "mode": "joystick",
-               "path": "/user/hand/right/input/joystick"
-            },
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/reset"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/right/input/joystick"
-            },
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/rotate_class_mode"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/right/input/a"
-            },
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/rotate_render_mode"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/right/input/b"
-            },
-            {
-               "inputs": {
-                  "position": {
-                     "output": "/actions/demo/in/rotate_model"
-                  }
-               },
-               "mode": "joystick",
-               "path": "/user/hand/left/input/joystick"
-            },
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/reset"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/left/input/joystick"
-            },
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/rotate_class_mode"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/left/input/x"
-            },
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/rotate_render_mode"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/left/input/y"
-            },
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/grip_right"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/right/input/grip"
-            },
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/shrink"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/left/input/trigger"
-            },
-            {
-               "inputs": {
-                  "click": {
-                     "output": "/actions/demo/in/grip_left"
-                  }
-               },
-               "mode": "button",
-               "path": "/user/hand/left/input/grip"
+          },
+          "mode": "joystick",
+          "path": "/user/hand/right/input/joystick"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/reset"
             }
-         ]
-      }
-   },
-   "controller_type": "generic",
-   "description": "Bindings for the nn_vis vr demo for a generic controller",
-   "name": "nn_vis bindings for a generic controller"
+          },
+          "mode": "button",
+          "path": "/user/hand/right/input/joystick"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/rotate_class_mode"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/right/input/a"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/rotate_render_mode"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/right/input/b"
+        },
+        {
+          "inputs": {
+            "position": {
+              "output": "/actions/demo/in/rotate_model"
+            }
+          },
+          "mode": "joystick",
+          "path": "/user/hand/left/input/joystick"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/reset"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/joystick"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/rotate_class_mode"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/x"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/rotate_render_mode"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/y"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/grip_right"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/right/input/grip"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/shrink"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/trigger"
+        },
+        {
+          "inputs": {
+            "click": {
+              "output": "/actions/demo/in/grip_left"
+            }
+          },
+          "mode": "button",
+          "path": "/user/hand/left/input/grip"
+        }
+      ]
+    }
+  },
+  "controller_type": "generic",
+  "description": "Bindings for the nn_vis vr demo for a generic controller",
+  "name": "nn_vis bindings for a generic controller"
 }

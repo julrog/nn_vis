@@ -1,12 +1,20 @@
 from enum import Enum
-from typing import List, Callable, Union
+from typing import Callable, List, Union
 
-from OpenGL.GL import *
-from OpenGL.constant import IntConstant, StringConstant, FloatConstant, LongConstant
+from OpenGL.constant import (Constant, FloatConstant, IntConstant,
+                             LongConstant, StringConstant)
+from OpenGL.GL import (GL_ALL_BARRIER_BITS, GL_BLEND, GL_COLOR_BUFFER_BIT,
+                       GL_DEPTH_BUFFER_BIT, GL_DEPTH_TEST, GL_MAX, GL_MIN,
+                       GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA,
+                       glBlendEquationSeparate, glBlendFunc, glClear,
+                       glClearColor, glDisable, glDrawArrays,
+                       glDrawArraysInstanced, glEnable, glLineWidth,
+                       glMemoryBarrier, glPointSize)
 
 
 def clear_screen(clear_color: List[float]):
-    glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3])
+    glClearColor(clear_color[0], clear_color[1],
+                 clear_color[2], clear_color[3])
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 
@@ -20,7 +28,8 @@ def generate_render_function(ogl_func: OGLRenderFunction,
                              point_size: float = None, line_width: float = None, add_blending: bool = False,
                              depth_test: bool = False) -> Callable:
     ogl_func: OGLRenderFunction = ogl_func
-    primitive: Union[FloatConstant, IntConstant, LongConstant, StringConstant, Constant] = primitive
+    primitive: Union[FloatConstant, IntConstant,
+                     LongConstant, StringConstant, Constant] = primitive
     point_size: float = point_size
     line_width: float = line_width
     add_blending: bool = add_blending

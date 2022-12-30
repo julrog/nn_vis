@@ -1,4 +1,10 @@
-from OpenGL.GL import *
+from OpenGL.GL import (GL_COLOR_ATTACHMENT0, GL_DEPTH24_STENCIL8,
+                       GL_DEPTH_STENCIL_ATTACHMENT, GL_FRAMEBUFFER, GL_LINEAR,
+                       GL_RENDERBUFFER, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                       GL_TEXTURE_MIN_FILTER, glBindFramebuffer,
+                       glBindRenderbuffer, glFramebufferRenderbuffer,
+                       glFramebufferTexture2D, glRenderbufferStorage,
+                       glTexParameteri)
 
 from opengl_helper.frame_buffer import FrameBufferObject
 from opengl_helper.texture import Texture

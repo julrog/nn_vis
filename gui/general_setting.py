@@ -1,33 +1,34 @@
 import logging
-from tkinter import LabelFrame, IntVar, StringVar, Label, Entry, Button, RAISED, SUNKEN, DoubleVar, TclError
-from typing import List, Callable
+from tkinter import (RAISED, SUNKEN, Button, DoubleVar, Entry, IntVar, Label,
+                     LabelFrame, StringVar, TclError)
+from typing import Any, Callable, List
 
 
 class SettingBase:
-    def __init__(self, root: LabelFrame, name: str, variable_value: any = 0, variable_type: str = "string",
+    def __init__(self, root: LabelFrame, name: str, variable_value: Any = 0, variable_type: str = 'string',
                  row: int = 0, column: int = 0):
         self.name: str = name
         self.variable_type: str = variable_type
-        if variable_type is "int":
+        if variable_type == 'int':
             self.variable: IntVar = IntVar(value=int(variable_value))
-        elif variable_type is "float":
+        elif variable_type == 'float':
             self.variable: DoubleVar = DoubleVar(value=float(variable_value))
         else:
             self.variable: StringVar = StringVar(value=str(variable_value))
         self.label: Label = Label(root, text=name)
         self.label.grid(row=row, column=column)
 
-    def set(self, value: any):
-        if self.variable_type is "int":
+    def set(self, value: Any):
+        if self.variable_type == 'int':
             self.variable.set(int(value))
-        elif self.variable_type is "float":
+        elif self.variable_type == 'float':
             self.variable.set(float(value))
         else:
             self.variable.set(str(value))
 
 
 class SettingField(SettingBase):
-    def __init__(self, root: LabelFrame, name: str, variable_value: any = 0, variable_type: str = "string",
+    def __init__(self, root: LabelFrame, name: str, variable_value: Any = 0, variable_type: str = 'string',
                  row: int = 0, column: int = 0):
         super().__init__(root, name, variable_value, variable_type, row, column)
         self.variable_field: Label = Label(root, textvariable=self.variable)
@@ -35,41 +36,43 @@ class SettingField(SettingBase):
 
 
 class SettingEntry(SettingBase):
-    def __init__(self, root: LabelFrame, name: str, variable_value: any = 0, variable_type: str = "string",
+    def __init__(self, root: LabelFrame, name: str, variable_value: Any = 0, variable_type: str = 'string',
                  row: int = 0, column: int = 0):
         super().__init__(root, name, variable_value, variable_type, row, column)
-        if variable_type is "int":
+        if variable_type == 'int':
             self.old_variable: IntVar = IntVar(value=int(variable_value))
-        elif variable_type is "float":
-            self.old_variable: DoubleVar = DoubleVar(value=float(variable_value))
+        elif variable_type == 'float':
+            self.old_variable: DoubleVar = DoubleVar(
+                value=float(variable_value))
         else:
             self.old_variable: StringVar = StringVar(value=str(variable_value))
-        self.variable_entry: Entry = Entry(root, width=5, textvariable=self.variable)
+        self.variable_entry: Entry = Entry(
+            root, width=5, textvariable=self.variable)
         self.variable_entry.grid(row=row, column=column + 1)
 
-    def set(self, value: any):
+    def set(self, value: Any):
         super().set(value)
-        if self.variable_type is "int":
+        if self.variable_type == 'int':
             self.old_variable.set(int(value))
-        elif self.variable_type is "float":
+        elif self.variable_type == 'float':
             self.old_variable.set(float(value))
         else:
             self.old_variable.set(str(value))
 
-    def get(self) -> any:
+    def get(self) -> Any:
         try:
-            if self.variable_type is "int":
+            if self.variable_type == 'int':
                 return int(self.variable.get())
-            elif self.variable_type is "float":
+            elif self.variable_type == 'float':
                 return float(self.variable.get())
             else:
                 return str(self.variable.get())
         except TclError:
             self.variable.set(self.old_variable.get())
-            logging.error("wrong value entered.. using old one")
-            if self.variable_type is "int":
+            logging.error('wrong value entered.. using old one')
+            if self.variable_type == 'int':
                 return int(self.variable.get())
-            elif self.variable_type is "float":
+            elif self.variable_type == 'float':
                 return float(self.variable.get())
             else:
                 return str(self.variable.get())
@@ -101,10 +104,10 @@ class RadioButtons:
                 button.config(relief=SUNKEN)
         self.command(self.option, self.sub_option, self.variable.get())
 
-    def set(self, value: any):
+    def set(self, value: Any):
         self.variable.set(int(value))
 
-    def get(self) -> any:
+    def get(self) -> Any:
         return int(self.variable.get())
 
     def set_buttons(self, button_names: List[str]):

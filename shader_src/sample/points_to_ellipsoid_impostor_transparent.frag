@@ -71,4 +71,3 @@ void main()
 
     frag_color = calculate_transparency_color(real_position_screen.z, ellipsoid_density);
 }
-

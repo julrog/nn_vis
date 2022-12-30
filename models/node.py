@@ -56,14 +56,16 @@ class Node:
             if i == position_max_0:
                 random_value: float = random.random()
                 second_try: float = random.random()
-                random_value = (random_value if random_value > second_try else second_try)
+                random_value = (random_value if random_value >
+                                second_try else second_try)
                 importance_sum += random_value
                 importance_squared_sum += random_value * random_value
                 self.data.append(random_value)
             else:
                 random_value: float = random.random()
                 second_try: float = random.random()
-                random_value = (random_value if random_value < second_try else second_try)
+                random_value = (random_value if random_value <
+                                second_try else second_try)
                 random_value = random_value * random_value
                 importance_sum += random_value
                 importance_squared_sum += random_value * random_value
@@ -120,11 +122,14 @@ def create_random_nodes(layer_nodes: List[int],
                 [center_position.x,
                  center_position.y,
                  z_range[0] * (1 - layer / (len(layer_nodes) - 1)) + z_range[1] * layer / (len(layer_nodes) - 1)])
-            new_node: Node = Node(len(current_layer_nodes), input_edges, output_edges)
+            new_node: Node = Node(len(current_layer_nodes),
+                                  input_edges, output_edges)
             if layer is not len(layer_nodes) - 1:
-                new_node = new_node.random_importance_init(num_classes, padding, position)
+                new_node = new_node.random_importance_init(
+                    num_classes, padding, position)
             else:
-                new_node = new_node.class_importance_init(num_classes, padding, position)
+                new_node = new_node.class_importance_init(
+                    num_classes, padding, position)
             current_layer_nodes.append(new_node)
         else:
             node_size_x: float = node_size
@@ -134,17 +139,21 @@ def create_random_nodes(layer_nodes: List[int],
                 node_size_y = abs(y_range[1] - y_range[0]) / nodes_sqrt
             for i in range(node_count):
                 pos_x: float = (i % nodes_sqrt) - (nodes_sqrt - 1.0) / 2.0
-                pos_y: float = (math.floor(i / nodes_sqrt)) - (nodes_sqrt - 1.0) / 2.0
+                pos_y: float = (math.floor(i / nodes_sqrt)) - \
+                    (nodes_sqrt - 1.0) / 2.0
                 position: Vector3 = Vector3(
                     [pos_x * node_size_x + center_position.x,
                      pos_y * node_size_y + center_position.y,
                      z_range[0] * (1 - layer / (len(layer_nodes) - 1)) + z_range[1] * layer / (
-                             len(layer_nodes) - 1)])
-                new_node: Node = Node(len(current_layer_nodes), input_edges, output_edges)
+                         len(layer_nodes) - 1)])
+                new_node: Node = Node(
+                    len(current_layer_nodes), input_edges, output_edges)
                 if layer is not len(layer_nodes) - 1:
-                    new_node = new_node.random_importance_init(num_classes, padding, position)
+                    new_node = new_node.random_importance_init(
+                        num_classes, padding, position)
                 else:
-                    new_node = new_node.class_importance_init(num_classes, padding, position)
+                    new_node = new_node.class_importance_init(
+                        num_classes, padding, position)
                 current_layer_nodes.append(new_node)
 
         nodes.append(current_layer_nodes)
@@ -189,12 +198,13 @@ def create_nodes_with_importance(layer_nodes: List[int],
                 node_size_y = abs(y_range[1] - y_range[0]) / nodes_sqrt
             for i in range(node_count):
                 pos_x: float = (i % nodes_sqrt) - (nodes_sqrt - 1.0) / 2.0
-                pos_y: float = (math.floor(i / nodes_sqrt)) - (nodes_sqrt - 1.0) / 2.0
+                pos_y: float = (math.floor(i / nodes_sqrt)) - \
+                    (nodes_sqrt - 1.0) / 2.0
                 position: Vector3 = Vector3(
                     [pos_x * node_size_x + center_position.x,
                      pos_y * node_size_y + center_position.y,
                      z_range[0] * (1 - layer / (len(layer_nodes) - 1)) + z_range[1] * layer / (
-                             len(layer_nodes) - 1)])
+                         len(layer_nodes) - 1)])
                 current_layer_nodes.append(Node(
                     len(current_layer_nodes),
                     input_edges,

@@ -1,14 +1,16 @@
 import abc
-from typing import Callable, List, Tuple
+from typing import Any, Callable, List, Tuple
 
 from opengl_helper.shader import BaseShader
-from opengl_helper.vertex_data_handler import VertexDataHandler, LayeredVertexDataHandler, OverflowingVertexDataHandler
+from opengl_helper.vertex_data_handler import (LayeredVertexDataHandler,
+                                               OverflowingVertexDataHandler,
+                                               VertexDataHandler)
 from rendering.rendering_config import RenderingConfig
 
 
 class BaseRenderSet:
     def __init__(self, shader: BaseShader, render_func: Callable, element_count_func: Callable):
-        __metaclass__ = abc.ABCMeta
+        __metaclass__ = abc.ABCMeta  # noqa F841
         self.shader: BaseShader = shader
         self.uniform_settings: List[str] = []
         self.render_func: Callable = render_func
@@ -18,7 +20,7 @@ class BaseRenderSet:
         if self.shader is not None:
             self.shader.set_uniform_label(data)
 
-    def set_uniform_data(self, data: List[Tuple[str, any, any]]):
+    def set_uniform_data(self, data: List[Tuple[str, Any, Any]]):
         if self.shader is not None:
             self.shader.set_uniform_data(data)
 

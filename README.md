@@ -60,7 +60,7 @@ The parameters used in the shaders rendering the neural network can be changed b
 
 ## Processing
 <img align="center" src="./docs/images/own_pipeline.png" />
-The above pipeline explains the bundling process of a neural network through my code. 
+The above pipeline explains the bundling process of a neural network through my code.
 
 
 <img align="center" src="./docs/images/comparisson_processing.jpg" />
@@ -98,7 +98,7 @@ To change the parameters for processing change values in following file:
 ```
 
 ### Importance
-Each classification is represented by one color. Nodes and egdes are colored according to their importance in the network for correctly predicting the associated class. The validity of the importance is proven by pruning the model parameters in order of their calculated importance.
+Each classification is represented by one color. Nodes and edges are colored according to their importance in the network for correctly predicting the associated class. The validity of the importance is proven by pruning the model parameters in order of their calculated importance.
 
 Overall Importance Pruning             |  Class Importance Pruning
 :-------------------------:|:-------------------------:

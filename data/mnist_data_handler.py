@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Tuple, Any
+from typing import Any, List, Tuple
 
 import numpy as np
 from tensorflow import keras
@@ -19,8 +19,8 @@ def get_basic_data(categorical: bool = False) -> Tuple[Tuple[Any, Any], Tuple[An
     x_test = x_test.reshape(x_test.shape[0], img_size, 1)
     input_shape = (img_size, 1)
 
-    x_train = x_train.astype("float32")
-    x_test = x_test.astype("float32")
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
     x_train /= 255
     x_test /= 255
 
@@ -67,7 +67,8 @@ def get_unbalance_data(main_class: int, other_class_percentage: float, class_sel
 
     x_unbalanced_train = []
     y_unbalanced_train = []
-    other_class_samples: int = int(other_class_percentage * x_train.shape[0] * (len(class_selection) / num_classes))
+    other_class_samples: int = int(
+        other_class_percentage * x_train.shape[0] * (len(class_selection) / num_classes))
 
     for result, image in zip(y_train, x_train):
         if result == main_class:
@@ -109,12 +110,12 @@ def get_unbalance_data(main_class: int, other_class_percentage: float, class_sel
 
 def split_mnist_data(class_selection: List[int] = None):
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
-    logging.info("splitting %i train examples" % x_train.shape[0])
-    logging.info("splitting %i test examples" % x_test.shape[0])
+    logging.info('splitting %i train examples' % x_train.shape[0])
+    logging.info('splitting %i test examples' % x_test.shape[0])
 
-    separated_train_data: List[Tuple[np.array or List[any], np.array or List[any]]] = [([], []) for _ in
+    separated_train_data: List[Tuple[np.array or List[Any], np.array or List[Any]]] = [([], []) for _ in
                                                                                        range(num_classes)]
-    separated_test_data: List[Tuple[np.array or List[any], np.array or List[any]]] = [([], []) for _ in
+    separated_test_data: List[Tuple[np.array or List[Any], np.array or List[Any]]] = [([], []) for _ in
                                                                                       range(num_classes)]
 
     if class_selection is None:
@@ -136,42 +137,56 @@ def split_mnist_data(class_selection: List[int] = None):
         separated_test_data[i] = (np.array(separated_test_data[class_id][0]).reshape([-1, input_shape[0], 1]),
                                   np.array(separated_test_data[class_id][1]).reshape([-1, 1]))
 
-    processed_separated_train_data: List[Tuple[np.array, np.array]] = [([], []) for _ in range(len(class_selection))]
-    processed_separated_test_data: List[Tuple[np.array, np.array]] = [([], []) for _ in range(len(class_selection))]
+    processed_separated_train_data: List[Tuple[np.array, np.array]] = [
+        ([], []) for _ in range(len(class_selection))]
+    processed_separated_test_data: List[Tuple[np.array, np.array]] = [
+        ([], []) for _ in range(len(class_selection))]
     for i in range(len(class_selection)):
-        processed_separated_train_data[i] = (np.copy(separated_train_data[i][0]), np.copy(separated_train_data[i][1]))
-        processed_separated_test_data[i] = (np.copy(separated_test_data[i][0]), np.copy(separated_test_data[i][1]))
+        processed_separated_train_data[i] = (
+            np.copy(separated_train_data[i][0]), np.copy(separated_train_data[i][1]))
+        processed_separated_test_data[i] = (
+            np.copy(separated_test_data[i][0]), np.copy(separated_test_data[i][1]))
 
     for i in range(len(class_selection)):
         for j in range(len(class_selection)):
             np.random.shuffle(separated_train_data[j][0])
-            split_portion: int = int(len(separated_train_data[j][0]) / len(class_selection))
+            split_portion: int = int(
+                len(separated_train_data[j][0]) / len(class_selection))
             processed_separated_train_data[i] = (
-                np.append(processed_separated_train_data[i][0], separated_train_data[j][0][0:split_portion], axis=0),
-                np.append(processed_separated_train_data[i][1], np.ones(split_portion).reshape(-1, 1), axis=0)
+                np.append(
+                    processed_separated_train_data[i][0], separated_train_data[j][0][0:split_portion], axis=0),
+                np.append(processed_separated_train_data[i][1], np.ones(
+                    split_portion).reshape(-1, 1), axis=0)
             )
             np.random.shuffle(separated_test_data[j][0])
-            split_portion: int = int(len(separated_test_data[j][0]) / len(class_selection))
+            split_portion: int = int(
+                len(separated_test_data[j][0]) / len(class_selection))
             processed_separated_test_data[i] = (
-                np.append(processed_separated_test_data[i][0], separated_test_data[j][0][0:split_portion], axis=0),
-                np.append(processed_separated_test_data[i][1], np.ones(split_portion).reshape(-1, 1), axis=0)
+                np.append(
+                    processed_separated_test_data[i][0], separated_test_data[j][0][0:split_portion], axis=0),
+                np.append(processed_separated_test_data[i][1], np.ones(
+                    split_portion).reshape(-1, 1), axis=0)
             )
 
     for i, class_id in enumerate(class_selection):
-        logging.info("%i train examples for class #%i" % (processed_separated_train_data[i][0].shape[0], class_id))
-        logging.info("%i test examples for class #%i" % (processed_separated_test_data[i][0].shape[0], class_id))
+        logging.info('%i train examples for class #%i' %
+                     (processed_separated_train_data[i][0].shape[0], class_id))
+        logging.info('%i test examples for class #%i' %
+                     (processed_separated_test_data[i][0].shape[0], class_id))
 
-    data_path: str = DATA_PATH + "mnist"
+    data_path: str = DATA_PATH + 'mnist'
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
     if len(class_selection) == num_classes:
-        np.savez("%s/mnist_train_split" % data_path, processed_separated_train_data)
-        np.savez("%s/mnist_test_split" % data_path, processed_separated_test_data)
+        np.savez('%s/mnist_train_split' %
+                 data_path, processed_separated_train_data)
+        np.savez('%s/mnist_test_split' %
+                 data_path, processed_separated_test_data)
     else:
-        np.savez("%s/mnist_train_split_%s" % (data_path, "".join(str(e) + "_" for e in class_selection)),
+        np.savez('%s/mnist_train_split_%s' % (data_path, ''.join(str(e) + '_' for e in class_selection)),
                  processed_separated_train_data)
-        np.savez("%s/mnist_test_split_%s" % (data_path, "".join(str(e) + "_" for e in class_selection)),
+        np.savez('%s/mnist_test_split_%s' % (data_path, ''.join(str(e) + '_' for e in class_selection)),
                  processed_separated_test_data)
 
     logging.info("saved split data to \"%s\"" % data_path)

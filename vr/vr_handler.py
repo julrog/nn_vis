@@ -12,7 +12,8 @@ class VRHandler:
     def __init__(
         self,
     ) -> None:
-        self.vr_system: openvr.IVRSystem = openvr.init(openvr.VRApplication_Scene)
+        self.vr_system: openvr.IVRSystem = openvr.init(
+            openvr.VRApplication_Scene)
         self.vr_compositor: openvr.IVRCompositor = openvr.VRCompositor()
         poses_t = openvr.TrackedDevicePose_t * openvr.k_unMaxTrackedDeviceCount
         self.poses: List[openvr.TrackedDevicePose_t] = poses_t()
@@ -27,7 +28,8 @@ class VRHandler:
 
         self.targets: List[VRRenderTarget] = []
         for id, vr_eye_id in enumerate([openvr.Eye_Left, openvr.Eye_Right]):
-            projection = self.vr_system.getProjectionMatrix(vr_eye_id, 0.1, 500.0)
+            projection = self.vr_system.getProjectionMatrix(
+                vr_eye_id, 0.1, 500.0)
             eye_to_head = self.vr_system.getEyeToHeadTransform(vr_eye_id)
             self.context.update_camera_matrices(id, projection, eye_to_head)
             self.targets.append(VRRenderTarget(vr_eye_id, id, w, h))
@@ -41,9 +43,9 @@ class VRHandler:
         while has_events:
             has_events = self.vr_system.pollNextEvent(event)
             if event.eventType == openvr.VREvent_TrackedDeviceDeactivated:
-                print(f"Device {event.trackedDeviceIndex} detached")
+                print(f'Device {event.trackedDeviceIndex} detached')
             elif event.eventType == openvr.VREvent_TrackedDeviceUpdated:
-                print(f"Device {event.trackedDeviceIndex} updated")
+                print(f'Device {event.trackedDeviceIndex} updated')
 
         self.input_handler.update()
 

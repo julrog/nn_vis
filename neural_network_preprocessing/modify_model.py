@@ -1,18 +1,17 @@
-from typing import Union, List
+from typing import List, Union
 
 import numpy as np
-from tensorflow.keras import Model
+from tensorflow.keras import Input, Model
 from tensorflow.keras.layers import BatchNormalization, Dense
-from tensorflow.keras.regularizers import l1, l2, l1_l2
-from tensorflow.keras import Input
+from tensorflow.keras.regularizers import l1, l1_l2, l2
 
 from neural_network_preprocessing.importance import ImportanceType
 
 
 def modify_model(model: Model, class_index: int, importance_type: ImportanceType) -> Model:
-    gamma_initializer: str = "zeros"
+    gamma_initializer: str = 'zeros'
     if importance_type & ImportanceType.GAMMA:
-        gamma_initializer = "ones"
+        gamma_initializer = 'ones'
 
     gamma_regularizer = None
     if importance_type & ImportanceType.L1 and not importance_type & ImportanceType.L2:
@@ -36,7 +35,8 @@ def modify_model(model: Model, class_index: int, importance_type: ImportanceType
                 gamma_regularizer=gamma_regularizer)
             last_output = new_layer(last_output)
         if i == max_layer - 1:
-            new_end_layer: Dense = Dense(2, activation="softmax", name="binary_output_layer")
+            new_end_layer: Dense = Dense(
+                2, activation='softmax', name='binary_output_layer')
             last_output = new_end_layer(last_output)
 
             old_weights = layer.get_weights()
