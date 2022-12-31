@@ -3,7 +3,7 @@ from typing import Callable
 
 
 class LayerSettings:
-    def __init__(self, root: LabelFrame, layer_id: int, row: int, column: int, remove_func: Callable):
+    def __init__(self, root: LabelFrame, layer_id: int, row: int, column: int, remove_func: Callable) -> None:
         self.layer_id: int = layer_id
         self.row: int = row
         self.column: int = column
@@ -15,7 +15,7 @@ class LayerSettings:
             root, text='Layer ' + str(self.layer_id + 1))
         self.grid()
 
-    def grid(self):
+    def grid(self) -> None:
         self.layer_label.config(text='Layer ' + str(self.layer_id + 1))
         self.remove_button.grid(
             row=self.row + self.layer_id, column=self.column + 2)
@@ -23,14 +23,14 @@ class LayerSettings:
             row=self.row + self.layer_id, column=self.column + 1)
         self.layer_label.grid(row=self.row + self.layer_id, column=self.column)
 
-    def set_neurons(self, neurons: int):
+    def set_neurons(self, neurons: int) -> None:
         self.neuron_count_entry.delete(0, END)
         self.neuron_count_entry.insert(0, str(neurons))
 
     def get_neurons(self) -> int:
         return int(self.neuron_count_entry.get())
 
-    def remove(self):
+    def remove(self) -> None:
         self.remove_button.destroy()
         self.neuron_count_entry.destroy()
         self.layer_label.destroy()

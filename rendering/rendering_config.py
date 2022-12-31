@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from utility.config import BaseConfig
 
@@ -11,7 +11,7 @@ class RenderConfigType(Enum):
 
 
 class RenderingConfig(BaseConfig):
-    def __init__(self, name: str = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         if name is None:
             super().__init__('rendering')
         else:
@@ -24,7 +24,7 @@ class RenderingConfig(BaseConfig):
         self.item_type: Dict[str, RenderConfigType] = dict()
         self.set_defaults()
 
-    def set_defaults(self):
+    def set_defaults(self) -> None:
         shader_items: List[Tuple[str, str, str, Any]] = []
         shader_items.extend([('screen_width', 'screen_width', 'Screen Width', 1920.0),
                              ('screen_height', 'screen_height',

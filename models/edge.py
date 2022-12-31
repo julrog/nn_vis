@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 from typing import List
 
@@ -7,11 +9,11 @@ from models.node import Node
 
 
 class Edge:
-    def __init__(self):
+    def __init__(self) -> None:
         self.data: List[float] = []
         self.sample_data: List[float] = []
 
-    def data_init(self, data: np.array, sample_data: np.array):
+    def data_init(self, data: np.array, sample_data: np.array) -> Edge:
         self.data = []
         for d in data:
             self.data.append(d)
@@ -21,7 +23,7 @@ class Edge:
         return self
 
     def importance_init(self, num_classes: int, padding: int, start_node: Node, end_node: Node, layer_id: int,
-                        layer_edge_id: int, importance: float):
+                        layer_edge_id: int, importance: float) -> Edge:
         self.data = []
         self.data = [2.0, layer_id, layer_edge_id, importance, start_node.data[num_classes + 5],
                      end_node.data[num_classes + 5], start_node.data[num_classes + 4], end_node.data[num_classes + 4]]
@@ -34,7 +36,7 @@ class Edge:
         return self
 
     def random_importance_init(self, num_classes: int, padding: int, start_node: Node, end_node: Node, layer_id: int,
-                               layer_edge_id: int):
+                               layer_edge_id: int) -> Edge:
         importance: float = random.random()
         self.data = [2.0, layer_id, layer_edge_id, importance, start_node.data[num_classes + 5],
                      end_node.data[num_classes + 5], start_node.data[num_classes + 4], end_node.data[num_classes + 4]]

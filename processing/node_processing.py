@@ -14,7 +14,7 @@ from utility.performance import track_time
 
 
 class NodeProcessor:
-    def __init__(self, network: NetworkModel):
+    def __init__(self, network: NetworkModel) -> None:
         ComputeShaderHandler().create('node_noise', 'node/node_noise.comp')
 
         object_size, render_data_offset, render_data_size = \
@@ -38,7 +38,7 @@ class NodeProcessor:
 
         self.set_data()
 
-    def set_data(self):
+    def set_data(self) -> None:
         initial_data: List[float] = []
         for node in self.nodes:
             initial_data.extend(node.data)
@@ -48,7 +48,7 @@ class NodeProcessor:
         self.node_buffer.load(transfer_data)
 
     @track_time
-    def node_noise(self, sample_length: float, strength: float = 1.0):
+    def node_noise(self, sample_length: float, strength: float = 1.0) -> None:
         noise: ComputeShader = ComputeShaderHandler().get('node_noise')
         noise.set_uniform_data(
             [('noise_strength', strength, 'float'), ('sample_length', sample_length, 'float')])
@@ -75,5 +75,5 @@ class NodeProcessor:
     def get_buffer_points(self) -> int:
         return len(self.nodes)
 
-    def delete(self):
+    def delete(self) -> None:
         self.node_buffer.delete()

@@ -14,7 +14,7 @@ from utility.camera import BaseCamera
 
 
 class Renderer:
-    def __init__(self):
+    def __init__(self) -> None:
         __metaclass__ = abc.ABCMeta  # noqa F841
         self.shaders: Dict[str, RenderShader] = dict()
         self.sets: Dict[str, BaseRenderSet] = dict()
@@ -22,13 +22,13 @@ class Renderer:
         self.element_count_funcs: Dict[str, Callable] = dict()
         self.render_elements: int = 0
 
-    def set_shader(self, shader_settings: List[ShaderSetting]):
+    def set_shader(self, shader_settings: List[ShaderSetting]) -> None:
         shader_handler: RenderShaderHandler = RenderShaderHandler()
         for shader_setting in shader_settings:
             self.shaders[shader_setting.id_name] = shader_handler.create(
                 shader_setting)
 
-    def create_sets(self, data_handler: BaseDataHandler):
+    def create_sets(self, data_handler: BaseDataHandler) -> None:
         if isinstance(data_handler, OverflowingVertexDataHandler):
             for name, shader in self.shaders.items():
                 self.sets[name] = OverflowingRenderSet(shader, data_handler, self.render_funcs[name],
@@ -43,9 +43,9 @@ class Renderer:
                                             self.element_count_funcs[name])
 
     @abc.abstractmethod
-    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig = None, show_class: int = 0):
+    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig, show_class: int = 0) -> None:
         return
 
     @abc.abstractmethod
-    def delete(self):
+    def delete(self) -> None:
         return

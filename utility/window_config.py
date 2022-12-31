@@ -1,10 +1,10 @@
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 from utility.config import BaseConfig
 
 
 class WindowConfig(BaseConfig):
-    def __init__(self, name: str = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         if name is None:
             super().__init__('window')
         else:
@@ -12,7 +12,7 @@ class WindowConfig(BaseConfig):
 
         self.set_defaults()
 
-    def set_defaults(self):
+    def set_defaults(self) -> None:
         render_setting_items: List[Tuple[str, Any]] = []
         render_setting_items.extend([('title', 'NNVis Render'),
                                      ('width', 1600),

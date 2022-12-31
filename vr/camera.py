@@ -1,5 +1,5 @@
 import math
-from typing import List, Union
+from typing import List, Optional
 
 import numpy as np
 import pyrr
@@ -40,7 +40,7 @@ class VRCamera(BaseCamera):
         self,
         width: int,
         height: int,
-        initial_pos: Vector3 = None,
+        initial_pos: Optional[Vector3] = None,
     ) -> None:
         super().__init__(width, height)
         self.base: Vector3 = Vector3([0.0, 0.0, 0.0])
@@ -52,7 +52,7 @@ class VRCamera(BaseCamera):
         self.head_to_camera: Matrix44 = Matrix44.identity()
 
         self.object_scale: float = INITIAL_SCALE
-        self.translation: Union[Matrix44, None] = None
+        self.translation: Optional[Matrix44] = None
         self.rotation: Matrix44 = Matrix44.identity()
         self.rotation_offset: Matrix44 = pyrr.matrix44.create_from_axis_rotation(
             [0.0, 1.0, 0.0], -math.pi / 2.0

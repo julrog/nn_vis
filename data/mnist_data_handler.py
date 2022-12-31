@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 from tensorflow import keras
@@ -31,7 +31,7 @@ def get_basic_data(categorical: bool = False) -> Tuple[Tuple[Any, Any], Tuple[An
     return (x_train, y_train), (x_test, y_test), input_shape, num_classes
 
 
-def get_prepared_data(class_selection: List[int] = None) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Any, Any]:
+def get_prepared_data(class_selection: Optional[List[int]] = None) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Any, Any]:
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
 
     if class_selection is not None:
@@ -61,7 +61,7 @@ def get_prepared_data(class_selection: List[int] = None) -> Tuple[Tuple[Any, Any
     return (x_train, y_train), (x_test, y_test), input_shape, num_classes
 
 
-def get_unbalance_data(main_class: int, other_class_percentage: float, class_selection: List[int] = None) \
+def get_unbalance_data(main_class: int, other_class_percentage: float, class_selection: Optional[List[int]] = None) \
         -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Any, Any]:
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
 
@@ -108,7 +108,7 @@ def get_unbalance_data(main_class: int, other_class_percentage: float, class_sel
     return (x_train, y_train), (x_test, y_test), input_shape, num_classes
 
 
-def split_mnist_data(class_selection: List[int] = None):
+def split_mnist_data(class_selection: Optional[List[int]] = None) -> None:
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
     logging.info('splitting %i train examples' % x_train.shape[0])
     logging.info('splitting %i test examples' % x_test.shape[0])

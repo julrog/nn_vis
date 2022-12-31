@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timezone
+from typing import Optional
 
 import numpy as np
 from OpenGL.GL import (GL_FRONT, GL_RGBA, GL_UNSIGNED_BYTE, glReadBuffer,
@@ -12,8 +13,8 @@ from opengl_helper.frame_buffer import FrameBufferObject
 screenshot_count: int = 0
 
 
-def create_screenshot(width: int, height: int, network_name: str = None, frame_buffer: FrameBufferObject = None,
-                      frame_id: int = None):
+def create_screenshot(width: int, height: int, network_name: str = None, frame_buffer: Optional[FrameBufferObject] = None,
+                      frame_id: Optional[int] = None) -> None:
     global screenshot_count
     screenshot_count += 1
 

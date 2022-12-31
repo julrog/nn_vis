@@ -18,7 +18,7 @@ SHADER_DYNAMIC_VAR: List[str] = [
 
 
 class ComputeShaderHandler(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         self.shader_dir: str = os.path.join(BASE_PATH, 'shader_src/compute')
         self.shader_list: Dict[str, ComputeShader] = dict()
         self.num_classes: int = 10  # default value
@@ -29,7 +29,7 @@ class ComputeShaderHandler(metaclass=Singleton):
 
         self.set_classification_number(self.num_classes)
 
-    def set_classification_number(self, num_classes: int):
+    def set_classification_number(self, num_classes: int) -> None:
         self.num_classes = num_classes
         self.static_var_map['$num_classes$'] = str(num_classes)
         self.edgebuffer_padding = (4 - ((self.num_classes * 2) % 4)) % 4
@@ -60,12 +60,15 @@ class ComputeShaderHandler(metaclass=Singleton):
         processed_line: str = line
 
         for static, value in self.static_var_map.items():
-            processed_line: str = processed_line.replace(static, value)
+            processed_line = processed_line.replace(static, value)
 
         if '$$' in processed_line:
+            new_line: str = ''
+            added: bool = False
+
             for padding_id in range(self.edgebuffer_padding):
-                new_line: str = processed_line
-                added: bool = False
+                new_line = processed_line
+                added = False
                 if '$r_edgebuffer_padding_id$' in new_line:
                     new_line = new_line.replace(
                         '$r_edgebuffer_padding_id$', str(padding_id))
@@ -75,8 +78,8 @@ class ComputeShaderHandler(metaclass=Singleton):
                         new_line.replace('//$$', '').replace('$$', '')
 
             for padding_id in range(self.densitybuffer_padding):
-                new_line: str = processed_line
-                added: bool = False
+                new_line = processed_line
+                added = False
                 if '$r_densitybuffer_padding_id$' in new_line:
                     new_line = new_line.replace(
                         '$r_densitybuffer_padding_id$', str(padding_id))
@@ -86,8 +89,8 @@ class ComputeShaderHandler(metaclass=Singleton):
                         new_line.replace('//$$', '').replace('$$', '')
 
             for padding_id in range(self.nodebuffer_padding):
-                new_line: str = processed_line
-                added: bool = False
+                new_line = processed_line
+                added = False
                 if '$r_nodebuffer_padding_id$' in new_line:
                     new_line = new_line.replace(
                         '$r_nodebuffer_padding_id$', str(padding_id))
@@ -97,8 +100,8 @@ class ComputeShaderHandler(metaclass=Singleton):
                         new_line.replace('//$$', '').replace('$$', '')
 
             for class_id in range(self.num_classes):
-                new_line: str = processed_line
-                added: bool = False
+                new_line = processed_line
+                added = False
                 if '$r_class_id$' in new_line:
                     new_line = new_line.replace('$r_class_id$', str(class_id))
                     added = True

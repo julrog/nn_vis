@@ -4,7 +4,7 @@ import os.path
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(sys.modules[__name__].__file__), '..')))
+    os.path.dirname(sys.modules[__name__].__file__), '..')))  # type: ignore
 
 if True:
     from typing import List

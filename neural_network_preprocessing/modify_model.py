@@ -1,9 +1,9 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
 import numpy as np
 from tensorflow.keras import Input, Model
 from tensorflow.keras.layers import BatchNormalization, Dense
-from tensorflow.keras.regularizers import l1, l1_l2, l2
+from tensorflow.keras.regularizers import Regularizer, l1, l1_l2, l2
 
 from neural_network_preprocessing.importance import ImportanceType
 
@@ -13,7 +13,7 @@ def modify_model(model: Model, class_index: int, importance_type: ImportanceType
     if importance_type & ImportanceType.GAMMA:
         gamma_initializer = 'ones'
 
-    gamma_regularizer = None
+    gamma_regularizer: Optional[Regularizer] = None
     if importance_type & ImportanceType.L1 and not importance_type & ImportanceType.L2:
         gamma_regularizer = l1()
     if not importance_type & ImportanceType.L1 and importance_type & ImportanceType.L2:
@@ -22,8 +22,8 @@ def modify_model(model: Model, class_index: int, importance_type: ImportanceType
         gamma_regularizer = l1_l2()
 
     max_layer: int = len(model.layers)
-    last_output: Input = None
-    network_input: Input = None
+    last_output: Optional[Input] = None
+    network_input: Optional[Input] = None
     for i, layer in enumerate(model.layers):
         if i == 0:
             last_output = layer.output

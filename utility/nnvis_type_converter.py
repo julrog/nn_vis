@@ -1,4 +1,4 @@
-from utility.types import CameraPose, ProcessRenderMode
+from definitions import CameraPose, ProcessRenderMode
 
 NN_VIS_TYPES = {
     'ProcessRenderMode': ProcessRenderMode,

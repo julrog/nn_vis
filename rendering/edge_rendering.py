@@ -17,7 +17,7 @@ from utility.performance import track_time
 
 
 class EdgeRenderer(Renderer):
-    def __init__(self, edge_processor: EdgeProcessor, grid: Grid):
+    def __init__(self, edge_processor: EdgeProcessor, grid: Grid) -> None:
         Renderer.__init__(self)
         self.edge_processor = edge_processor
         self.grid = grid
@@ -54,7 +54,7 @@ class EdgeRenderer(Renderer):
         def generate_element_count_func(ep: EdgeProcessor) -> Callable:
             buffered_ep: EdgeProcessor = ep
 
-            def element_count_func(layer: int, buffer: int):
+            def element_count_func(layer: int, buffer: int) -> int:
                 return buffered_ep.get_buffer_points(layer, buffer)
 
             return element_count_func
@@ -85,7 +85,7 @@ class EdgeRenderer(Renderer):
         self.importance_threshold: float = 0.0
 
     @track_time
-    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig = None, show_class: int = 0):
+    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig, show_class: int = 0) -> None:
         current_set: BaseRenderSet = self.sets[set_name]
         if isinstance(current_set, LayeredRenderSet):
             current_set.set_buffer_divisor(
@@ -112,5 +112,5 @@ class EdgeRenderer(Renderer):
         current_set.set_uniform_labeled_data(config)
         current_set.render()
 
-    def delete(self):
+    def delete(self) -> None:
         self.data_handler.delete()

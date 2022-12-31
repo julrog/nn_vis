@@ -1,6 +1,6 @@
 import logging
 from enum import IntEnum
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from OpenGL.GL import glFinish
@@ -22,7 +22,7 @@ from rendering.edge_rendering import EdgeRenderer
 from rendering.grid_rendering import GridRenderer
 from rendering.node_rendering import NodeRenderer
 from rendering.rendering_config import RenderingConfig
-from utility.camera import Camera
+from utility.camera import BaseCamera
 
 
 class NetworkProcess(IntEnum):
@@ -38,8 +38,8 @@ class NetworkProcess(IntEnum):
 class NetworkProcessor:
     def __init__(self, layer_nodes: List[int],
                  processing_config: ProcessingConfig,
-                 importance_data: ImportanceDataHandler = None,
-                 processed_nn: ProcessedNNHandler = None):
+                 importance_data: Optional[ImportanceDataHandler] = None,
+                 processed_nn: Optional[ProcessedNNHandler] = None) -> None:
         logging.info(
             'Prepare network processing for network of size: %s' % layer_nodes)
         self.layer_nodes: List[int] = layer_nodes
@@ -94,9 +94,9 @@ class NetworkProcessor:
 
         self.edge_smoothing: bool = processing_config['smoothing']
         self.edge_smoothing_iterations: int = processing_config['smoothing_iterations']
-        self.bar: ProgressBar or None = None
+        self.bar: Optional[ProgressBar] = None
 
-    def reset_edges(self):
+    def reset_edges(self) -> None:
         self.edge_processor.delete()
         self.edge_renderer.delete()
 
@@ -113,7 +113,7 @@ class NetworkProcessor:
         self.edge_advection_status.reset()
         self.edge_processor.check_limits()
 
-    def process(self, action_mode: NetworkProcess):
+    def process(self, action_mode: NetworkProcess) -> None:
         if self.last_action_mode is not action_mode:
             if action_mode == NetworkProcess.RESET:
                 logging.info('Resample %i edges' %
@@ -156,12 +156,12 @@ class NetworkProcessor:
         self.last_action_mode = action_mode
         glFinish()
 
-    def smooth_edges(self):
+    def smooth_edges(self) -> None:
         glFinish()
         self.edge_processor.sample_smooth(self.edge_advection_status, True)
         glFinish()
 
-    def node_advection(self, reverse: bool = False):
+    def node_advection(self, reverse: bool = False) -> None:
         if self.bar is None:
             logging.info('Advect %i nodes' % len(self.node_processor.nodes))
             self.bar = ProgressBar(
@@ -186,7 +186,7 @@ class NetworkProcessor:
             self.bar.finish()
             self.bar = None
 
-    def edge_advection(self, reverse: bool = False):
+    def edge_advection(self, reverse: bool = False) -> None:
         if self.bar is None:
             logging.info('Advect %i edges' %
                          self.edge_processor.get_edge_count())
@@ -214,7 +214,7 @@ class NetworkProcessor:
             self.bar.finish()
             self.bar = None
 
-    def render(self, cam: Camera, config: RenderingConfig, show_class: int = 0):
+    def render(self, cam: BaseCamera, config: RenderingConfig, show_class: int = 0) -> None:
         clear_screen([1.0, 1.0, 1.0, 1.0])
         if config['grid_render_mode'] == 1:
             self.grid_renderer.render('grid_cube', cam, config=config)
@@ -245,7 +245,7 @@ class NetworkProcessor:
             self.node_renderer.render(
                 'node_sphere', cam, config=config, show_class=show_class)
 
-    def save_model(self, file_path: str):
+    def save_model(self, file_path: str) -> None:
         layer_data: List[int] = self.network.layer
         logging.info('Reading nodes from buffer...')
         node_data: List[float] = self.node_processor.read_nodes_from_buffer(
@@ -261,7 +261,7 @@ class NetworkProcessor:
         np.savez(file_path, (layer_data, node_data,
                  edge_data, sample_data, max_sample_points))
 
-    def delete(self):
+    def delete(self) -> None:
         self.node_processor.delete()
         self.node_renderer.delete()
         self.edge_processor.delete()

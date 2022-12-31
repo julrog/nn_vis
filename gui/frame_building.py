@@ -10,7 +10,7 @@ from rendering.rendering_config import RenderingConfig
 from rendering.shader_uniforms import EDGE_SHADER_UNIFORM, NODE_SHADER_UNIFORM
 
 
-def set_stat_frame(gui_root: Tk, settings: Dict[Any, Any]):
+def set_stat_frame(gui_root: Tk, settings: Dict[Any, Any]) -> None:
     stats_frame: LabelFrame = LabelFrame(
         gui_root, text='Statistics', width=60, padx=5, pady=5)
     stats_frame.grid(row=0, column=0, padx=5, pady=5)

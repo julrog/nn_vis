@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List
+from typing import Any, List, Optional
 
 import numpy as np
 from sklearn.metrics import classification_report
@@ -44,7 +44,7 @@ def build_mnist_model(layer_data: List[int], num_classes: int, input_shape: Any,
 
 def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learning_rate: float = 0.001,
            regularized: bool = False, train_type: ModelTrainType = ModelTrainType.BALANCED, main_class: int = None,
-           other_class_percentage: float = None, class_selection: List[int] = None) -> ModelData:
+           other_class_percentage: Optional[float] = None, class_selection: Optional[List[int]] = None) -> ModelData:
     logging.info(
         "Create MNIST neural network model with training type \"%s\"." % train_type.name)
 

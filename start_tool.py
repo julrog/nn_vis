@@ -1,9 +1,11 @@
 import logging
 import threading
 import time
+from typing import Optional
 
 from OpenGL.GL import GL_MAJOR_VERSION, GL_MINOR_VERSION, glGetIntegerv
 
+from definitions import CameraPose
 from gui.constants import StatisticLink
 from gui.ui_window import OptionGui
 from opengl_helper.screenshot import create_screenshot
@@ -11,7 +13,6 @@ from processing.network_processing import NetworkProcessor
 from utility.file import FileHandler
 from utility.log_handling import setup_logger
 from utility.performance import track_time
-from utility.types import CameraPose
 from utility.window import Window, WindowHandler
 
 global options_gui
@@ -19,7 +20,7 @@ options_gui = OptionGui()
 setup_logger('tool')
 
 
-def compute_render(some_name: str):
+def compute_render(some_name: str) -> None:
     global options_gui
 
     width, height = 1920, 1200
@@ -34,33 +35,32 @@ def compute_render(some_name: str):
     logging.info('OpenGL Version: %d.%d' % (glGetIntegerv(
         GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
 
-    network_processor: NetworkProcessor or None = None
+    network_processor: Optional[NetworkProcessor] = None
 
     @track_time(track_recursive=False)
-    def frame():
+    def frame() -> None:
         window_handler.update()
 
-        if 'trigger_network_sample' in options_gui.settings and options_gui.settings['trigger_network_sample'] > 0:
-            network_processor.reset_edges()
-            options_gui.settings['trigger_network_sample'] = 0
-
         if network_processor is not None:
+            if 'trigger_network_sample' in options_gui.settings and options_gui.settings['trigger_network_sample'] > 0:
+                network_processor.reset_edges()
+                options_gui.settings['trigger_network_sample'] = 0
             network_processor.process(options_gui.settings['action_state'])
             network_processor.render(
                 window.cam, options_gui.render_config, options_gui.settings['show_class'])
 
-        if StatisticLink.SAMPLE_COUNT in options_gui.settings:
-            options_gui.settings[StatisticLink.SAMPLE_COUNT].set(
-                network_processor.edge_processor.point_count)
-        if StatisticLink.EDGE_COUNT in options_gui.settings:
-            options_gui.settings[StatisticLink.EDGE_COUNT].set(
-                network_processor.edge_processor.get_edge_count())
-        if StatisticLink.CELL_COUNT in options_gui.settings:
-            options_gui.settings[StatisticLink.CELL_COUNT].set(
-                network_processor.grid_processor.grid.grid_cell_count_overall)
-        if StatisticLink.PRUNED_EDGES in options_gui.settings:
-            options_gui.settings[StatisticLink.PRUNED_EDGES].set(
-                network_processor.network.pruned_edges)
+            if StatisticLink.SAMPLE_COUNT in options_gui.settings:
+                options_gui.settings[StatisticLink.SAMPLE_COUNT].set(
+                    network_processor.edge_processor.point_count)
+            if StatisticLink.EDGE_COUNT in options_gui.settings:
+                options_gui.settings[StatisticLink.EDGE_COUNT].set(
+                    network_processor.edge_processor.get_edge_count())
+            if StatisticLink.CELL_COUNT in options_gui.settings:
+                options_gui.settings[StatisticLink.CELL_COUNT].set(
+                    network_processor.grid_processor.grid.grid_cell_count_overall)
+            if StatisticLink.PRUNED_EDGES in options_gui.settings:
+                options_gui.settings[StatisticLink.PRUNED_EDGES].set(
+                    network_processor.network.pruned_edges)
 
         window.swap()
 

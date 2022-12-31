@@ -1,7 +1,7 @@
 import logging
 import threading
 import time
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from OpenGL.GL import GL_MAJOR_VERSION, GL_MINOR_VERSION, glGetIntegerv
 
@@ -20,7 +20,7 @@ setup_logger('tool')
 RENDER_MODES: List[Tuple[int, int]] = [(3, 2), (4, 1), (1, 1), (2, 2)]
 
 
-def compute_render(_: str):
+def compute_render(_: str) -> None:
     global options_gui
 
     FileHandler().read_statistics()
@@ -32,18 +32,17 @@ def compute_render(_: str):
         % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION))
     )
 
-    network_processor: NetworkProcessor or None = None
+    network_processor: Optional[NetworkProcessor] = None
 
     @track_time(track_recursive=False)
-    def frame():
-        if (
-            'trigger_network_sample' in options_gui.settings
-            and options_gui.settings['trigger_network_sample'] > 0
-        ):
-            network_processor.reset_edges()
-            options_gui.settings['trigger_network_sample'] = 0
-
+    def frame() -> None:
         if network_processor is not None:
+            if (
+                'trigger_network_sample' in options_gui.settings
+                and options_gui.settings['trigger_network_sample'] > 0
+            ):
+                network_processor.reset_edges()
+                options_gui.settings['trigger_network_sample'] = 0
             network_processor.process(options_gui.settings['action_state'])
 
             if vr_handler.update():
@@ -71,22 +70,22 @@ def compute_render(_: str):
                     )
                     vr_handler.submit_target_texture(target)
 
-        if StatisticLink.SAMPLE_COUNT in options_gui.settings:
-            options_gui.settings[StatisticLink.SAMPLE_COUNT].set(
-                network_processor.edge_processor.point_count
-            )
-        if StatisticLink.EDGE_COUNT in options_gui.settings:
-            options_gui.settings[StatisticLink.EDGE_COUNT].set(
-                network_processor.edge_processor.get_edge_count()
-            )
-        if StatisticLink.CELL_COUNT in options_gui.settings:
-            options_gui.settings[StatisticLink.CELL_COUNT].set(
-                network_processor.grid_processor.grid.grid_cell_count_overall
-            )
-        if StatisticLink.PRUNED_EDGES in options_gui.settings:
-            options_gui.settings[StatisticLink.PRUNED_EDGES].set(
-                network_processor.network.pruned_edges
-            )
+            if StatisticLink.SAMPLE_COUNT in options_gui.settings:
+                options_gui.settings[StatisticLink.SAMPLE_COUNT].set(
+                    network_processor.edge_processor.point_count
+                )
+            if StatisticLink.EDGE_COUNT in options_gui.settings:
+                options_gui.settings[StatisticLink.EDGE_COUNT].set(
+                    network_processor.edge_processor.get_edge_count()
+                )
+            if StatisticLink.CELL_COUNT in options_gui.settings:
+                options_gui.settings[StatisticLink.CELL_COUNT].set(
+                    network_processor.grid_processor.grid.grid_cell_count_overall
+                )
+            if StatisticLink.PRUNED_EDGES in options_gui.settings:
+                options_gui.settings[StatisticLink.PRUNED_EDGES].set(
+                    network_processor.network.pruned_edges
+                )
 
         vr_handler.context.swap()
 

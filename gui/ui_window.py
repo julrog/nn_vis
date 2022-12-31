@@ -1,6 +1,6 @@
 import ntpath
 from tkinter import Label, LabelFrame, Tk, filedialog, messagebox
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from data.data_handler import ImportanceDataHandler, ProcessedNNHandler
 from definitions import DATA_PATH
@@ -15,7 +15,7 @@ from utility.window_config import WindowConfig
 
 
 class OptionGui:
-    def __init__(self):
+    def __init__(self) -> None:
         self.window_config: WindowConfig = WindowConfig('ui')
 
         self.gui_root: Tk = Tk()
@@ -47,7 +47,7 @@ class OptionGui:
             '+%d+%d' % (self.window_config['screen_x'], self.window_config['screen_y']))
         self.gui_root.bind('<Configure>', self.handle_configure)
 
-    def start(self, layer_data: List[int] = None):
+    def start(self, layer_data: Optional[List[int]] = None) -> None:
         if layer_data is None:
             default_layer_data = [4, 9, 10]
             for nodes in default_layer_data:
@@ -65,19 +65,18 @@ class OptionGui:
             print('Closing')
         self.settings['Closed'] = True
 
-    def handle_configure(self, event):
+    def handle_configure(self, _: Any) -> None:
         self.window_config['screen_x'] = self.gui_root.winfo_x()
         self.window_config['screen_y'] = self.gui_root.winfo_y()
         self.window_config.store()
 
-    def save_processed_nn_file(self):
+    def save_processed_nn_file(self) -> None:
         filename = filedialog.asksaveasfilename()
-        if not filename:
-            return
-        self.settings['save_processed_nn_path'] = filename + '.pro.npz'
-        self.settings['save_file'] = True
+        if filename:
+            self.settings['save_processed_nn_path'] = filename + '.pro.npz'
+            self.settings['save_file'] = True
 
-    def open_processed_nn_file(self):
+    def open_processed_nn_file(self) -> None:
         filename = filedialog.askopenfilename(initialdir=DATA_PATH, title='Select A File',
                                               filetypes=(('processed nn files', '*.pro.npz'),))
         data_loader: ProcessedNNHandler = ProcessedNNHandler(filename)
@@ -85,15 +84,15 @@ class OptionGui:
             filename) + '_processed'
         self.update_layer(data_loader.layer_data, processed_nn=data_loader)
 
-    def open_importance_file(self):
+    def open_importance_file(self) -> None:
         filename = filedialog.askopenfilename(initialdir=DATA_PATH, title='Select A File',
                                               filetypes=(('importance files', '*.imp.npz'),))
         data_loader: ImportanceDataHandler = ImportanceDataHandler(filename)
         self.settings['network_name'] = ntpath.basename(filename) + '_raw'
         self.update_layer(data_loader.layer_data, importance_data=data_loader)
 
-    def update_layer(self, layer_data: List[int], importance_data: ImportanceDataHandler = None,
-                     processed_nn: ProcessedNNHandler = None):
+    def update_layer(self, layer_data: List[int], importance_data: Optional[ImportanceDataHandler] = None,
+                     processed_nn: Optional[ProcessedNNHandler] = None) -> None:
         self.clear_layer()
 
         for nodes in layer_data:
@@ -102,18 +101,18 @@ class OptionGui:
         self.generate(importance_data, processed_nn)
         self.set_classes(layer_data[len(layer_data) - 1])
 
-    def add_layer(self, nodes: int = 9):
+    def add_layer(self, nodes: int = 9) -> None:
         layer_id: int = len(self.layer_settings)
         self.layer_settings.append(LayerSettings(
             self.architecture_frame, layer_id, 5, 0, self.remove_layer))
         self.layer_settings[layer_id].set_neurons(nodes)
 
-    def clear_layer(self):
+    def clear_layer(self) -> None:
         for ls in self.layer_settings:
             ls.remove()
         self.layer_settings = []
 
-    def remove_layer(self, layer_id: int):
+    def remove_layer(self, layer_id: int) -> None:
         self.layer_settings[layer_id].remove()
         self.layer_settings.remove(self.layer_settings[layer_id])
 
@@ -122,7 +121,7 @@ class OptionGui:
             ls.grid()
         self.layer_label.grid(row=0, column=0)
 
-    def generate(self, importance_data: ImportanceDataHandler = None, processed_nn: ProcessedNNHandler = None):
+    def generate(self, importance_data: Optional[ImportanceDataHandler] = None, processed_nn: Optional[ProcessedNNHandler] = None) -> None:
         self.action_buttons.press(0)
         layer_data: List[int] = []
         for ls in self.layer_settings:
@@ -134,30 +133,30 @@ class OptionGui:
         self.settings['update_model'] = True
         self.processing_config.store()
 
-    def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False):
+    def change_setting(self, setting_type: str, sub_type: str, value: int, stop_action: bool = False) -> None:
         if stop_action:
             self.action_buttons.press(0)
         self.settings[setting_type + '_' + sub_type] = value
 
-    def change_render_config(self, name: str, value: int, stop_action: bool = False):
+    def change_render_config(self, name: str, value: int, stop_action: bool = False) -> None:
         if stop_action:
             self.action_buttons.press(0)
         self.render_config[name] = value
         self.render_config.store()
 
-    def change_processing_config(self, name: str, value: int):
+    def change_processing_config(self, name: str, value: int) -> None:
         self.processing_config[name] = value
         self.processing_config.store()
 
-    def on_closing(self):
+    def on_closing(self) -> None:
         if messagebox.askokcancel('Quit', 'Do you want to quit?'):
             self.settings['Closed'] = True
 
-    def set_classes(self, num_classes: int):
+    def set_classes(self, num_classes: int) -> None:
         show_class_names: List[str] = ['Independent', 'All']
         for class_id in range(num_classes):
             show_class_names.append('Class ' + str(class_id))
         self.class_show_options.set_buttons(show_class_names)
 
-    def destroy(self):
+    def destroy(self) -> None:
         self.gui_root.destroy()

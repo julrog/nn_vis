@@ -15,7 +15,7 @@ from utility.performance import track_time
 
 
 class GridRenderer(Renderer):
-    def __init__(self, grid_processor: GridProcessor):
+    def __init__(self, grid_processor: GridProcessor) -> None:
         Renderer.__init__(self)
         self.grid_processor: GridProcessor = grid_processor
 
@@ -34,7 +34,7 @@ class GridRenderer(Renderer):
         def generate_element_count_func(gp: GridProcessor) -> Callable:
             buffered_gp: GridProcessor = gp
 
-            def element_count_func(buffer: int):
+            def element_count_func(buffer: int) -> int:
                 return buffered_gp.grid_density_buffer.get_objects() - buffered_gp.grid_slice_size
 
             return element_count_func
@@ -51,7 +51,7 @@ class GridRenderer(Renderer):
         self.create_sets(self.data_handler)
 
     @track_time
-    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig = None, show_class: int = 0):
+    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig, show_class: int = 0) -> None:
         current_set: BaseRenderSet = self.sets[set_name]
         current_set.set_uniform_data([('projection', cam.projection, 'mat4'),
                                       ('view', cam.view, 'mat4'),
@@ -59,5 +59,5 @@ class GridRenderer(Renderer):
         current_set.set_uniform_labeled_data(config)
         current_set.render()
 
-    def delete(self):
+    def delete(self) -> None:
         self.data_handler.delete()

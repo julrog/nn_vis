@@ -4,7 +4,7 @@ import numpy as np
 import pyrr
 from pyrr import Matrix44, Vector3, vector, vector3
 
-from utility.types import CAMERA_POSE_POSITION, CameraPose
+from definitions import CAMERA_POSE_POSITION, CameraPose
 
 
 def look_at(position: Vector3, target: Vector3, world_up: Vector3) -> Matrix44:
@@ -43,7 +43,7 @@ class BaseCamera:
 
 class Camera(BaseCamera):
     def __init__(self, width: float, height: float, base: Vector3, move_speed: float = 0.1,
-                 rotation: bool = False, rotation_speed: float = -0.25):
+                 rotation: bool = False, rotation_speed: float = -0.25) -> None:
         super().__init__(width, height)
         self.base: Vector3 = base
         self.camera_pos: Vector3 = self.base + Vector3([-3.0, 0.0, 0.0])
@@ -64,7 +64,7 @@ class Camera(BaseCamera):
         self.rotate_around_base: bool = rotation
         self.yaw_offset: float = 0.0
 
-    def update(self):
+    def update(self) -> None:
         self.update_camera_vectors()
         self.generate_view_matrix()
 
@@ -73,7 +73,7 @@ class Camera(BaseCamera):
                             self.camera_front, self.camera_up)
         return self.view
 
-    def process_mouse_movement(self, x_offset: float, y_offset: float, constrain_pitch: bool = True):
+    def process_mouse_movement(self, x_offset: float, y_offset: float, constrain_pitch: bool = True) -> None:
         self.yaw += x_offset * self.rotation_speed
         self.pitch += y_offset * self.rotation_speed
 
@@ -83,7 +83,7 @@ class Camera(BaseCamera):
             if self.pitch < -60.0:
                 self.pitch = -60.0
 
-    def update_camera_vectors(self):
+    def update_camera_vectors(self) -> None:
         if not self.rotate_around_base:
             front: Vector3 = Vector3([0.0, 0.0, 0.0])
             front.x = cos(radians(self.yaw + self.yaw_offset)) * \
@@ -127,21 +127,21 @@ class Camera(BaseCamera):
             self.camera_pos = self.camera_pos + self.camera_front * \
                 self.move_vector.z * self.move_speed
 
-    def set_size(self, width: float, height: float):
+    def set_size(self, width: float, height: float) -> None:
         self.projection = pyrr.matrix44.create_perspective_projection_matrix(
             45, width / height, 0.1, 100)
 
-    def move(self, direction: Vector3):
+    def move(self, direction: Vector3) -> None:
         self.move_vector.x = self.move_vector.x if self.move_vector.x != 0 else direction.x
         self.move_vector.y = self.move_vector.y if self.move_vector.y != 0 else direction.y
         self.move_vector.z = self.move_vector.z if self.move_vector.z != 0 else direction.z
 
-    def stop(self, direction: Vector3):
+    def stop(self, direction: Vector3) -> None:
         self.move_vector.x = 0 if self.move_vector.x == direction.x else self.move_vector.x
         self.move_vector.y = 0 if self.move_vector.y == direction.y else self.move_vector.y
         self.move_vector.z = 0 if self.move_vector.z == direction.z else self.move_vector.z
 
-    def set_position(self, camera_position_index: CameraPose):
+    def set_position(self, camera_position_index: CameraPose) -> None:
         self.move_vector = Vector3([0, 0, 0])
         self.camera_up = Vector3([0.0, 1.0, 0.0])
         self.camera_pos = CAMERA_POSE_POSITION[camera_position_index]
@@ -153,7 +153,7 @@ class Camera(BaseCamera):
             np.cross(self.camera_up, self.camera_front)))
         self.yaw_offset = 0.0
 
-    def set_yaw_pitch_from_front(self, use_x: bool = True):
+    def set_yaw_pitch_from_front(self, use_x: bool = True) -> None:
         try:
             self.pitch = degrees(asin(self.camera_front.y))
             if not use_x:
@@ -171,12 +171,12 @@ class Camera(BaseCamera):
                 self.yaw = degrees(
                     asin(self.camera_front.z / cos(radians(self.pitch))))
 
-    def update_base(self, new_base: Vector3):
+    def update_base(self, new_base: Vector3) -> None:
         self.camera_pos = self.camera_pos + (new_base - self.base)
         self.base = new_base
         self.update()
 
-    def rotate(self):
+    def rotate(self) -> None:
         swap: bool = self.rotate_around_base
         self.rotate_around_base = True
         self.update()

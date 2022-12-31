@@ -1,17 +1,17 @@
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
 
 import glfw
 from OpenGL.GL import glViewport
 from pyrr import Vector3
 
+from definitions import CameraPose
 from utility.camera import Camera
 from utility.singleton import Singleton
-from utility.types import CameraPose
 from utility.window_config import WindowConfig
 
 
 class Window:
-    def __init__(self, config: WindowConfig):
+    def __init__(self, config: WindowConfig) -> None:
         self.config: WindowConfig = config
 
         # glfw.window_hint(glfw.DECORATED, glfw.FALSE)
@@ -38,23 +38,23 @@ class Window:
         self.record: bool = False
         self.frame_id: int = 0
 
-    def set_size(self, width: float, height: float):
+    def set_size(self, width: float, height: float) -> None:
         self.config['width'] = width
         self.config['height'] = height
         if self.active:
             glViewport(0, 0, width, height)
         self.cam.set_size(width, height)
 
-    def set_callbacks(self):
-        def resize_clb(glfw_window, width, height):
+    def set_callbacks(self) -> None:
+        def resize_clb(_: Any, width: float, height: float) -> None:
             self.config['screen_width'] = width
             self.config['screen_height'] = height
             self.config.store()
 
-        def frame_resize_clb(glfw_window, width, height):
+        def frame_resize_clb(_: Any, width: float, height: float) -> None:
             self.set_size(width, height)
 
-        def mouse_look_clb(glfw_window, x_pos, y_pos):
+        def mouse_look_clb(_: Any, x_pos: int, y_pos: int) -> None:
             if not self.focused or not self.mouse_captured:
                 return
 
@@ -68,19 +68,19 @@ class Window:
             self.last_mouse_pos = (x_pos, y_pos)
             self.cam.process_mouse_movement(x_offset, y_offset)
 
-        def mouse_button_clb(glfw_window, button: int, action: int, mods: int):
+        def mouse_button_clb(_: Any, button: int, action: int, mods: int) -> None:
             if not self.focused:
                 return
             if button == glfw.MOUSE_BUTTON_RIGHT and action == glfw.PRESS:
                 self.toggle_mouse_capture()
 
-        def focus_clb(glfw_window, focused: int):
+        def focus_clb(_, focused: int) -> None:
             if focused:
                 self.focused = True
             else:
                 self.focused = False
 
-        def window_pos_clb(glfw_window, x_pos: int, y_pos: int):
+        def window_pos_clb(_: Any, x_pos: int, y_pos: int) -> None:
             if len(glfw.get_monitors()) >= 1:
                 for monitor_id, monitor in enumerate(glfw.get_monitors()):
                     m_x, m_y, width, height = glfw.get_monitor_workarea(
@@ -91,7 +91,7 @@ class Window:
             self.config['screen_y'] = y_pos
             self.config.store()
 
-        def key_input_clb(glfw_window, key, scancode, action, mode):
+        def key_input_clb(glfw_window, key, scancode, action, mode) -> None:
             if not self.focused:
                 return
             if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
@@ -157,7 +157,7 @@ class Window:
         glfw.set_window_focus_callback(self.window_handle, focus_clb)
         glfw.set_window_pos_callback(self.window_handle, window_pos_clb)
 
-    def activate(self):
+    def activate(self) -> None:
         if self.config['monitor_id'] is not None and 0 <= self.config['monitor_id'] < len(glfw.get_monitors()):
             glfw.set_window_pos(
                 self.window_handle, self.config['screen_x'], self.config['screen_y'])
@@ -175,16 +175,16 @@ class Window:
     def is_active(self) -> bool:
         return not glfw.window_should_close(self.window_handle)
 
-    def swap(self):
+    def swap(self) -> None:
         glfw.swap_buffers(self.window_handle)
 
-    def destroy(self):
+    def destroy(self) -> None:
         glfw.destroy_window(self.window_handle)
 
-    def update(self):
+    def update(self) -> None:
         self.cam.update()
 
-    def toggle_mouse_capture(self):
+    def toggle_mouse_capture(self) -> None:
         if self.mouse_captured:
             self.mouse_set = False
             glfw.set_input_mode(self.window_handle,
@@ -197,13 +197,13 @@ class Window:
 
 
 class WindowHandler(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         self.windows: Dict[str, Window] = dict()
 
         if not glfw.init():
             raise Exception('glfw can not be initialized!')
 
-    def create_window(self, hidden: bool = False):
+    def create_window(self, hidden: bool = False) -> Window:
         if hidden:
             glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
         window_config: WindowConfig = WindowConfig()
@@ -215,19 +215,19 @@ class WindowHandler(metaclass=Singleton):
         self.windows[window_config['title']] = window
         return window
 
-    def get_window(self, title: str):
+    def get_window(self, title: str) -> Window:
         window = self.windows[title]
         if not window:
             raise Exception('Requested window does not exist!')
         return window
 
-    def destroy(self):
+    def destroy(self) -> None:
         for _, window in self.windows.items():
             if window.is_active():
                 window.destroy()
         glfw.terminate()
 
-    def update(self):
+    def update(self) -> None:
         glfw.poll_events()
         for _, window in self.windows.items():
             window.update()

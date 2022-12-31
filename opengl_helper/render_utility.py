@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Callable, List, Union
+from typing import Callable, List, Optional, Union
 
 from OpenGL.constant import (Constant, FloatConstant, IntConstant,
                              LongConstant, StringConstant)
@@ -25,15 +25,11 @@ class OGLRenderFunction(Enum):
 
 def generate_render_function(ogl_func: OGLRenderFunction,
                              primitive: Union[FloatConstant, IntConstant, LongConstant, StringConstant, Constant],
-                             point_size: float = None, line_width: float = None, add_blending: bool = False,
+                             point_size: Optional[float] = None, line_width: Optional[float] = None, add_blending: bool = False,
                              depth_test: bool = False) -> Callable:
     ogl_func: OGLRenderFunction = ogl_func
     primitive: Union[FloatConstant, IntConstant,
                      LongConstant, StringConstant, Constant] = primitive
-    point_size: float = point_size
-    line_width: float = line_width
-    add_blending: bool = add_blending
-    depth_test: bool = depth_test
 
     def render_func(element_count: int):
         if add_blending:
