@@ -5,7 +5,7 @@ from pyrr import Matrix44, Vector3, Vector4, matrix44, vector4
 
 class Grid:
     def __init__(self, grid_cell_size: Vector3, bounding_volume: Tuple[Vector3, Vector3], layer_distance: float,
-                 extend_by: int = 1.0):
+                 extend_by: float = 1.0):
         self.grid_cell_size: Vector3 = grid_cell_size
         self.layer_distance: float = layer_distance
 

@@ -13,7 +13,7 @@ from opengl_helper.frame_buffer import FrameBufferObject
 screenshot_count: int = 0
 
 
-def create_screenshot(width: int, height: int, network_name: str = None, frame_buffer: Optional[FrameBufferObject] = None,
+def create_screenshot(width: int, height: int, network_name: Optional[str] = None, frame_buffer: Optional[FrameBufferObject] = None,
                       frame_id: Optional[int] = None) -> None:
     global screenshot_count
     screenshot_count += 1

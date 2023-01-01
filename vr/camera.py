@@ -75,7 +75,7 @@ class VRCamera(BaseCamera):
             * self.rotation_offset
         )
 
-    def set_position(self, pose: np.ndarray):
+    def set_position(self, pose: np.ndarray) -> None:
         pos: List[float] = [pose[0][3], pose[1][3], pose[2][3]]
 
         if self.translation is None:

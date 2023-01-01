@@ -1,6 +1,6 @@
 import os
 from enum import IntEnum, IntFlag, auto
-from typing import List
+from typing import Generator, Iterable, List
 
 from pyrr import Vector3
 
@@ -43,7 +43,7 @@ CAMERA_POSE_POSITION: List[Vector3] = [
 ]
 
 
-def pairwise(it, size: int):
+def pairwise(it: Iterable, size: int) -> Generator:
     it = iter(it)
     while True:
         try:
@@ -54,7 +54,7 @@ def pairwise(it, size: int):
             return
 
 
-def vec4wise(it):
+def vec4wise(it: Iterable) -> Generator:
     it = iter(it)
     while True:
         try:

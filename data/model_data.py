@@ -25,11 +25,10 @@ class ModelData:
         self.model: Model = model if model is not None else keras.models.load_model(
             self.get_model_path())
         self.check_model_supported_layer()
-        self.description: str = description
         self.data: dict = dict()
         self.data['name'] = self.name
         if description is not None:
-            self.data['description'] = self.description
+            self.data['description'] = description
         self.data_file: EvaluationFile = EvaluationFile(self.name)
         self.data_file.read_data()
 
@@ -51,7 +50,7 @@ class ModelData:
         self.data['train_accuracy'] = str(train_accuracy)
         self.data['classification_report'] = classification_report
 
-    def set_class_selection(self, class_selection: List[int]) -> None:
+    def set_class_selection(self, class_selection: Optional[List[int]]) -> None:
         importance: dict = dict()
         importance['class_selection'] = class_selection
         self.data_file.append_main_data('processed', 'importance', importance)

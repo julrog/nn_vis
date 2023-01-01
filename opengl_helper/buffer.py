@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Any, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 import numpy as np
 from OpenGL.GL import (GL_ARRAY_BUFFER, GL_FALSE, GL_FLOAT,
@@ -43,12 +43,10 @@ class BufferObject:
             self.max_ssbo_size: int = glGetIntegerv(
                 GL_MAX_SHADER_STORAGE_BLOCK_SIZE)
         self.object_size: int = object_size
-        self.render_data_offset: List[int] = render_data_offset
-        if render_data_offset is None:
-            self.render_data_offset = [0]
-        self.render_data_size: List[int] = render_data_size
-        if render_data_size is None:
-            self.render_data_size = [4]
+        self.render_data_offset: List[int] = [
+            0] if render_data_offset is None else render_data_offset
+        self.render_data_size: List[int] = [
+            4] if render_data_size is None else render_data_size
 
     def load(self, data: Any) -> None:
         glBindVertexArray(0)
@@ -141,7 +139,7 @@ class SwappingBufferObject(BufferObject):
 
 
 class OverflowingBufferObject:
-    def __init__(self, data_splitting_function, object_size: int = 4, render_data_offset: Optional[List[int]] = None,
+    def __init__(self, data_splitting_function: Callable, object_size: int = 4, render_data_offset: Optional[List[int]] = None,
                  render_data_size: Optional[List[int]] = None) -> None:
         self.handle: List[int] = [glGenBuffers(1)]
         self.location: int = 0
@@ -151,14 +149,12 @@ class OverflowingBufferObject:
             GL_MAX_SHADER_STORAGE_BLOCK_SIZE)
         self.max_buffer_objects: int = glGetIntegerv(
             GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS)
-        self.data_splitting_function = data_splitting_function
+        self.data_splitting_function: Callable = data_splitting_function
         self.object_size: int = object_size
-        self.render_data_offset: List[int] = render_data_offset
-        if render_data_offset is None:
-            self.render_data_offset = [0]
-        self.render_data_size: List[int] = render_data_size
-        if render_data_size is None:
-            self.render_data_size = [4]
+        self.render_data_offset: List[int] = [
+            0] if render_data_offset is None else render_data_offset
+        self.render_data_size: List[int] = [
+            4] if render_data_size is None else render_data_size
 
     def load(self, data: Any) -> None:
         glBindVertexArray(0)
@@ -181,7 +177,7 @@ class OverflowingBufferObject:
             glBufferData(GL_SHADER_STORAGE_BUFFER,
                          data.nbytes, data, GL_STATIC_DRAW)
 
-    def load_empty(self, dtype, size: int, component_size: int) -> None:
+    def load_empty(self, dtype: Any, size: int, component_size: int) -> None:
         glBindVertexArray(0)
 
         self.overall_size = size * self.object_size * 4

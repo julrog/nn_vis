@@ -1,7 +1,7 @@
 import logging
 
 
-def setup_logger(name: str, level: int = 10):
+def setup_logger(name: str, level: int = 10) -> None:
     logging.basicConfig(
         format='%(asctime)s [%(levelname)s][%(filename)s] - %(message)s', level=level)
     root_logger = logging.getLogger()

@@ -56,16 +56,16 @@ class Node:
         position_max_0: int = int(random.random() * num_classes)
         for i in range(num_classes):
             if i == position_max_0:
-                random_value: float = random.random()
-                second_try: float = random.random()
+                random_value = random.random()
+                second_try = random.random()
                 random_value = (random_value if random_value >
                                 second_try else second_try)
                 importance_sum += random_value
                 importance_squared_sum += random_value * random_value
                 self.data.append(random_value)
             else:
-                random_value: float = random.random()
-                second_try: float = random.random()
+                random_value = random.random()
+                second_try = random.random()
                 random_value = (random_value if random_value <
                                 second_try else second_try)
                 random_value = random_value * random_value
@@ -94,7 +94,7 @@ class Node:
         return self
 
     def reset_position(self, position: Vector3) -> None:
-        self.position: Vector3 = position
+        self.position = position
         self.data[0] = position.x
         self.data[1] = position.y
         self.data[2] = position.z
@@ -120,12 +120,12 @@ def create_random_nodes(layer_nodes: List[int],
 
         current_layer_nodes: List[Node] = []
         if node_count <= 1:
-            position: Vector3 = Vector3(
+            position = Vector3(
                 [center_position.x,
                  center_position.y,
                  z_range[0] * (1 - layer / (len(layer_nodes) - 1)) + z_range[1] * layer / (len(layer_nodes) - 1)])
-            new_node: Node = Node(len(current_layer_nodes),
-                                  input_edges, output_edges)
+            new_node = Node(len(current_layer_nodes),
+                            input_edges, output_edges)
             if layer is not len(layer_nodes) - 1:
                 new_node = new_node.random_importance_init(
                     num_classes, padding, position)
@@ -134,21 +134,20 @@ def create_random_nodes(layer_nodes: List[int],
                     num_classes, padding, position)
             current_layer_nodes.append(new_node)
         else:
-            node_size_x: float = node_size
-            node_size_y: float = node_size
-            if node_size is None:
-                node_size_x = abs(x_range[1] - x_range[0]) / nodes_sqrt
-                node_size_y = abs(y_range[1] - y_range[0]) / nodes_sqrt
+            node_size_x: float = node_size if node_size is not None else abs(
+                x_range[1] - x_range[0]) / nodes_sqrt
+            node_size_y: float = node_size if node_size is not None else abs(
+                y_range[1] - y_range[0]) / nodes_sqrt
             for i in range(node_count):
                 pos_x: float = (i % nodes_sqrt) - (nodes_sqrt - 1.0) / 2.0
                 pos_y: float = (math.floor(i / nodes_sqrt)) - \
                     (nodes_sqrt - 1.0) / 2.0
-                position: Vector3 = Vector3(
+                position = Vector3(
                     [pos_x * node_size_x + center_position.x,
                      pos_y * node_size_y + center_position.y,
                      z_range[0] * (1 - layer / (len(layer_nodes) - 1)) + z_range[1] * layer / (
                          len(layer_nodes) - 1)])
-                new_node: Node = Node(
+                new_node = Node(
                     len(current_layer_nodes), input_edges, output_edges)
                 if layer is not len(layer_nodes) - 1:
                     new_node = new_node.random_importance_init(
@@ -221,7 +220,7 @@ def create_nodes_with_importance(layer_nodes: List[int],
 
 
 def create_nodes_from_data(layer_nodes: List[int],
-                           node_data: Optional[List[np.array]]) -> List[List[Node]]:
+                           node_data: List[np.array]) -> List[List[Node]]:
     nodes: List[List[Node]] = []
     for layer, node_count in enumerate(layer_nodes):
         input_edges: int = 0

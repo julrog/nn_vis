@@ -31,10 +31,8 @@ class VertexDataHandler(BaseDataHandler):
         self.handle: int = glGenVertexArrays(1)
         self.targeted_buffer_objects: List[Tuple[BufferObject,
                                                  int]] = targeted_buffer_objects
-        if buffer_divisor is None:
-            self.buffer_divisor: List[Tuple[int, int]] = []
-        else:
-            self.buffer_divisor: List[Tuple[int, int]] = buffer_divisor
+        self.buffer_divisor: List[Tuple[int, int]] = [
+        ] if buffer_divisor is None else buffer_divisor
 
     def set(self, rendering: bool = False) -> None:
         glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
@@ -69,27 +67,27 @@ class OverflowingVertexDataHandler(VertexDataHandler):
 
     def set(self, rendering: bool = False) -> None:
         VertexDataHandler.set(self, rendering)
-        for buffer, location in self.targeted_overflowing_buffer_objects:
-            buffer.bind_single(self.current_buffer_id, location, rendering)
+        for o_buffer, location in self.targeted_overflowing_buffer_objects:
+            o_buffer.bind_single(self.current_buffer_id, location, rendering)
 
     def set_range(self, count: int) -> None:
         glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
         glBindVertexArray(self.handle)
         for buffer, location in self.targeted_buffer_objects:
             buffer.bind(location)
-        for buffer, location in self.targeted_overflowing_buffer_objects:
+        for o_buffer, location in self.targeted_overflowing_buffer_objects:
             for i in range(count):
-                if self.current_buffer_id + i >= 0 and (self.current_buffer_id + i) < len(buffer.handle):
-                    buffer.bind_single((self.current_buffer_id + i) %
-                                       len(buffer.handle), location + i)
+                if self.current_buffer_id + i >= 0 and (self.current_buffer_id + i) < len(o_buffer.handle):
+                    o_buffer.bind_single((self.current_buffer_id + i) %
+                                         len(o_buffer.handle), location + i)
 
     def set_consecutive(self) -> None:
         glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT)
         glBindVertexArray(self.handle)
         for buffer, location in self.targeted_buffer_objects:
             buffer.bind(location)
-        for buffer, location in self.targeted_overflowing_buffer_objects:
-            buffer.bind_consecutive(location)
+        for o_buffer, location in self.targeted_overflowing_buffer_objects:
+            o_buffer.bind_consecutive(location)
 
 
 class LayeredVertexDataHandler(BaseDataHandler):

@@ -20,12 +20,12 @@ class ImportanceEvaluator:
         self.importance_calculation: ImportanceCalculation = ImportanceCalculation.BNN_EDGE
         self.relevant_classes: Optional[List[int]] = None
 
-        self.x_train = None
-        self.y_train = None
-        self.x_test = None
-        self.y_test = None
+        self.x_train: Any = None
+        self.y_train: Any = None
+        self.x_test: Any = None
+        self.y_test: Any = None
 
-    def set_train_and_test_data(self, x_train, y_train, x_test, y_test) -> None:
+    def set_train_and_test_data(self, x_train: Any, y_train: Any, x_test: Any, y_test: Any) -> None:
         self.x_train = x_train
         self.y_train = y_train
         self.x_test = x_test

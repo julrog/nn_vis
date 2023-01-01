@@ -54,7 +54,7 @@ class VRInputHandler:
 
         self.hands: List[HandInput] = [HandInput('left'), HandInput('right')]
 
-        self.scaling: int = 0
+        self.scaling: float = 0.0
         self.grabbed: int = 0
         self.origin: Optional[np.ndarray] = None
         self.origin_update: bool = False

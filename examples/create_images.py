@@ -15,7 +15,7 @@ if True:
     from evaluation.create_plot import save_plot
 
 
-def configure_plt():
+def configure_plt() -> None:
     plt.rc('font', size=14)
     plt.rc('axes', titlesize=14)
     plt.rc('axes', labelsize=14)
@@ -25,7 +25,7 @@ def configure_plt():
     plt.rc('figure', titlesize=14)
 
 
-def plot_mnist_samples(width: int = 6, height: int = 2):
+def plot_mnist_samples(width: int = 6, height: int = 2) -> None:
     (x_train, y_train), (_, _) = mnist.load_data()
     fig, axs = plt.subplots(height, width, figsize=(width, height))
     for i in range(height):
@@ -41,7 +41,7 @@ def plot_mnist_samples(width: int = 6, height: int = 2):
     plt.subplots_adjust(wspace=0.2, hspace=0.2)
 
 
-def plot_kernels():
+def plot_kernels() -> None:
     fig, ax = plt.subplots(figsize=(8, 4),
                            subplot_kw={'facecolor': '#F4F4F4',
                                        'axisbelow': True})
@@ -64,7 +64,7 @@ def plot_kernels():
     ax.legend()
 
 
-def plot_histogram(path: str):
+def plot_histogram(path: str) -> None:
     processed_nn: ProcessedNNHandler = ProcessedNNHandler(DATA_PATH + path)
     samples: np.array = processed_nn.get_all_samples()
     z_values: np.array = np.zeros(samples.shape[0])

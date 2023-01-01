@@ -74,7 +74,7 @@ class Window:
             if button == glfw.MOUSE_BUTTON_RIGHT and action == glfw.PRESS:
                 self.toggle_mouse_capture()
 
-        def focus_clb(_, focused: int) -> None:
+        def focus_clb(_: Any, focused: int) -> None:
             if focused:
                 self.focused = True
             else:
@@ -91,7 +91,7 @@ class Window:
             self.config['screen_y'] = y_pos
             self.config.store()
 
-        def key_input_clb(glfw_window, key, scancode, action, mode) -> None:
+        def key_input_clb(glfw_window: Any, key: int, scancode: int, action: int, mode: int) -> None:
             if not self.focused:
                 return
             if key == glfw.KEY_ESCAPE and action == glfw.PRESS:

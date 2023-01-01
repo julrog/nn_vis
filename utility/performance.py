@@ -8,7 +8,7 @@ running_times = []
 
 def track_time(_func: Optional[Callable] = None, *, track_recursive: bool = True) -> Callable:
     def track_time_inner(func: Callable) -> Callable:
-        def tracked_func(*args, **kwargs) -> Any:
+        def tracked_func(*args: Any, **kwargs: Any) -> Any:
             global running_times
             start_time = time.perf_counter()
             running_times.append(start_time)

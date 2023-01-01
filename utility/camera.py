@@ -85,7 +85,7 @@ class Camera(BaseCamera):
 
     def update_camera_vectors(self) -> None:
         if not self.rotate_around_base:
-            front: Vector3 = Vector3([0.0, 0.0, 0.0])
+            front = Vector3([0.0, 0.0, 0.0])
             front.x = cos(radians(self.yaw + self.yaw_offset)) * \
                 cos(radians(self.pitch))
             front.y = sin(radians(self.pitch))
@@ -105,7 +105,7 @@ class Camera(BaseCamera):
                 self.move_vector.z * self.move_speed
         else:
             self.yaw_offset += self.rotation_speed
-            front: Vector3 = Vector3([0.0, 0.0, 0.0])
+            front = Vector3([0.0, 0.0, 0.0])
             front.x = cos(radians(self.yaw + self.yaw_offset)) * \
                 cos(radians(self.pitch))
             front.y = sin(radians(self.pitch))
