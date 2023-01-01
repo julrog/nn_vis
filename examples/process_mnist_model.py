@@ -1,9 +1,9 @@
 import os.path
 import sys
-from typing import List
+from typing import List, Optional
 
 sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(sys.modules[__name__].__file__), '..')))
+    os.path.dirname(sys.modules[__name__].__file__), '..')))  # type: ignore
 
 if True:
     from data.mnist_data_handler import split_mnist_data
@@ -22,7 +22,7 @@ setup_logger('sample_processing')
 
 # -------------------------------------------------change these settings-----------------------------------------------#
 name: str = 'default'
-class_selection: List[int] or None = None  # [0, 1, 2, 3, 4]
+class_selection: Optional[List[int]] = None  # [0, 1, 2, 3, 4]
 importance_type: ImportanceType = ImportanceType(
     ImportanceType.GAMMA | ImportanceType.L1)
 

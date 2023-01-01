@@ -28,7 +28,7 @@ The visualization tool `start_tool.py` can be used to render and/or process neur
 
 ### VR
 
-See [VR_TOOL.md](./VR_TOOL.md)) for more info.
+See [VR_TOOL.md](./VR_TOOL.md) for more info.
 
 ### Example
 <img align="center" src="./docs/images/compare_network_parameters.jpg" />

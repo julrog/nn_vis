@@ -11,7 +11,7 @@ from opengl_helper.texture import Texture
 
 
 class ComputeShader(BaseShader):
-    def __init__(self, shader_src: str):
+    def __init__(self, shader_src: str) -> None:
         BaseShader.__init__(self)
         self.shader_handle: int = compileProgram(
             compileShader(shader_src, GL_COMPUTE_SHADER))
@@ -20,7 +20,7 @@ class ComputeShader(BaseShader):
         self.max_workgroup_size: int = glGetIntegeri_v(
             GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0)[0]
 
-    def compute(self, width: int, barrier: bool = False):
+    def compute(self, width: int, barrier: bool = False) -> None:
         for i in range(math.ceil(width / self.max_workgroup_size)):
             self.set_uniform_data(
                 [('work_group_offset', i * self.max_workgroup_size, 'int')])
@@ -40,5 +40,5 @@ class ComputeShader(BaseShader):
             self.barrier()
 
     @staticmethod
-    def barrier():
+    def barrier() -> None:
         glMemoryBarrier(GL_ALL_BARRIER_BITS)

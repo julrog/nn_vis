@@ -1,12 +1,14 @@
-from utility.types import CameraPose, ProcessRenderMode
+from typing import Any, Callable, Dict, Type, Union
 
-NN_VIS_TYPES = {
+from definitions import CameraPose, ProcessRenderMode
+
+NN_VIS_TYPES: Dict[str, Type[Union[ProcessRenderMode, CameraPose]]] = {
     'ProcessRenderMode': ProcessRenderMode,
     'CameraPose': CameraPose
 }
 
 
-def nnvis_to_str(value) -> str:
+def nnvis_to_str(value: Any) -> str:
     for nnvis_type_name, nnvis_type in NN_VIS_TYPES.items():
         if isinstance(value, nnvis_type):
             if value.name:
@@ -16,7 +18,7 @@ def nnvis_to_str(value) -> str:
     return value
 
 
-def convert_values(obj, convert):
+def convert_values(obj: Any, convert: Callable) -> Any:
     if isinstance(obj, list):
         return [convert_values(i, convert) for i in obj]
     if not isinstance(obj, dict):
@@ -24,7 +26,7 @@ def convert_values(obj, convert):
     return {k: convert_values(v, convert) for k, v in obj.items()}
 
 
-def str_to_nnvis(value):
+def str_to_nnvis(value: Any) -> Union[ProcessRenderMode, CameraPose, Any]:
     if isinstance(value, str):
         for nnvis_type in NN_VIS_TYPES.keys():
             if nnvis_type in value:

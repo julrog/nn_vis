@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Any, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
 import numpy as np
 from OpenGL.GL import glFinish
@@ -18,7 +18,7 @@ from utility.performance import track_time
 
 class GridProcessor:
     def __init__(self, grid: Grid, node_processor: NodeProcessor, edge_processor: EdgeProcessor,
-                 density_strength: float = 1000.0):
+                 density_strength: float = 1000.0) -> None:
         self.node_processor: NodeProcessor = node_processor
         self.edge_processor: EdgeProcessor = edge_processor
         self.grid: Grid = grid
@@ -36,20 +36,21 @@ class GridProcessor:
         for shader_name, path in shader_settings.items():
             ComputeShaderHandler().create(shader_name, path)
 
-        def split_function_generation(split_grid: Grid):
+        def split_function_generation(split_grid: Grid) -> Callable:
             size_xy_slice = split_grid.grid_cell_count[0] * \
                 split_grid.grid_cell_count[1] * 4
 
-            def split_grid_data(data, i, size):
-                fitting_slices = math.floor(size / (4 * size_xy_slice)) - 1
-                section_start = None
-                section_end = None
+            def split_grid_data(data: np.array, i: int, size: int) -> np.array:
+                fitting_slices: float = math.floor(
+                    size / (4 * size_xy_slice)) - 1
+                section_start: int = 0
+                section_end: int = 0
                 if i > 0:
-                    section_start = i * fitting_slices * size_xy_slice
+                    section_start = int(i * fitting_slices * size_xy_slice)
                 if i < data.nbytes / (fitting_slices * size_xy_slice * 4) - 1:
                     # add one more slice at the edge for edge cases
-                    section_end = (i + 1) * \
-                        (fitting_slices + 1) * size_xy_slice
+                    section_end = int((i + 1) *
+                                      (fitting_slices + 1) * size_xy_slice)
                 return data[section_start:section_end]
 
             return split_grid_data
@@ -96,16 +97,7 @@ class GridProcessor:
         self.density_buffer_slice_count: int = math.floor(
             self.grid_density_buffer.size[0] / (self.grid_density_buffer.object_size * 4 * self.grid_slice_size)) - 1
 
-    def set_node_processor(self, node_processor: NodeProcessor):
-        self.node_processor = node_processor
-        self.node_density_ssbo_handler.delete()
-        self.node_density_ssbo_handler = OverflowingVertexDataHandler(
-            [(self.node_processor.node_buffer, 0)], [(self.grid_density_buffer, 2)])
-        self.sample_advect_ssbo_handler.delete()
-        self.sample_advect_ssbo_handler = OverflowingVertexDataHandler(
-            [(self.node_processor.node_buffer, 0)], [(self.grid_density_buffer, 2)])
-
-    def set_new_edge_processor(self, edge_processor: EdgeProcessor):
+    def set_new_edge_processor(self, edge_processor: EdgeProcessor) -> None:
         self.edge_processor = edge_processor
 
         for layer_ssbo_handler in self.sample_density_ssbo_handler:
@@ -126,7 +118,7 @@ class GridProcessor:
             [(self.grid_density_buffer, 3)]) for j in range(len(self.edge_processor.sample_buffer[i]))] for i in range(
             len(self.edge_processor.sample_buffer))]
 
-    def set_uniform(self, compute_shader: ComputeShader, uniforms: List[str]):
+    def set_uniform(self, compute_shader: ComputeShader, uniforms: List[str]) -> None:
         uniform_data: List[Tuple[str, Any, Any]] = []
         if 'slice_size' in uniforms:
             uniform_data.append(('slice_size', self.grid_slice_size, 'int'))
@@ -157,7 +149,7 @@ class GridProcessor:
         compute_shader.set_uniform_data(uniform_data)
 
     @track_time
-    def clear_buffer(self):
+    def clear_buffer(self) -> None:
         clear: ComputeShader = ComputeShaderHandler().get('clear_grid')
         for i in range(len(self.grid_density_buffer.handle)):
             self.density_ssbo_handler.set_buffer(i)
@@ -166,7 +158,7 @@ class GridProcessor:
         clear.barrier()
 
     @track_time
-    def calculate_position(self):
+    def calculate_position(self) -> None:
         logging.info('Calculate grid positions.')
         position: ComputeShader = ComputeShaderHandler().get('grid_position')
         self.set_uniform(position,
@@ -179,7 +171,7 @@ class GridProcessor:
         position.barrier()
 
     @track_time
-    def calculate_node_density(self, advection_status: AdvectionProgress):
+    def calculate_node_density(self, advection_status: AdvectionProgress) -> None:
         self.node_density_ssbo_handler.set_buffer(0)
         self.node_density_ssbo_handler.set()
         density: ComputeShader = ComputeShaderHandler().get('node_density')
@@ -191,7 +183,7 @@ class GridProcessor:
         density.barrier()
 
     @track_time
-    def calculate_edge_density(self, layer: int, advection_status: AdvectionProgress, wait_for_compute: bool = False):
+    def calculate_edge_density(self, layer: int, advection_status: AdvectionProgress, wait_for_compute: bool = False) -> None:
         density: ComputeShader = ComputeShaderHandler().get('sample_density')
         self.set_uniform(density, ['max_sample_points', 'slice_size', 'slice_count', 'density_strength',
                                    'grid_cell_size', 'grid_bounding_min', 'grid_cell_count', 'edge_importance_type'])
@@ -212,7 +204,7 @@ class GridProcessor:
         density.barrier()
 
     @track_time
-    def node_advect(self, advection_status: AdvectionProgress):
+    def node_advect(self, advection_status: AdvectionProgress) -> None:
         self.node_advect_ssbo_handler.set_buffer(0)
         self.node_advect_ssbo_handler.set()
         advect: ComputeShader = ComputeShaderHandler().get('node_advect')
@@ -227,7 +219,7 @@ class GridProcessor:
         self.node_processor.node_buffer.swap()
 
     @track_time
-    def sample_advect(self, layer: int, advection_status: AdvectionProgress, wait_for_compute: bool = False):
+    def sample_advect(self, layer: int, advection_status: AdvectionProgress, wait_for_compute: bool = False) -> None:
         advect: ComputeShader = ComputeShaderHandler().get('sample_advect')
         self.set_uniform(advect, ['max_sample_points', 'slice_size', 'slice_count', 'grid_cell_size',
                                   'grid_bounding_min', 'grid_cell_count', 'edge_importance_type'])
@@ -249,7 +241,7 @@ class GridProcessor:
                     glFinish()
         advect.barrier()
 
-    def delete(self):
+    def delete(self) -> None:
         self.grid_position_buffer.delete()
         self.grid_density_buffer.delete()
         self.position_ssbo_handler.delete()

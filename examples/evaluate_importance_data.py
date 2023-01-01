@@ -2,7 +2,7 @@ import os.path
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(sys.modules[__name__].__file__), '..')))
+    os.path.dirname(sys.modules[__name__].__file__), '..')))  # type: ignore
 
 if True:
     from data.mnist_data_handler import get_prepared_data

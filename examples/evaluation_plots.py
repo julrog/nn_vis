@@ -4,7 +4,7 @@ import os.path
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(sys.modules[__name__].__file__), '..')))
+    os.path.dirname(sys.modules[__name__].__file__), '..')))  # type: ignore
 
 if True:
     from typing import List
@@ -26,7 +26,7 @@ if True:
     from utility.log_handling import setup_logger
 
 
-def create_importance_data(model_data: ModelData, importance_type: ImportanceType):
+def create_importance_data(model_data: ModelData, importance_type: ImportanceType) -> None:
     pn = ProcessedNetwork(model_data=model_data)
     pn.generate_importance_data('mnist/mnist_train_split%s' % split_suffix,
                                 'mnist/mnist_test_split%s' % split_suffix,
@@ -35,7 +35,7 @@ def create_importance_data(model_data: ModelData, importance_type: ImportanceTyp
     model_data.save_data()
 
 
-def evaluate_importance(model_data: ModelData, importance_type: ImportanceType, importance_calculation: ImportanceCalculation):
+def evaluate_importance(model_data: ModelData, importance_type: ImportanceType, importance_calculation: ImportanceCalculation) -> None:
     model_data.reload_model()
     importance_handler: ImportanceEvaluator = ImportanceEvaluator(model_data)
     importance_handler.setup(importance_type, importance_calculation)

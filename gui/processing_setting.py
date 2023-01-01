@@ -6,7 +6,7 @@ from processing.processing_config import ProcessingConfig
 
 
 class ProcessingSetting:
-    def __init__(self, processing_config: ProcessingConfig, root: LabelFrame):
+    def __init__(self, processing_config: ProcessingConfig, root: LabelFrame) -> None:
         self.processing_config: ProcessingConfig = processing_config
         self.settings: Dict[str, SettingEntry] = {}
 
@@ -15,10 +15,10 @@ class ProcessingSetting:
                 self.settings[key] = SettingEntry(root, self.processing_config.label[key], row=i, column=0,
                                                   variable_type=self.processing_config.value_type[key])
 
-    def set(self):
+    def set(self) -> None:
         for key, setting in self.settings.items():
             setting.set(self.processing_config[key])
 
-    def update_config(self):
+    def update_config(self) -> None:
         for key, setting in self.settings.items():
             self.processing_config[key] = setting.get()

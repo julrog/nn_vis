@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Callable, List, Union
+from typing import Callable, List, Optional, Union
 
 from OpenGL.constant import (Constant, FloatConstant, IntConstant,
                              LongConstant, StringConstant)
@@ -12,7 +12,7 @@ from OpenGL.GL import (GL_ALL_BARRIER_BITS, GL_BLEND, GL_COLOR_BUFFER_BIT,
                        glMemoryBarrier, glPointSize)
 
 
-def clear_screen(clear_color: List[float]):
+def clear_screen(clear_color: List[float]) -> None:
     glClearColor(clear_color[0], clear_color[1],
                  clear_color[2], clear_color[3])
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -25,17 +25,10 @@ class OGLRenderFunction(Enum):
 
 def generate_render_function(ogl_func: OGLRenderFunction,
                              primitive: Union[FloatConstant, IntConstant, LongConstant, StringConstant, Constant],
-                             point_size: float = None, line_width: float = None, add_blending: bool = False,
+                             point_size: Optional[float] = None, line_width: Optional[float] = None, add_blending: bool = False,
                              depth_test: bool = False) -> Callable:
-    ogl_func: OGLRenderFunction = ogl_func
-    primitive: Union[FloatConstant, IntConstant,
-                     LongConstant, StringConstant, Constant] = primitive
-    point_size: float = point_size
-    line_width: float = line_width
-    add_blending: bool = add_blending
-    depth_test: bool = depth_test
 
-    def render_func(element_count: int):
+    def render_func(element_count: int) -> None:
         if add_blending:
             glEnable(GL_BLEND)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)

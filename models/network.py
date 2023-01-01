@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 from pyrr import Vector3
@@ -16,8 +16,8 @@ from opengl_helper.buffer import get_buffer_padding
 
 class NetworkModel:
     def __init__(self, layer: List[int], layer_width: float, layer_distance: float,
-                 importance_data: ImportanceDataHandler = None, processed_nn: ProcessedNNHandler = None,
-                 prune_percentage: float = 0.1):
+                 importance_data: Optional[ImportanceDataHandler] = None, processed_nn: Optional[ProcessedNNHandler] = None,
+                 prune_percentage: float = 0.1) -> None:
         self.layer: List[int] = layer
         self.layer_width: float = layer_width
         self.layer_distance: float = layer_distance
@@ -42,29 +42,29 @@ class NetworkModel:
         self.edge_importance_only: bool = False
 
         if importance_data is not None:
-            self.layer_nodes: List[List[Node]] = create_nodes_with_importance(self.layer, self.bounding_mid,
-                                                                              (self.bounding_volume[0].x,
-                                                                               self.bounding_volume[1].x),
-                                                                              (self.bounding_volume[0].y,
-                                                                               self.bounding_volume[1].y),
-                                                                              (self.bounding_volume[0].z,
-                                                                               self.bounding_volume[1].z),
-                                                                              importance_data.node_importance_data)
+            self.layer_nodes = create_nodes_with_importance(self.layer, self.bounding_mid,
+                                                            (self.bounding_volume[0].x,
+                                                             self.bounding_volume[1].x),
+                                                            (self.bounding_volume[0].y,
+                                                             self.bounding_volume[1].y),
+                                                            (self.bounding_volume[0].z,
+                                                             self.bounding_volume[1].z),
+                                                            importance_data.node_importance_data)
             self.edge_data = importance_data.edge_importance_data
             self.edge_importance_only = True
         elif processed_nn is not None:
-            self.layer_nodes: List[List[Node]] = create_nodes_from_data(
+            self.layer_nodes = create_nodes_from_data(
                 self.layer, processed_nn.node_data)
             self.edge_data = processed_nn.edge_data
             self.sample_data = processed_nn.sample_data
         else:
-            self.layer_nodes: List[List[Node]] = create_random_nodes(self.layer, self.bounding_mid,
-                                                                     (self.bounding_volume[0].x,
-                                                                      self.bounding_volume[1].x),
-                                                                     (self.bounding_volume[0].y,
-                                                                      self.bounding_volume[1].y),
-                                                                     (self.bounding_volume[0].z,
-                                                                      self.bounding_volume[1].z))
+            self.layer_nodes = create_random_nodes(self.layer, self.bounding_mid,
+                                                   (self.bounding_volume[0].x,
+                                                    self.bounding_volume[1].x),
+                                                   (self.bounding_volume[0].y,
+                                                    self.bounding_volume[1].y),
+                                                   (self.bounding_volume[0].z,
+                                                    self.bounding_volume[1].z))
         self.edge_count: int = 0
         for i in range(len(self.layer) - 1):
             self.edge_count += len(self.layer_nodes[i]) * \
@@ -87,7 +87,7 @@ class NetworkModel:
                 node_data.append(node)
         return node_data
 
-    def set_nodes(self, node_data: List[Node]):
+    def set_nodes(self, node_data: List[Node]) -> None:
         read_node_index: int = 0
         for i, layer in enumerate(self.layer_nodes):
             new_nodes = []
@@ -137,7 +137,7 @@ class NetworkModel:
             lowest_importance: float = sorted_importance_list[0]
             highest_importance: float = sorted_importance_list[sorted_importance_list.shape[0] - 1]
             if not lowest_importance == highest_importance:
-                importance_prune_threshold: float = sorted_importance_list[
+                importance_prune_threshold = sorted_importance_list[
                     int(len(edge_importance_values) * self.prune_percentage)]
             else:
                 logging.info(

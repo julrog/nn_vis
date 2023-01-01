@@ -2,7 +2,7 @@ import math
 
 
 class AdvectionProgress:
-    def __init__(self, bandwidth: float, bandwidth_reduction: float, limit: float):
+    def __init__(self, bandwidth: float, bandwidth_reduction: float, limit: float) -> None:
         self.iteration: int = 0
         self.bandwidth: float = bandwidth
         self.bandwidth_reduction: float = bandwidth_reduction
@@ -12,11 +12,11 @@ class AdvectionProgress:
         self.advection_direction: float = 1.0
         self.importance_similarity: float = 0.0
 
-    def reset(self):
+    def reset(self) -> None:
         self.iteration = 0
         self.limit_reached = False
 
-    def iterate(self):
+    def iterate(self) -> None:
         self.iteration += 1
         self.current_bandwidth = self.bandwidth * \
             math.pow(self.bandwidth_reduction, self.iteration)
@@ -41,5 +41,5 @@ class AdvectionProgress:
     def get_advection_strength(self) -> float:
         return self.current_bandwidth * self.advection_direction
 
-    def get_bandwidth_reduction(self):
+    def get_bandwidth_reduction(self) -> float:
         return math.pow(self.bandwidth_reduction, self.iteration)

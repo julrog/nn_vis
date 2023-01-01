@@ -1,3 +1,5 @@
+from typing import Any, Optional
+
 from OpenGL.GL import (GL_CLAMP_TO_EDGE, GL_FALSE, GL_FLOAT, GL_LINEAR,
                        GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, GL_READ_ONLY,
                        GL_READ_WRITE, GL_RGBA, GL_RGBA32F, GL_TEXTURE0,
@@ -12,22 +14,22 @@ from utility.singleton import Singleton
 
 
 class Texture:
-    def __init__(self, width: int, height: int):
+    def __init__(self, width: int, height: int) -> None:
         self.texture_handler: TextureHandler = TextureHandler()
         self.width: int = width
         self.height: int = height
-        self.active_index: int or None = None
+        self.active_index: Optional[int] = None
         self.ogl_handle: int = glGenTextures(1)
         self.texture_position: int = -1
         self.image_position: int = -1
 
     def setup(
         self,
-        position: int = None,
-        data=None,
-        internalformat=GL_RGBA32F,
-        data_type=GL_FLOAT,
-    ):
+        position: Optional[int] = None,
+        data: Optional[Any] = None,
+        internalformat: int = GL_RGBA32F,
+        data_type: int = GL_FLOAT,
+    ) -> None:
         self.bind_as_texture(position)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
@@ -45,7 +47,7 @@ class Texture:
             data,
         )
 
-    def bind_as_texture(self, position: int = None):
+    def bind_as_texture(self, position: Optional[int] = None) -> None:
         if position is None:
             if self.texture_position == -1:
                 raise Exception('No texture position configured.')
@@ -54,7 +56,7 @@ class Texture:
         self.texture_handler.activate(self.texture_position)
         glBindTexture(GL_TEXTURE_2D, self.ogl_handle)
 
-    def bind_as_image(self, flag: str, position=None):
+    def bind_as_image(self, flag: str, position: Optional[int] = None) -> None:
         if position is None:
             if self.image_position == -1:
                 raise Exception('No image position configured!')
@@ -71,21 +73,21 @@ class Texture:
             self.image_position, self.ogl_handle, 0, GL_FALSE, 0, ogl_flag, GL_RGBA32F
         )
 
-    def read(self):
+    def read(self) -> Any:
         self.bind_as_texture()
         data = glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT)
         return data
 
-    def delete(self):
+    def delete(self) -> None:
         glDeleteTextures(1, [self.ogl_handle])
 
 
 class TextureHandler(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         self.max_textures: int = glGetIntegerv(
             GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
 
-    def activate(self, position: int):
+    def activate(self, position: int) -> None:
         if position < 0 or position > self.max_textures:
             raise Exception(
                 "OGL Texture position '%d' not available." % position)

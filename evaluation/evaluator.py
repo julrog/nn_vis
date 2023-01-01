@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 from tensorflow import keras
@@ -13,27 +13,27 @@ from neural_network_preprocessing.importance import (ImportanceCalculation,
 
 
 class ImportanceEvaluator:
-    def __init__(self, model_data: ModelData):
+    def __init__(self, model_data: ModelData) -> None:
         self.model_data: ModelData = model_data
         self.importance_type: ImportanceType = ImportanceType(
             model_data.get_importance_type())
         self.importance_calculation: ImportanceCalculation = ImportanceCalculation.BNN_EDGE
-        self.relevant_classes: List[int] or None = None
+        self.relevant_classes: Optional[List[int]] = None
 
-        self.x_train = None
-        self.y_train = None
-        self.x_test = None
-        self.y_test = None
+        self.x_train: Any = None
+        self.y_train: Any = None
+        self.x_test: Any = None
+        self.y_test: Any = None
 
-    def set_train_and_test_data(self, x_train, y_train, x_test, y_test):
+    def set_train_and_test_data(self, x_train: Any, y_train: Any, x_test: Any, y_test: Any) -> None:
         self.x_train = x_train
         self.y_train = y_train
         self.x_test = x_test
         self.y_test = y_test
 
-    def setup(self, importance_type: ImportanceType,
+    def setup(self, importance_type: ImportanceType = ImportanceType.L1,
               importance_calculation: ImportanceCalculation = ImportanceCalculation.BNN_EDGE,
-              relevant_classes: List[int] = None):
+              relevant_classes: Optional[List[int]] = None) -> None:
         self.importance_type = importance_type
         self.importance_calculation = importance_calculation
         self.relevant_classes = relevant_classes
@@ -62,7 +62,7 @@ class ImportanceEvaluator:
     def prune_model(self,
                     importance_prune_percent: str,
                     importance_data: ImportanceDataHandler,
-                    importance_threshold: float):
+                    importance_threshold: float) -> None:
         data: Dict[Any, Any] = dict()
 
         pruned_edges: int = 0
@@ -127,7 +127,7 @@ class ImportanceEvaluator:
                 true_positive_rate + true_negative_rate) / 2.0
         return accuracy_report
 
-    def test_model(self, importance_prune_percent: str):
+    def test_model(self, importance_prune_percent: str) -> None:
         self.model_data.model.compile(loss=keras.losses.categorical_crossentropy,
                                       optimizer=keras.optimizers.Adam(0.001),
                                       metrics=['accuracy'])
@@ -171,7 +171,7 @@ class ImportanceEvaluator:
             self.importance_calculation.name,
             importance_prune_data)
 
-    def create_evaluation_data(self, step_size: int = 1, start_percentage: int = 0, end_percentage: int = 100):
+    def create_evaluation_data(self, step_size: int = 1, start_percentage: int = 0, end_percentage: int = 100) -> None:
         importance_data: ImportanceDataHandler = ImportanceDataHandler(
             self.model_data.get_path() + get_importance_type_name(self.importance_type) + '.imp.npz')
 

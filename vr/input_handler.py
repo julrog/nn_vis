@@ -1,5 +1,5 @@
 import os
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple
 
 import numpy as np
 import openvr
@@ -54,9 +54,9 @@ class VRInputHandler:
 
         self.hands: List[HandInput] = [HandInput('left'), HandInput('right')]
 
-        self.scaling: int = 0
+        self.scaling: float = 0.0
         self.grabbed: int = 0
-        self.origin: Union[np.ndarray, None] = None
+        self.origin: Optional[np.ndarray] = None
         self.origin_update: bool = False
         self.rotation: List[float] = [0, 0]
         self.reset: bool = False

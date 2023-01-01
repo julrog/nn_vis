@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 from tensorflow import keras
@@ -31,7 +31,7 @@ def get_basic_data(categorical: bool = False) -> Tuple[Tuple[Any, Any], Tuple[An
     return (x_train, y_train), (x_test, y_test), input_shape, num_classes
 
 
-def get_prepared_data(class_selection: List[int] = None) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Any, Any]:
+def get_prepared_data(class_selection: Optional[List[int]] = None) -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Any, Any]:
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
 
     if class_selection is not None:
@@ -61,14 +61,17 @@ def get_prepared_data(class_selection: List[int] = None) -> Tuple[Tuple[Any, Any
     return (x_train, y_train), (x_test, y_test), input_shape, num_classes
 
 
-def get_unbalance_data(main_class: int, other_class_percentage: float, class_selection: List[int] = None) \
+def get_unbalance_data(main_class: int, other_class_percentage: float, class_selection: Optional[List[int]] = None) \
         -> Tuple[Tuple[Any, Any], Tuple[Any, Any], Any, Any]:
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
 
     x_unbalanced_train = []
     y_unbalanced_train = []
+
+    considered_class_count: int = num_classes if class_selection is None else len(
+        class_selection)
     other_class_samples: int = int(
-        other_class_percentage * x_train.shape[0] * (len(class_selection) / num_classes))
+        other_class_percentage * x_train.shape[0] * (considered_class_count / num_classes))
 
     for result, image in zip(y_train, x_train):
         if result == main_class:
@@ -108,50 +111,49 @@ def get_unbalance_data(main_class: int, other_class_percentage: float, class_sel
     return (x_train, y_train), (x_test, y_test), input_shape, num_classes
 
 
-def split_mnist_data(class_selection: List[int] = None):
+def split_mnist_data(class_selection: Optional[List[int]] = None) -> None:
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
     logging.info('splitting %i train examples' % x_train.shape[0])
     logging.info('splitting %i test examples' % x_test.shape[0])
 
-    separated_train_data: List[Tuple[np.array or List[Any], np.array or List[Any]]] = [([], []) for _ in
-                                                                                       range(num_classes)]
-    separated_test_data: List[Tuple[np.array or List[Any], np.array or List[Any]]] = [([], []) for _ in
-                                                                                      range(num_classes)]
-
-    if class_selection is None:
-        class_selection = range(num_classes)
+    separated_train_data: List[Tuple[np.array, np.array]] = [([], []) for _ in
+                                                             range(num_classes)]
+    separated_test_data: List[Tuple[np.array, np.array]] = [([], []) for _ in
+                                                            range(num_classes)]
+    ensured_class_selection: List[int] = list(range(
+        num_classes)) if class_selection is None else class_selection
 
     for result, image in zip(y_train, x_train):
-        if result in class_selection:
+        if result in ensured_class_selection:
             separated_train_data[result][0].append(image)
             separated_train_data[result][1].append(0)
 
     for result, image in zip(y_test, x_test):
-        if result in class_selection:
+        if result in ensured_class_selection:
             separated_test_data[result][0].append(image)
             separated_test_data[result][1].append(0)
 
-    for i, class_id in enumerate(class_selection):
+    for i, class_id in enumerate(ensured_class_selection):
         separated_train_data[i] = (np.array(separated_train_data[class_id][0]).reshape([-1, input_shape[0], 1]),
                                    np.array(separated_train_data[class_id][1]).reshape([-1, 1]))
         separated_test_data[i] = (np.array(separated_test_data[class_id][0]).reshape([-1, input_shape[0], 1]),
                                   np.array(separated_test_data[class_id][1]).reshape([-1, 1]))
 
     processed_separated_train_data: List[Tuple[np.array, np.array]] = [
-        ([], []) for _ in range(len(class_selection))]
+        ([], []) for _ in range(len(ensured_class_selection))]
     processed_separated_test_data: List[Tuple[np.array, np.array]] = [
-        ([], []) for _ in range(len(class_selection))]
-    for i in range(len(class_selection)):
+        ([], []) for _ in range(len(ensured_class_selection))]
+    for i in range(len(ensured_class_selection)):
         processed_separated_train_data[i] = (
             np.copy(separated_train_data[i][0]), np.copy(separated_train_data[i][1]))
         processed_separated_test_data[i] = (
             np.copy(separated_test_data[i][0]), np.copy(separated_test_data[i][1]))
 
-    for i in range(len(class_selection)):
-        for j in range(len(class_selection)):
+    for i in range(len(ensured_class_selection)):
+        for j in range(len(ensured_class_selection)):
             np.random.shuffle(separated_train_data[j][0])
-            split_portion: int = int(
-                len(separated_train_data[j][0]) / len(class_selection))
+            split_portion = int(
+                len(separated_train_data[j][0]) / len(ensured_class_selection))
             processed_separated_train_data[i] = (
                 np.append(
                     processed_separated_train_data[i][0], separated_train_data[j][0][0:split_portion], axis=0),
@@ -159,8 +161,8 @@ def split_mnist_data(class_selection: List[int] = None):
                     split_portion).reshape(-1, 1), axis=0)
             )
             np.random.shuffle(separated_test_data[j][0])
-            split_portion: int = int(
-                len(separated_test_data[j][0]) / len(class_selection))
+            split_portion = int(
+                len(separated_test_data[j][0]) / len(ensured_class_selection))
             processed_separated_test_data[i] = (
                 np.append(
                     processed_separated_test_data[i][0], separated_test_data[j][0][0:split_portion], axis=0),
@@ -168,7 +170,7 @@ def split_mnist_data(class_selection: List[int] = None):
                     split_portion).reshape(-1, 1), axis=0)
             )
 
-    for i, class_id in enumerate(class_selection):
+    for i, class_id in enumerate(ensured_class_selection):
         logging.info('%i train examples for class #%i' %
                      (processed_separated_train_data[i][0].shape[0], class_id))
         logging.info('%i test examples for class #%i' %
@@ -178,15 +180,15 @@ def split_mnist_data(class_selection: List[int] = None):
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
-    if len(class_selection) == num_classes:
+    if len(ensured_class_selection) == num_classes:
         np.savez('%s/mnist_train_split' %
                  data_path, processed_separated_train_data)
         np.savez('%s/mnist_test_split' %
                  data_path, processed_separated_test_data)
     else:
-        np.savez('%s/mnist_train_split_%s' % (data_path, ''.join(str(e) + '_' for e in class_selection)),
+        np.savez('%s/mnist_train_split_%s' % (data_path, ''.join(str(e) + '_' for e in ensured_class_selection)),
                  processed_separated_train_data)
-        np.savez('%s/mnist_test_split_%s' % (data_path, ''.join(str(e) + '_' for e in class_selection)),
+        np.savez('%s/mnist_test_split_%s' % (data_path, ''.join(str(e) + '_' for e in ensured_class_selection)),
                  processed_separated_test_data)
 
     logging.info("saved split data to \"%s\"" % data_path)

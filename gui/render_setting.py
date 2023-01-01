@@ -1,5 +1,5 @@
 from tkinter import Button, IntVar, LabelFrame, Radiobutton
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 from gui.general_setting import SettingEntry
 from rendering.rendering_config import RenderingConfig
@@ -7,7 +7,7 @@ from rendering.rendering_config import RenderingConfig
 
 class RenderSettings:
     def __init__(self, root: LabelFrame, name: str, change_setting_func: Callable, config: RenderingConfig,
-                 render_mode: str, shader_settings: List[str] = None, row: int = 0, column: int = 0):
+                 render_mode: str, shader_settings: Optional[List[str]] = None, row: int = 0, column: int = 0) -> None:
         self.name: str = name
         self.render_frame: LabelFrame = LabelFrame(
             root, text=self.name, width=60, padx=1, pady=1)
@@ -18,7 +18,7 @@ class RenderSettings:
             self.render_frame, text='Shader Settings', padx=1, pady=1)
 
         def create_apply_func(function: Callable, inner_func: Callable) -> Callable:
-            def command():
+            def command() -> None:
                 function(inner_func)
 
             return command
@@ -27,7 +27,7 @@ class RenderSettings:
                                              command=create_apply_func(self.get_settings, change_setting_func))
 
         def create_radio_func(setting_value: int) -> Callable:
-            def command():
+            def command() -> None:
                 change_setting_func(render_mode, setting_value)
 
             return command
@@ -53,6 +53,6 @@ class RenderSettings:
 
         self.get_settings(change_setting_func)
 
-    def get_settings(self, change_setting_func: Callable):
+    def get_settings(self, change_setting_func: Callable) -> None:
         for key, entry in self.shader_settings.items():
             change_setting_func(key, entry.get())

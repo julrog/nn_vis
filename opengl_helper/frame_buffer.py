@@ -11,7 +11,7 @@ from OpenGL.GL import (GL_COLOR_ATTACHMENT0, GL_DEPTH_ATTACHMENT,
 
 
 class FrameBufferObject:
-    def __init__(self, width: int, height: int):
+    def __init__(self, width: int, height: int) -> None:
         self.handle: int = glGenFramebuffers(1)
         self.color_handle: int = glGenRenderbuffers(1)
         self.depth_handle: int = glGenRenderbuffers(1)
@@ -19,7 +19,7 @@ class FrameBufferObject:
         self.height: int = height
         self.load()
 
-    def load(self):
+    def load(self) -> None:
         glBindFramebuffer(GL_FRAMEBUFFER, self.handle)
 
         glBindRenderbuffer(GL_RENDERBUFFER, self.color_handle)
@@ -43,10 +43,10 @@ class FrameBufferObject:
                             GL_RGBA, GL_UNSIGNED_BYTE)
         return data
 
-    def bind(self):
+    def bind(self) -> None:
         glBindFramebuffer(GL_FRAMEBUFFER, self.handle)
 
-    def delete(self):
+    def delete(self) -> None:
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
         glDeleteRenderbuffers(1, [self.color_handle])
         glDeleteRenderbuffers(1, [self.depth_handle])

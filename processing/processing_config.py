@@ -1,10 +1,10 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from utility.config import BaseConfig
 
 
 class ProcessingConfig(BaseConfig):
-    def __init__(self, name: str = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         if name is None:
             super().__init__('processing')
         else:
@@ -14,7 +14,7 @@ class ProcessingConfig(BaseConfig):
         self.value_type: Dict[str, str] = dict()
         self.set_defaults()
 
-    def set_defaults(self):
+    def set_defaults(self) -> None:
         setting_items: List[Tuple[str, str, str, Any]] = []
         setting_items.extend([('layer_distance', 'Layer distance', 'float', 0.5),
                               ('layer_width', 'Layer width', 'float', 1.0),

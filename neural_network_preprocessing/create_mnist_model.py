@@ -1,5 +1,5 @@
 import logging
-from typing import Any, List
+from typing import Any, List, Optional
 
 import numpy as np
 from sklearn.metrics import classification_report
@@ -43,8 +43,8 @@ def build_mnist_model(layer_data: List[int], num_classes: int, input_shape: Any,
 
 
 def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learning_rate: float = 0.001,
-           regularized: bool = False, train_type: ModelTrainType = ModelTrainType.BALANCED, main_class: int = None,
-           other_class_percentage: float = None, class_selection: List[int] = None) -> ModelData:
+           regularized: bool = False, train_type: ModelTrainType = ModelTrainType.BALANCED, main_class: Optional[int] = None,
+           other_class_percentage: Optional[float] = None, class_selection: Optional[List[int]] = None) -> ModelData:
     logging.info(
         "Create MNIST neural network model with training type \"%s\"." % train_type.name)
 
@@ -52,6 +52,12 @@ def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learn
         (x_train, y_train), (x_test,
                              y_test), input_shape, num_classes = get_prepared_data(class_selection)
     else:
+        if main_class is None:
+            raise Exception(
+                'No main class is given for creating an unbalanced dataset.')
+        if other_class_percentage is None:
+            raise Exception(
+                'No percentage of other classes is given for creating an unbalanced dataset.')
         (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_unbalance_data(main_class,
                                                                                             other_class_percentage,
                                                                                             class_selection)
@@ -102,7 +108,7 @@ def evaluate_model(model_data: ModelData, x_train: Any, y_train: Any, x_test: An
     return model_data
 
 
-def calculate_performance_of_model(model_data: ModelData):
+def calculate_performance_of_model(model_data: ModelData) -> ModelData:
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_prepared_data()
 
     logging.info('Train examples: %i' % x_train.shape[0])

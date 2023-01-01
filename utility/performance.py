@@ -1,13 +1,14 @@
 import time
+from typing import Any, Callable, Optional
 
 from utility.file import FileHandler
 
 running_times = []
 
 
-def track_time(_func=None, *, track_recursive: bool = True):
-    def track_time_inner(func):
-        def tracked_func(*args, **kwargs):
+def track_time(_func: Optional[Callable] = None, *, track_recursive: bool = True) -> Callable:
+    def track_time_inner(func: Callable) -> Callable:
+        def tracked_func(*args: Any, **kwargs: Any) -> Any:
             global running_times
             start_time = time.perf_counter()
             running_times.append(start_time)

@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 from sklearn.metrics import classification_report
@@ -15,12 +15,12 @@ from neural_network_preprocessing.modify_model import modify_model
 
 
 class ProcessedNetwork:
-    def __init__(self, model_data: ModelData, store_path: str = None):
+    def __init__(self, model_data: ModelData, store_path: Optional[str] = None) -> None:
         self.model_data: ModelData = model_data
         self.name: str = 'Undefined'
         self.num_classes: int = -1
         self.path: str = store_path if model_data is None else model_data.get_path()
-        self.original_name: str = None if model_data is None else model_data.name
+        self.original_name: Optional[str] = None if model_data is None else model_data.name
 
         self.model_data.reload_model()
         self.architecture_data: List[int] = []
@@ -89,7 +89,7 @@ class ProcessedNetwork:
 
         return modified_model
 
-    def extract_importance_from_model(self, original_model: Model, fine_tuned_model: Model):
+    def extract_importance_from_model(self, original_model: Model, fine_tuned_model: Model) -> None:
         count: int = 0
         for layer in fine_tuned_model.layers:
             if layer.__class__.__name__ == 'BatchNormalization':
@@ -98,7 +98,7 @@ class ProcessedNetwork:
                 count += 1
 
         if not self.edge_importance_set:
-            count: int = 0
+            count = 0
             for i, layer in enumerate(original_model.layers):
                 if layer.__class__.__name__ == 'Dense':
                     self.edge_importance_value[count] = original_model.layers[i].get_weights()[
@@ -137,7 +137,7 @@ class ProcessedNetwork:
 
     def generate_importance_data(self, train_data_path: str, test_data_path: str,
                                  importance_type: ImportanceType = ImportanceType(
-                                     ImportanceType.GAMMA | ImportanceType.L1)):
+                                     ImportanceType.GAMMA | ImportanceType.L1)) -> None:
         self.importance_type = importance_type
         self.model_data.set_importance_type(importance_type)
         self.name = get_importance_type_name(self.importance_type)

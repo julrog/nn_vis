@@ -1,6 +1,6 @@
 import math
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from definitions import (ADDITIONAL_EDGE_BUFFER_DATA,
                          ADDITIONAL_NODE_BUFFER_DATA, BASE_PATH)
@@ -55,7 +55,7 @@ def get_buffer_id(position: int) -> str:
 
 
 class RenderShaderHandler(metaclass=Singleton):
-    def __init__(self):
+    def __init__(self) -> None:
         self.shader_dir: str = os.path.join(BASE_PATH, 'shader_src')
         self.shader_list: Dict[str, RenderShader] = dict()
         self.num_classes: int = 10  # default value
@@ -63,7 +63,7 @@ class RenderShaderHandler(metaclass=Singleton):
 
         self.set_classification_number(self.num_classes)
 
-    def set_classification_number(self, num_classes: int):
+    def set_classification_number(self, num_classes: int) -> None:
         self.num_classes = num_classes
         self.static_var_map['$num_classes$'] = str(num_classes)
         self.static_var_map['$nodebuffer_average$'] = get_buffer_id(
@@ -87,7 +87,7 @@ class RenderShaderHandler(metaclass=Singleton):
             os.path.join(self.shader_dir, shader_setting.vertex))
         fragment_src: str = self.get_processed_src(
             os.path.join(self.shader_dir, shader_setting.fragment))
-        geometry_src: str or None = None
+        geometry_src: Optional[str] = None
         if shader_setting.geometry is not None:
             geometry_src = self.get_processed_src(
                 os.path.join(self.shader_dir, shader_setting.geometry))
@@ -110,13 +110,16 @@ class RenderShaderHandler(metaclass=Singleton):
         processed_line: str = line
 
         for static, value in self.static_var_map.items():
-            processed_line: str = processed_line.replace(static, value)
+            processed_line = processed_line.replace(static, value)
 
         if '$$' in processed_line:
+            new_line: str = ''
+            added: bool = False
+
             for node_buffer_group in range(
                     int(math.ceil((self.num_classes + (ADDITIONAL_NODE_BUFFER_DATA - 4)) / 4.0))):
-                new_line: str = processed_line
-                added: bool = False
+                new_line = processed_line
+                added = False
                 if '$r_nodebuffer_group_id$' in new_line:
                     new_line = new_line.replace(
                         '$r_nodebuffer_group_id$', str(node_buffer_group))
@@ -130,8 +133,8 @@ class RenderShaderHandler(metaclass=Singleton):
                         new_line.replace('//$$', '').replace('$$', '')
 
             for edge_buffer_group in range(int(math.ceil((self.num_classes * 2 + ADDITIONAL_EDGE_BUFFER_DATA) / 4))):
-                new_line: str = processed_line
-                added: bool = False
+                new_line = processed_line
+                added = False
                 if '$r_edgebuffer_group_id$' in new_line:
                     new_line = new_line.replace(
                         '$r_edgebuffer_group_id$', str(edge_buffer_group))
@@ -145,8 +148,8 @@ class RenderShaderHandler(metaclass=Singleton):
                         new_line.replace('//$$', '').replace('$$', '')
 
             for class_id in range(self.num_classes):
-                new_line: str = processed_line
-                added: bool = False
+                new_line = processed_line
+                added = False
                 if '$r_class_color$' in new_line:
                     new_line = new_line.replace(
                         '$r_class_color$', CLASS_COLOR[class_id])

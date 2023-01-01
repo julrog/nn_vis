@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional
 
 import numpy as np
 import openvr
@@ -17,7 +17,7 @@ class VRHandler:
         self.vr_compositor: openvr.IVRCompositor = openvr.VRCompositor()
         poses_t = openvr.TrackedDevicePose_t * openvr.k_unMaxTrackedDeviceCount
         self.poses: List[openvr.TrackedDevicePose_t] = poses_t()
-        self.head_to_world: Union[np.ndarray, None] = None
+        self.head_to_world: Optional[np.ndarray] = None
         w, h = self.vr_system.getRecommendedRenderTargetSize()
         self.window_width: int = w
         self.window_height: int = h

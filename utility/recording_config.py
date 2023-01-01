@@ -1,12 +1,12 @@
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 
+from definitions import ProcessRenderMode
 from utility.camera import CameraPose
 from utility.config import BaseConfig
-from utility.types import ProcessRenderMode
 
 
 class RecordingConfig(BaseConfig):
-    def __init__(self, name: str = None):
+    def __init__(self, name: Optional[str] = None) -> None:
         if name is None:
             super().__init__('recording')
         else:
@@ -14,7 +14,7 @@ class RecordingConfig(BaseConfig):
 
         self.set_defaults()
 
-    def set_defaults(self):
+    def set_defaults(self) -> None:
         render_setting_items: List[Tuple[str, Any]] = []
         render_setting_items.extend([('screenshot_width', 1600),
                                      ('screenshot_height', 900),

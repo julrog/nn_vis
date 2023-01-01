@@ -10,7 +10,7 @@ from definitions import BASE_PATH
 from utility.file import EvaluationFile
 
 
-def setup_plot():
+def setup_plot() -> None:
     plt.rc('font', size=14)
     plt.rc('axes', titlesize=14)
     plt.rc('axes', labelsize=14)
@@ -26,7 +26,7 @@ def load_data(name: str, importance_name: str, timed_name: bool = False) -> Dict
     return evaluation_file.data_cache[importance_name]
 
 
-def save_plot(name: str):
+def save_plot(name: str) -> None:
     directory_path: str = os.path.join(
         BASE_PATH, os.path.join('storage', 'evaluation'))
     if not os.path.exists(directory_path):
@@ -37,7 +37,7 @@ def save_plot(name: str):
     plt.savefig(file_path)
 
 
-def create_importance_plot(filename: str, importance_name: str, timed_name: bool = False, show: bool = False):
+def create_importance_plot(filename: str, importance_name: str, timed_name: bool = False, show: bool = False) -> None:
     data: Dict[Any, Any] = load_data(filename, importance_name, timed_name)
 
     converted_data: List[List[Any]] = []
@@ -76,7 +76,7 @@ def create_importance_plot(filename: str, importance_name: str, timed_name: bool
 
 
 def create_importance_plot_compare_regularizer(filename: str, importance_names: List[str], check_importance_type: str,
-                                               timed_name: bool = False, show: bool = False):
+                                               timed_name: bool = False, show: bool = False) -> None:
     plt.rcParams['legend.loc'] = 'lower left'
     converted_data: List[List[Any]] = []
     for importance_name in importance_names:
@@ -117,7 +117,7 @@ def create_importance_plot_compare_regularizer(filename: str, importance_names: 
 
 
 def create_importance_plot_compare_bn_parameter(filename: str, importance_names: List[str], check_importance_type: str,
-                                                timed_name: bool = False, show: bool = False):
+                                                timed_name: bool = False, show: bool = False) -> None:
     converted_data: List[List[Any]] = []
     for importance_name in importance_names:
         data: Dict[Any, Any] = load_data(filename, importance_name, timed_name)
@@ -154,7 +154,7 @@ def create_importance_plot_compare_bn_parameter(filename: str, importance_names:
 def create_importance_plot_compare_class_vs_all(filename: str, importance_name: str, class_index: int,
                                                 check_importance_type: str, class_specific_data: bool = True,
                                                 timed_name: bool = False,
-                                                show: bool = False):
+                                                show: bool = False) -> None:
     converted_data: List[List[Any]] = []
 
     importance_data_name: str = '%s_[%s]' % (
@@ -191,7 +191,7 @@ def create_importance_plot_compare_class_vs_all(filename: str, importance_name: 
 
 def create_importance_plot_compare_classes_vs_all(filename: str, importance_name: str, check_importance_type: str,
                                                   class_specific_data: bool = True, timed_name: bool = False,
-                                                  show: bool = False):
+                                                  show: bool = False) -> None:
     converted_data: List[List[Any]] = []
 
     for i in range(10):

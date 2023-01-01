@@ -16,7 +16,7 @@ from utility.performance import track_time
 
 
 class NodeRenderer(Renderer):
-    def __init__(self, node_processor: NodeProcessor, grid: Grid):
+    def __init__(self, node_processor: NodeProcessor, grid: Grid) -> None:
         Renderer.__init__(self)
         self.node_processor = node_processor
         self.grid = grid
@@ -43,7 +43,7 @@ class NodeRenderer(Renderer):
         def generate_element_count_func(np: NodeProcessor) -> Callable:
             buffered_np: NodeProcessor = np
 
-            def element_count_func():
+            def element_count_func() -> int:
                 return buffered_np.get_buffer_points()
 
             return element_count_func
@@ -64,7 +64,7 @@ class NodeRenderer(Renderer):
         self.create_sets(self.data_handler)
 
     @track_time
-    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig = None, show_class: int = 0):
+    def render(self, set_name: str, cam: BaseCamera, config: RenderingConfig, show_class: int = 0) -> None:
         current_set: BaseRenderSet = self.sets[set_name]
         near: float = 0.0
         far: float = 0.0
@@ -79,5 +79,5 @@ class NodeRenderer(Renderer):
         current_set.set_uniform_labeled_data(config)
         current_set.render()
 
-    def delete(self):
+    def delete(self) -> None:
         self.data_handler.delete()
