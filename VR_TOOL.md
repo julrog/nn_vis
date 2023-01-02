@@ -21,6 +21,10 @@ This tool can be used to render a processed neural network in VR.
 
 * `python start_tool_vr.py`
 
+Or
+
+* Run `start_tool.py --demo` to download data of an already processed model and render it.
+
 ## Controls
 
 Using Oculus Quest 2 controller:
@@ -35,7 +39,7 @@ Using Oculus Quest 2 controller:
 
 
 ### GUI
-See [README.md](./README.md)) for information on the desktop GUI
+See [README.md](./README.md) for information on the desktop GUI
 
 ## Used Systems
 

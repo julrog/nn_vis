@@ -21,7 +21,15 @@ Artificial neural networks is a popular field of research in artificial intellig
 2. Create a neural network model and process it. An example of this process is given in `examples/process_mnist_model.py` on [MNIST](http://yann.lecun.com/exdb/mnist/) data.
 3. Start the visualization tool `start_tool.py` and select the neural network via `Load Processed Network` to render the representation of the neural network.
 
+Or
+
+1. Run `start_tool.py --demo` to download data of an already processed model and render it.
+
 Multiple scripts are located in `examples`, which can be adapted to create and process neural networks. `examples/evaluation_plots.py` for example can be used to recreate the evaluation data and plots of my thesis.
+
+### Sample Model Importance
+
+A processed model can be found [here](https://drive.google.com/file/d/1LiVzBfB7LPrR95q_VO44wx4MyGNTj6vD/view?usp=sharing).
 
 ## Rendering Tool
 The visualization tool `start_tool.py` can be used to render and/or process neural networks. Instead of existing ones, you can also generate random networks and process them of various sizes. For neural networks the visualization results in a more structured view of a neural network in regards to their trained parameters compared to the most common ones.

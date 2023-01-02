@@ -1,11 +1,17 @@
 import logging
+import ntpath
+import os
 import threading
 import time
+import zipfile
+from argparse import ArgumentParser
 from typing import Optional
 
+import wget
 from OpenGL.GL import GL_MAJOR_VERSION, GL_MINOR_VERSION, glGetIntegerv
 
-from definitions import CameraPose
+from data.data_handler import ProcessedNNHandler
+from definitions import DATA_PATH, CameraPose
 from gui.constants import StatisticLink
 from gui.ui_window import OptionGui
 from opengl_helper.screenshot import create_screenshot
@@ -15,13 +21,34 @@ from utility.log_handling import setup_logger
 from utility.performance import track_time
 from utility.window import Window, WindowHandler
 
-global options_gui
-options_gui = OptionGui()
-setup_logger('tool')
+
+def download_and_unzip_sample() -> str:
+    output_directory = DATA_PATH
+    filename = wget.download(
+        'https://drive.google.com/uc?export=download&id=1LiVzBfB7LPrR95q_VO44wx4MyGNTj6vD', out=output_directory)
+    zip_filepath = os.path.join(output_directory, filename)
+    with zipfile.ZipFile(zip_filepath, 'r') as zip_ref:
+        zip_ref.extractall(DATA_PATH)
+    return os.path.join(DATA_PATH, 'sample_model.npz')
+
+
+def open_processed_network(option_gui: OptionGui, filename: str) -> None:
+    data_loader: ProcessedNNHandler = ProcessedNNHandler(filename)
+    option_gui.processing_config['prune_percentage'] = 0.9
+    option_gui.processing_setting.set()
+    option_gui.settings['network_name'] = ntpath.basename(
+        filename) + '_processed'
+    option_gui.update_layer(data_loader.layer_data, processed_nn=data_loader)
 
 
 def compute_render(some_name: str) -> None:
     global options_gui
+    global use_sample
+
+    if use_sample:
+        global sample_filepath
+        logging.info('Loading sample model...')
+        open_processed_network(options_gui, sample_filepath)
 
     width, height = 1920, 1200
 
@@ -72,6 +99,7 @@ def compute_render(some_name: str) -> None:
     if not options_gui.settings['Closed']:
         print('Start building network: ' +
               str(options_gui.settings['current_layer_data']))
+        options_gui.settings['update_model'] = False
         network_processor = NetworkProcessor(options_gui.settings['current_layer_data'],
                                              options_gui.processing_config,
                                              importance_data=options_gui.settings['importance_data'],
@@ -154,9 +182,39 @@ def compute_render(some_name: str) -> None:
     options_gui.destroy()
 
 
-compute_render_thread: threading.Thread = threading.Thread(
-    target=compute_render, args=(1,))
-compute_render_thread.setDaemon(True)
-compute_render_thread.start()
+def parse_args() -> bool:
+    parser = ArgumentParser(prog='Start nn_vis tool')
+    parser.add_argument('--demo', action='store_true',
+                        help='Download sample of a processed model and render it with 90% pruned edges instead of generating a random model.')
+    args = parser.parse_args()
+    return args.demo
 
-options_gui.start()
+
+if __name__ == '__main__':
+    global options_gui
+    options_gui = OptionGui()
+
+    global sample_filepath
+    sample_filepath = 'sample_model.npz'
+
+    global use_sample
+    use_sample = parse_args()
+
+    setup_logger('tool')
+
+    if use_sample:
+        expected_sample_path = os.path.join(DATA_PATH, sample_filepath)
+        if not os.path.exists(expected_sample_path):
+            logging.info(
+                f'Downloading sample model to "{expected_sample_path}". This might take a minute ...')
+            sample_filepath = download_and_unzip_sample()
+        else:
+            logging.info(
+                f'Using sample model at "{expected_sample_path}"')
+            sample_filepath = expected_sample_path
+    compute_render_thread: threading.Thread = threading.Thread(
+        target=compute_render, args=(1,))
+    compute_render_thread.setDaemon(True)
+    compute_render_thread.start()
+
+    options_gui.start()
