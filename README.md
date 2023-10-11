@@ -8,8 +8,8 @@ Visualization of neural network architectures and parameters.
 
 ## News
 
-(11.10.2023) Fixed bugs with demo and evaluation scripts, also added more example networks
-(30.12.2022) Added VR support (see [VR_TOOL.md](./VR_TOOL.md))
+* (11.10.2023) Fixed bugs with demo and evaluation scripts, also added more example networks
+* (30.12.2022) Added VR support (see [VR_TOOL.md](./VR_TOOL.md))
 
 ## Description
 
