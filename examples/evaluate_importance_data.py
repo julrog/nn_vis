@@ -13,7 +13,7 @@ if True:
 
 setup_logger('sample_evaluation')
 
-name: str = 'default_all'
+name: str = 'default'
 model_data: ModelData = ModelData(name)
 model_data.reload_model()
 importance_handler: ImportanceEvaluator = ImportanceEvaluator(model_data)

@@ -50,7 +50,7 @@ setup_logger('evaluation')
 logging.info('Evaluation will take some time...')
 setup_plot()
 
-name: str = 'default_all'
+name: str = 'default'
 layer_data: List[int] = [81, 49]
 
 model_data: ModelData = create(
