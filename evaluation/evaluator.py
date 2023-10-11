@@ -142,11 +142,11 @@ class ImportanceEvaluator:
                      (test_score[0], test_score[1]))
 
         truth_train: np.array = np.argmax(self.y_train, axis=1)
-        prediction_train: np.array = self.model_data.model.predict_classes(
-            self.x_train)
+        predict_train: np.array = self.model_data.model.predict(self.x_train)
+        prediction_train: np.array = np.argmax(predict_train, axis=1)
         truth_test: np.array = np.argmax(self.y_test, axis=1)
-        prediction_test: np.array = self.model_data.model.predict_classes(
-            self.x_test)
+        predict_test: np.array = self.model_data.model.predict(self.x_test)
+        prediction_test: np.array = np.argmax(predict_test, axis=1)
 
         train_class_accuracy_report: Dict[str, Any] = self.accuracy_report(
             truth_train, prediction_train)

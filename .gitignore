@@ -133,5 +133,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/storage/
+/storage/*
+!/storage/data
+/storage/data/*
 /scripts/
+!/storage/data/.gitkeep

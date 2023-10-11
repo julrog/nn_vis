@@ -25,11 +25,11 @@ from utility.window import Window, WindowHandler
 def download_and_unzip_sample() -> str:
     output_directory = DATA_PATH
     filename = wget.download(
-        'https://drive.google.com/uc?export=download&id=1LiVzBfB7LPrR95q_VO44wx4MyGNTj6vD', out=output_directory)
+        'https://drive.google.com/uc?export=download&id=1EpsubJhHH4shqzDhsBB0SHsBjWgWa03S', out=output_directory)
     zip_filepath = os.path.join(output_directory, filename)
     with zipfile.ZipFile(zip_filepath, 'r') as zip_ref:
         zip_ref.extractall(DATA_PATH)
-    return os.path.join(DATA_PATH, 'sample_model.npz')
+    return os.path.join(DATA_PATH, 'sample_model.pro.npz')
 
 
 def open_processed_network(option_gui: OptionGui, filename: str) -> None:
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     options_gui = OptionGui()
 
     global sample_filepath
-    sample_filepath = 'sample_model.npz'
+    sample_filepath = 'sample_model.pro.npz'
 
     global use_sample
     use_sample = parse_args()
