@@ -8,5 +8,5 @@ progressbar2==3.53.1
 PyOpenGL==3.1.5
 pyrr==0.10.3
 scikit_learn==0.24.0
-tensorflow==2.9.3
+tensorflow==2.11.1
 wget==3.2
