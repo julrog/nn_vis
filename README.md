@@ -8,9 +8,9 @@ Visualization of neural network architectures and parameters.
 
 ## News
 
-(13.10.2023) Added docker (see [DOCKER.md](./docs/DOCKER.md)) and docker image (see [here](https://hub.docker.com/repository/docker/julrog/nn_vis))
-(11.10.2023) Fixed bugs with demo and evaluation scripts, also added more example networks
-(30.12.2022) Added VR support (see [VR_TOOL.md](./docs/VR_TOOL.md))
+- (13.10.2023) Added docker (see [DOCKER.md](./docs/DOCKER.md)) and docker image (see [here](https://hub.docker.com/repository/docker/julrog/nn_vis))
+- (11.10.2023) Fixed bugs with demo and evaluation scripts, also added more example networks
+- (30.12.2022) Added VR support (see [VR_TOOL.md](./docs/VR_TOOL.md))
 
 ## Description
 
