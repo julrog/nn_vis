@@ -138,3 +138,5 @@ dmypy.json
 /storage/data/*
 /scripts/
 !/storage/data/.gitkeep
+/configs/*
+!/configs/.gitkeep
