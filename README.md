@@ -8,8 +8,9 @@ Visualization of neural network architectures and parameters.
 
 ## News
 
-* (11.10.2023) Fixed bugs with demo and evaluation scripts, also added more example networks
-* (30.12.2022) Added VR support (see [VR_TOOL.md](./VR_TOOL.md))
+- (13.10.2023) Added docker (see [DOCKER.md](./docs/DOCKER.md)) and docker image (see [here](https://hub.docker.com/repository/docker/julrog/nn_vis))
+- (11.10.2023) Fixed bugs with demo and evaluation scripts, also added more example networks
+- (30.12.2022) Added VR support (see [VR_TOOL.md](./docs/VR_TOOL.md))
 
 ## Description
 
@@ -45,7 +46,11 @@ The visualization tool `start_tool.py` can be used to render and/or process neur
 
 ### VR
 
-See [VR_TOOL.md](./VR_TOOL.md) for more info.
+See [VR_TOOL.md](./docs/VR_TOOL.md) for more info.
+
+### Docker
+
+See [DOCKER.md](./docs/DOCKER.md) for more info.
 
 ### Example
 
