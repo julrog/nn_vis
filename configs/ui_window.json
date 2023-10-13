@@ -5,8 +5,8 @@
   "monitor_id": null,
   "screen_height": 900,
   "screen_width": 1600,
-  "screen_x": 98,
-  "screen_y": 424,
+  "screen_x": 0,
+  "screen_y": 0,
   "title": "NNVis Render",
   "width": 1600
 }

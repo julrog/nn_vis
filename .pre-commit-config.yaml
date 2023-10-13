@@ -5,7 +5,7 @@ repos:
       - id: mypy
         args: [--ignore-missing-imports, --disallow-untyped-defs, --disallow-incomplete-defs, --disallow-untyped-calls]
   - repo: https://github.com/timothycrosley/isort
-    rev: 5.10.1
+    rev: 5.12.0
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/mirrors-autopep8
