@@ -1,0 +1,10 @@
+{
+  "customizations": {
+    "vscode": {}
+  },
+  "dockerComposeFile": "docker-compose.yml",
+  "name": "NN_vis Dev",
+  "postCreateCommand": "git config --global --add safe.directory /workspaces/nn_vis && sudo pre-commit install",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspaces/nn_vis"
+}
