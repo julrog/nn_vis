@@ -8,17 +8,36 @@ Visualization of neural network architectures and parameters.
 
 ## News
 
+- (23.11.2023) Master Thesis published [[link]](https://kola.opus.hbz-nrw.de/frontdoor/index/index/docId/2445) [[pdf]](https://kola.opus.hbz-nrw.de/files/2445/masterthesis_julian_rogawski.pdf)
 - (13.10.2023) Added docker (see [DOCKER.md](./docs/DOCKER.md)) and docker image (see [here](https://hub.docker.com/repository/docker/julrog/nn_vis))
 - (11.10.2023) Fixed bugs with demo and evaluation scripts, also added more example networks
 - (30.12.2022) Added VR support (see [VR_TOOL.md](./docs/VR_TOOL.md))
 
-## Description
+## Thesis
 
-This project was done for my master thesis. A general description can be taken from the thesis:
+This project was done for my master's thesis. A general description can be taken from the thesis:
 
 ### Abstract
 
 Artificial neural networks is a popular field of research in artificial intelligence. The increasing size and complexity of huge models entail certain problems. The lack of transparency of the inner workings of a neural network makes it difficult to choose efficient architectures for different tasks. It proves to be challenging to solve these problems, and with a lack of insightful representations of neural networks, this state of affairs becomes entrenched. With these difficulties in mind a novel 3D visualization technique is introduced. Attributes for trained neural networks are estimated by utilizing established methods from the area of neural network optimization. Batch normalization is used with fine-tuning and feature extraction to estimate the importance of different parts of the neural network. A combination of the importance values with various methods like edge bundling, ray tracing, 3D impostor and a special transparency technique results in a 3D model representing a neural network. The validity of the extracted importance estimations is demonstrated and the potential of the developed visualization is explored.
+
+### Full
+
+Can be found at the university's publication server [[link]](https://kola.opus.hbz-nrw.de/frontdoor/index/index/docId/2445) [[pdf]](https://kola.opus.hbz-nrw.de/files/2445/masterthesis_julian_rogawski.pdf)
+
+### Cite
+If you use my work in your research, please cite it by using the following BibTeX entry:
+
+```latex
+@mastersthesis{Rogawski2023,
+  author      = {Julian Rogawski},
+  title       = {Visualization of Neural Networks},
+  type        = {masterthesis},
+  pages       = {ii, 48},
+  school      = {Universit{\"a}t Koblenz, Universit{\"a}tsbibliothek},
+  year        = {2023},
+}
+```
 
 ## How to use
 
