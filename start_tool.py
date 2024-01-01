@@ -59,8 +59,8 @@ def compute_render(some_name: str) -> None:
     window.set_callbacks()
     window.activate()
 
-    logging.info('OpenGL Version: %d.%d' % (glGetIntegerv(
-        GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION)))
+    logging.info(
+        f'OpenGL Version: {glGetIntegerv(GL_MAJOR_VERSION)}.{glGetIntegerv(GL_MINOR_VERSION)}')
 
     network_processor: Optional[NetworkProcessor] = None
 
@@ -147,7 +147,7 @@ def compute_render(some_name: str) -> None:
             frame_count += 1
             if time.perf_counter() - check_time > 1.0:
                 options_gui.settings[StatisticLink.FPS].set(float(
-                    '{:.2f}'.format(float(frame_count - checked_frame_count) / (time.perf_counter() - check_time))))
+                    f'{float(frame_count - checked_frame_count) / (time.perf_counter() - check_time):.2f}'))
                 checked_frame_count = frame_count
                 check_time = time.perf_counter()
             if 'save_file' in options_gui.settings.keys() and options_gui.settings['save_file']:

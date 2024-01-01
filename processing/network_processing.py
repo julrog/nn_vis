@@ -41,7 +41,7 @@ class NetworkProcessor:
                  importance_data: Optional[ImportanceDataHandler] = None,
                  processed_nn: Optional[ProcessedNNHandler] = None) -> None:
         logging.info(
-            'Prepare network processing for network of size: %s' % layer_nodes)
+            f'Prepare network processing for network of size: {layer_nodes}')
         self.layer_nodes: List[int] = layer_nodes
         self.layer_distance: float = processing_config['layer_distance']
         self.layer_width: float = processing_config['layer_width']
@@ -116,8 +116,8 @@ class NetworkProcessor:
     def process(self, action_mode: NetworkProcess) -> None:
         if self.last_action_mode is not action_mode:
             if action_mode == NetworkProcess.RESET:
-                logging.info('Resample %i edges' %
-                             self.edge_processor.get_edge_count())
+                logging.info(
+                    f'Resample {self.edge_processor.get_edge_count()} edges')
                 self.edge_processor.sample_edges()
                 self.edge_processor.check_limits()
             else:
@@ -163,7 +163,7 @@ class NetworkProcessor:
 
     def node_advection(self, reverse: bool = False) -> None:
         if self.bar is None:
-            logging.info('Advect %i nodes' % len(self.node_processor.nodes))
+            logging.info(f'Advect {len(self.node_processor.nodes)} nodes')
             self.bar = ProgressBar(
                 max_value=self.node_advection_status.get_max_iterations())
             self.bar.start()
@@ -188,8 +188,8 @@ class NetworkProcessor:
 
     def edge_advection(self, reverse: bool = False) -> None:
         if self.bar is None:
-            logging.info('Advect %i edges' %
-                         self.edge_processor.get_edge_count())
+            logging.info(
+                f'Advect {self.edge_processor.get_edge_count()} edges')
             self.bar = ProgressBar(
                 max_value=self.edge_advection_status.get_max_iterations())
             self.bar.start()

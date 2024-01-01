@@ -67,8 +67,8 @@ class ProcessedNetwork:
 
         train_score = modified_model.evaluate(x_train, y_train, verbose=0)
         test_score = modified_model.evaluate(x_test, y_test, verbose=0)
-        logging.info('Class %i: Train loss: %f, Train accuracy: %f, Test loss: %f, Test accuracy: %f' % (
-            class_index, train_score[0], train_score[1], test_score[0], test_score[1]))
+        logging.info(
+            f'Class {class_index}: Train loss: {train_score[0]:f}, Train accuracy: {train_score[1]:f}, Test loss: {test_score[0]:f}, Test accuracy: {test_score[1]:f}')
 
         c_y_test = np.argmax(y_test, axis=1)
         prediction_test = np.argmax(modified_model.predict(x_test), axis=1)
@@ -84,7 +84,7 @@ class ProcessedNetwork:
         fine_tuned_data['test_accuracy'] = str(test_score[1])
         fine_tuned_data['classification_report'] = c_report
 
-        self.model_data.store_data('modified_fine_tuned_performance', self.name, 'class_%i' % class_index,
+        self.model_data.store_data('modified_fine_tuned_performance', self.name, f'class_{class_index}',
                                    fine_tuned_data)
 
         return modified_model
@@ -109,17 +109,17 @@ class ProcessedNetwork:
     def generate_importance_for_data(self, train_data_path: str, test_data_path: str) -> Tuple[List[np.array],
                                                                                                List[np.array]]:
         raw_train_data: dict = np.load(
-            '%s/%s.npz' % (DATA_PATH, train_data_path), allow_pickle=True)
+            f'{DATA_PATH}/{train_data_path}.npz', allow_pickle=True)
         train_data: List[np.array] = raw_train_data['arr_0']
 
         raw_test_data: dict = np.load(
-            '%s/%s.npz' % (DATA_PATH, test_data_path), allow_pickle=True)
+            f'{DATA_PATH}/{test_data_path}.npz', allow_pickle=True)
         test_data: List[np.array] = raw_test_data['arr_0']
 
         if (len(train_data) is not self.num_classes and self.num_classes is not None) or (
                 len(test_data) is not self.num_classes and self.num_classes is not None):
             raise Exception(
-                'Data does not match number of classes %i.' % self.num_classes)
+                f'Data does not match number of classes {self.num_classes}.')
 
         for i, (class_test_data, class_train_data) in enumerate(zip(test_data, train_data)):
             fine_tuned_model = self.get_fine_tuned_model_data(
@@ -160,8 +160,8 @@ class ProcessedNetwork:
                         max_node_importance = node_class_importance
             normalized_node_importance_data.append(
                 normalized_layer_importance / max_node_importance)
-            logging.info('Node importance - Min: %f, Max: %f' %
-                         (min_node_importance, max_node_importance))
+            logging.info(
+                f'Node importance - Min: {min_node_importance:f}, Max: {max_node_importance:f}')
         node_importance_data = normalized_node_importance_data
 
         normalized_edge_importance_data: List[np.array] = []
@@ -179,8 +179,8 @@ class ProcessedNetwork:
                     min_edge_importance = current_edge_min
                 absolute_layer_data /= max_edge_importance
                 new_layer_data.append(absolute_layer_data)
-            logging.info('Edge importance - Min: %f, Max: %f' %
-                         (min_edge_importance, max_edge_importance))
+            logging.info(
+                f'Edge importance - Min: {min_edge_importance:f}, Max: {max_edge_importance:f}')
             normalized_edge_importance_data.append(
                 np.stack(new_layer_data, axis=0))
         edge_importance_data = normalized_edge_importance_data

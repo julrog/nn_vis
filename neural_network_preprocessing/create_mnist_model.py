@@ -46,7 +46,7 @@ def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learn
            regularized: bool = False, train_type: ModelTrainType = ModelTrainType.BALANCED, main_class: Optional[int] = None,
            other_class_percentage: Optional[float] = None, class_selection: Optional[List[int]] = None) -> ModelData:
     logging.info(
-        "Create MNIST neural network model with training type \"%s\"." % train_type.name)
+        f"Create MNIST neural network model with training type \"{train_type.name}\".")
 
     if train_type is not ModelTrainType.UNBALANCED:
         (x_train, y_train), (x_test,
@@ -61,8 +61,8 @@ def create(name: str, batch_size: int, epochs: int, layer_data: List[int], learn
         (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_unbalance_data(main_class,
                                                                                             other_class_percentage,
                                                                                             class_selection)
-    logging.info('Train examples: %i' % x_train.shape[0])
-    logging.info('Test examples: %i' % x_test.shape[0])
+    logging.info(f'Train examples: {x_train.shape[0]}')
+    logging.info(f'Test examples: {x_test.shape[0]}')
 
     if class_selection is not None:
         num_classes = len(class_selection)
@@ -93,8 +93,8 @@ def evaluate_model(model_data: ModelData, x_train: Any, y_train: Any, x_test: An
         -> ModelData:
     train_score = model_data.model.evaluate(x_train, y_train, verbose=0)
     test_score = model_data.model.evaluate(x_test, y_test, verbose=0)
-    logging.info('Train loss: %f, Train accuracy: %f, Test loss: %f, Test accuracy: %f' % (
-        train_score[0], train_score[1], test_score[0], test_score[1]))
+    logging.info(
+        f'Train loss: {train_score[0]:f}, Train accuracy: {train_score[1]:f}, Test loss: {test_score[0]:f}, Test accuracy: {test_score[1]:f}')
 
     c_y_test = np.argmax(y_test, axis=1)
 
@@ -111,8 +111,8 @@ def evaluate_model(model_data: ModelData, x_train: Any, y_train: Any, x_test: An
 def calculate_performance_of_model(model_data: ModelData) -> ModelData:
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_prepared_data()
 
-    logging.info('Train examples: %i' % x_train.shape[0])
-    logging.info('Test examples: %i' % x_test.shape[0])
+    logging.info(f'Train examples: {x_train.shape[0]}')
+    logging.info(f'Test examples: {x_test.shape[0]}')
 
     model_data.reload_model()
     model_data.model.compile(loss=keras.losses.categorical_crossentropy, optimizer=keras.optimizers.Adam(0.001),

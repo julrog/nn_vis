@@ -42,7 +42,7 @@ def uniform_setter_function(uniform_setter: str) -> Callable:
 
         return uniform_func_3iv
     raise Exception(
-        "Uniform setter function for '%s' not defined." % uniform_setter)
+        f"Uniform setter function for '{uniform_setter}' not defined.")
 
 
 class ShaderSetting:

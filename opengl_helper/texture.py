@@ -90,5 +90,5 @@ class TextureHandler(metaclass=Singleton):
     def activate(self, position: int) -> None:
         if position < 0 or position > self.max_textures:
             raise Exception(
-                "OGL Texture position '%d' not available." % position)
+                f"OGL Texture position '{position}' not available.")
         glActiveTexture(GL_TEXTURE0 + position)

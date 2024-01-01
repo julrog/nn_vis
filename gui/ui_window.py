@@ -44,7 +44,7 @@ class OptionGui:
 
         self.gui_root.protocol('WM_DELETE_WINDOW', self.on_closing)
         self.gui_root.geometry(
-            '+%d+%d' % (self.window_config['screen_x'], self.window_config['screen_y']))
+            f"+{self.window_config['screen_x']}+{self.window_config['screen_y']}")
         self.gui_root.bind('<Configure>', self.handle_configure)
 
     def start(self, layer_data: Optional[List[int]] = None) -> None:

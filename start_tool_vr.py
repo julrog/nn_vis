@@ -56,8 +56,7 @@ def compute_render(_: str) -> None:
     vr_handler: VRHandler = VRHandler()
 
     logging.info(
-        'OpenGL Version: %d.%d'
-        % (glGetIntegerv(GL_MAJOR_VERSION), glGetIntegerv(GL_MINOR_VERSION))
+        f'OpenGL Version: {glGetIntegerv(GL_MAJOR_VERSION)}.{glGetIntegerv(GL_MINOR_VERSION)}'
     )
 
     network_processor: Optional[NetworkProcessor] = None
@@ -172,10 +171,7 @@ def compute_render(_: str) -> None:
             if time.perf_counter() - check_time > 1.0:
                 options_gui.settings[StatisticLink.FPS].set(
                     float(
-                        '{:.2f}'.format(
-                            float(frame_count - checked_frame_count)
-                            / (time.perf_counter() - check_time)
-                        )
+                        f'{float(frame_count - checked_frame_count) / (time.perf_counter() - check_time):.2f}'
                     )
                 )
                 checked_frame_count = frame_count

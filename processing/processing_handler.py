@@ -24,12 +24,12 @@ class ProcessingHandler:
         window.set_callbacks()
         window.activate()
 
-        importance_data_path: str = DATA_PATH + 'model/%s/%s.imp.npz' % (self.network_name,
-                                                                         self.importance_data_name)
+        importance_data_path: str = DATA_PATH + \
+            f'model/{self.network_name}/{self.importance_data_name}.imp.npz'
 
         if not os.path.exists(importance_data_path):
-            raise Exception("Importance data '%s' for model '%s' is not yet created." % (self.network_name,
-                                                                                         self.importance_data_name))
+            raise Exception(
+                f"Importance data '{self.network_name}' for model '{self.importance_data_name}' is not yet created.")
 
         importance_data: ImportanceDataHandler = ImportanceDataHandler(
             importance_data_path)
@@ -55,8 +55,8 @@ class ProcessingHandler:
         self.processor.reset_edges()
         self.process_loop()
 
-        self.processor.save_model(DATA_PATH + 'model/%s/%s.pro.npz' % (self.network_name,
-                                                                       self.importance_data_name))
+        self.processor.save_model(
+            DATA_PATH + f'model/{self.network_name}/{self.importance_data_name}.pro.npz')
         self.clean_up()
 
     def clean_up(self) -> None:
@@ -154,8 +154,8 @@ class RecordingProcessingHandler(ProcessingHandler):
                 self.frame_buffer.bind()
             self.viewed_process_loop()
 
-        self.processor.save_model(DATA_PATH + 'model/%s/%s.pro.npz' %
-                                  (self.network_name, self.importance_data_name))
+        self.processor.save_model(
+            DATA_PATH + f'model/{self.network_name}/{self.importance_data_name}.pro.npz')
 
         if self.recording_config['screenshot_mode']:
             if self.frame_buffer is not None:
