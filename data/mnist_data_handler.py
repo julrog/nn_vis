@@ -181,14 +181,12 @@ def split_mnist_data(class_selection: Optional[List[int]] = None) -> None:
         os.makedirs(data_path)
 
     if len(ensured_class_selection) == num_classes:
-        np.savez('%s/mnist_train_split' %
-                 data_path, processed_separated_train_data)
-        np.savez('%s/mnist_test_split' %
-                 data_path, processed_separated_test_data)
+        np.savez(f'{data_path}/mnist_train_split', processed_separated_train_data)
+        np.savez(f'{data_path}/mnist_test_split', processed_separated_test_data)
     else:
-        np.savez('%s/mnist_train_split_%s' % (data_path, ''.join(str(e) + '_' for e in ensured_class_selection)),
+        np.savez(f"{data_path}/mnist_train_split_{''.join(str(e) + '_' for e in ensured_class_selection)}",
                  processed_separated_train_data)
-        np.savez('%s/mnist_test_split_%s' % (data_path, ''.join(str(e) + '_' for e in ensured_class_selection)),
+        np.savez(f"{data_path}/mnist_test_split_{''.join(str(e) + '_' for e in ensured_class_selection)}",
                  processed_separated_test_data)
 
     logging.info("saved split data to \"%s\"" % data_path)
