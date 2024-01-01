@@ -17,11 +17,11 @@ class FileHandler(metaclass=Singleton):
         self.day_key: str = datetime.utcfromtimestamp(
             datetime.timestamp(datetime.now().replace(tzinfo=timezone.utc).astimezone())).strftime(
             '%Y-%m-%d')
-        os.makedirs('%s/stats' % self.storage_path, exist_ok=True)
+        os.makedirs(f'{self.storage_path}/stats', exist_ok=True)
 
     def read_statistics(self) -> None:
         try:
-            with open('%s/stats/%s.json' % (self.storage_path, self.day_key), 'r') as stats_file:
+            with open(f'{self.storage_path}/stats/{self.day_key}.json', 'r') as stats_file:
                 file_data = stats_file.read()
                 if file_data:
                     self.stats_cache = json.loads(file_data)
@@ -31,7 +31,7 @@ class FileHandler(metaclass=Singleton):
                                 self.stats_cache[name][time] = [
                                     time_stat_slice]
         except FileNotFoundError:
-            with open('%s/stats/%s.json' % (self.storage_path, self.day_key), 'w+'):
+            with open(f'{self.storage_path}/stats/{self.day_key}.json', 'w+'):
                 pass
 
     def append_statistics(self, data: Dict[str, Any]) -> None:
@@ -55,7 +55,7 @@ class FileHandler(metaclass=Singleton):
                     self.stats_cache[name][time] = reduce(
                         lambda a, b: a + b, time_stat_slice) / len(time_stat_slice)
 
-        with open('%s/stats/%s.json' % (self.storage_path, self.day_key), 'w') as stats_file:
+        with open(f'{self.storage_path}/stats/{self.day_key}.json', 'w') as stats_file:
             stats_file.write(json.dumps(self.stats_cache))
 
 
@@ -73,9 +73,7 @@ class EvaluationFile:
             '%Y-%m-%d')
 
     def read_data(self, timed_file: bool = True) -> None:
-        file_path: str = '%s/%s_%s.json' % (
-            self.directory_path, self.name, self.day_key) if timed_file else '%s/%s.json' % (
-            self.directory_path, self.name)
+        file_path: str = f'{self.directory_path}/{self.name}_{self.day_key}.json' if timed_file else f'{self.directory_path}/{self.name}.json'
         try:
             with open(file_path, 'r') as stats_file:
                 file_data = stats_file.read()
@@ -104,7 +102,7 @@ class EvaluationFile:
             self.data_cache[key][sub_key][sub_sub_key].update(data)
 
     def write_data(self) -> None:
-        with open('%s/%s_%s.json' % (self.directory_path, self.name, self.day_key), 'w') as stats_file:
+        with open(f'{self.directory_path}/{self.name}_{self.day_key}.json', 'w') as stats_file:
             json.dump(self.data_cache, stats_file, sort_keys=True, indent=2)
 
 
@@ -114,7 +112,7 @@ class DictFile:
         if not os.path.exists(self.directory_path):
             os.makedirs(self.directory_path)
         self.name = name
-        self.file_path: str = '%s/%s.json' % (self.directory_path, self.name)
+        self.file_path: str = f'{self.directory_path}/{self.name}.json'
 
     def read_data(self, data: Dict) -> Dict:
         read_data = dict()

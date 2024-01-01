@@ -113,8 +113,8 @@ def get_unbalance_data(main_class: int, other_class_percentage: float, class_sel
 
 def split_mnist_data(class_selection: Optional[List[int]] = None) -> None:
     (x_train, y_train), (x_test, y_test), input_shape, num_classes = get_basic_data()
-    logging.info('splitting %i train examples' % x_train.shape[0])
-    logging.info('splitting %i test examples' % x_test.shape[0])
+    logging.info(f'splitting {x_train.shape[0]} train examples')
+    logging.info(f'splitting {x_test.shape[0]} test examples')
 
     separated_train_data: List[Tuple[np.array, np.array]] = [([], []) for _ in
                                                              range(num_classes)]
@@ -171,24 +171,24 @@ def split_mnist_data(class_selection: Optional[List[int]] = None) -> None:
             )
 
     for i, class_id in enumerate(ensured_class_selection):
-        logging.info('%i train examples for class #%i' %
-                     (processed_separated_train_data[i][0].shape[0], class_id))
-        logging.info('%i test examples for class #%i' %
-                     (processed_separated_test_data[i][0].shape[0], class_id))
+        logging.info(
+            f'{processed_separated_train_data[i][0].shape[0]} train examples for class #{class_id}')
+        logging.info(
+            f'{processed_separated_test_data[i][0].shape[0]} test examples for class #{class_id}')
 
     data_path: str = DATA_PATH + 'mnist'
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
     if len(ensured_class_selection) == num_classes:
-        np.savez('%s/mnist_train_split' %
-                 data_path, processed_separated_train_data)
-        np.savez('%s/mnist_test_split' %
-                 data_path, processed_separated_test_data)
-    else:
-        np.savez('%s/mnist_train_split_%s' % (data_path, ''.join(str(e) + '_' for e in ensured_class_selection)),
+        np.savez(f'{data_path}/mnist_train_split',
                  processed_separated_train_data)
-        np.savez('%s/mnist_test_split_%s' % (data_path, ''.join(str(e) + '_' for e in ensured_class_selection)),
+        np.savez(f'{data_path}/mnist_test_split',
+                 processed_separated_test_data)
+    else:
+        np.savez(f"{data_path}/mnist_train_split_{''.join(str(e) + '_' for e in ensured_class_selection)}",
+                 processed_separated_train_data)
+        np.savez(f"{data_path}/mnist_test_split_{''.join(str(e) + '_' for e in ensured_class_selection)}",
                  processed_separated_test_data)
 
-    logging.info("saved split data to \"%s\"" % data_path)
+    logging.info(f"saved split data to \"{data_path}\"")

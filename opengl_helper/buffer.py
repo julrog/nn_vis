@@ -54,8 +54,8 @@ class BufferObject:
         self.size = data.nbytes
         if self.ssbo:
             if data.nbytes > self.max_ssbo_size:
-                raise Exception('Data to big for SSBO (%d bytes, max %d bytes).' % (
-                    data.nbytes, self.max_ssbo_size))
+                raise Exception(
+                    f'Data to big for SSBO ({data.nbytes} bytes, max {self.max_ssbo_size} bytes).')
 
             glBindBuffer(GL_SHADER_STORAGE_BUFFER, self.handle)
             glBufferData(GL_SHADER_STORAGE_BUFFER,
@@ -185,7 +185,7 @@ class OverflowingBufferObject:
             empty = np.zeros(int(self.max_ssbo_size / 4), dtype=dtype)
             buffer_count = math.ceil(
                 int(size / component_size) / int(self.max_ssbo_size / (component_size * self.object_size * 4)))
-            logging.info('Data split into %i buffer' % buffer_count)
+            logging.info(f'Data split into {buffer_count} buffer')
             for i in range(buffer_count):
                 if i >= len(self.handle):
                     self.handle.append(glGenBuffers(1))

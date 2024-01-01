@@ -106,4 +106,4 @@ class ModelData:
         for index, layer in enumerate(self.model.layers):
             if layer.__class__.__name__ not in SUPPORTED_LAYER and layer.__class__.__name__ not in IGNORED_LAYER:
                 raise Exception(
-                    "'%s' layer type of model not supported!" % layer.__class__.__name__)
+                    f"'{layer.__class__.__name__}' layer type of model not supported!")

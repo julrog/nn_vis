@@ -100,7 +100,7 @@ class ImportanceEvaluator:
             self.importance_calculation.name,
             data)
 
-        logging.info('Pruned edges: %i' % pruned_edges)
+        logging.info(f'Pruned edges: {pruned_edges}')
 
     def accuracy_report(self, truths: np.array, predictions: np.array) -> Dict[str, Any]:
         accuracy_report: Dict[str, Any] = dict()
@@ -136,10 +136,10 @@ class ImportanceEvaluator:
         test_score = self.model_data.model.evaluate(
             self.x_test, self.y_test, verbose=0)
 
-        logging.info('Train loss: %f, Train accuracy: %f' %
-                     (train_score[0], train_score[1]))
-        logging.info('Test loss: %f, Test accuracy: %f' %
-                     (test_score[0], test_score[1]))
+        logging.info(
+            f'Train loss: {train_score[0]:f}, Train accuracy: {train_score[1]:f}')
+        logging.info(
+            f'Test loss: {test_score[0]:f}, Test accuracy: {test_score[1]:f}')
 
         truth_train: np.array = np.argmax(self.y_train, axis=1)
         predict_train: np.array = self.model_data.model.predict(self.x_train)

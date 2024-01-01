@@ -79,7 +79,7 @@ def plot_histogram(path: str) -> None:
         pdf = KernelDensity(kernel='epanechnikov', bandwidth=bandwidth).fit(
             z_values).score_samples(x_grid[:, None])
         ax.plot(x_grid, np.exp(pdf), linewidth=2, alpha=0.6,
-                label='bandwidth=%.2f' % bandwidth)
+                label=f'bandwidth={bandwidth:.2f}')
 
     ax.hist(z_values, slots, facecolor='gray',
             histtype='stepfilled', alpha=0.4, density=True)

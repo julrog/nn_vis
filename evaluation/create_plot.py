@@ -31,9 +31,9 @@ def save_plot(name: str) -> None:
         BASE_PATH, os.path.join('storage', 'evaluation'))
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
-    file_path: str = '%s/%s.svg' % (directory_path, name)
+    file_path: str = f'{directory_path}/{name}.svg'
     plt.savefig(file_path)
-    file_path = '%s/%s.jpg' % (directory_path, name)
+    file_path = f'{directory_path}/{name}.jpg'
     plt.savefig(file_path)
 
 
@@ -65,7 +65,7 @@ def create_importance_plot(filename: str, importance_name: str, timed_name: bool
     plot.axvline(x=90, color='red')
     trans = transforms.blended_transform_factory(
         plot.get_yticklabels()[0].get_transform(), plot.transData)
-    plot.text(0.9, -0.025, '{:.0f}'.format(90), color='red', transform=trans,
+    plot.text(0.9, -0.025, f'{90:.0f}', color='red', transform=trans,
               va='bottom', ha='center')
 
     save_plot(importance_name)
@@ -106,10 +106,10 @@ def create_importance_plot_compare_regularizer(filename: str, importance_names: 
     plot.axvline(x=90, color='red')
     trans = transforms.blended_transform_factory(
         plot.get_yticklabels()[0].get_transform(), plot.transData)
-    plot.text(0.9, -0.025, '{:.0f}'.format(90), color='red', transform=trans,
+    plot.text(0.9, -0.025, f'{90:.0f}', color='red', transform=trans,
               va='bottom', ha='center')
 
-    save_plot('regularizer_compare_%s' % check_importance_type)
+    save_plot(f'regularizer_compare_{check_importance_type}')
 
     if show:
         plt.show()
@@ -144,7 +144,7 @@ def create_importance_plot_compare_bn_parameter(filename: str, importance_names:
     for line in plot.lines:
         plt.setp(line, linewidth=3, alpha=0.6)
 
-    save_plot('bn_parameter_compare_%s' % check_importance_type)
+    save_plot(f'bn_parameter_compare_{check_importance_type}')
 
     if show:
         plt.show()
@@ -157,10 +157,9 @@ def create_importance_plot_compare_class_vs_all(filename: str, importance_name: 
                                                 show: bool = False) -> None:
     converted_data: List[List[Any]] = []
 
-    importance_data_name: str = '%s_[%s]' % (
-        check_importance_type, class_index) if class_specific_data else check_importance_type
+    importance_data_name: str = f'{check_importance_type}_[{class_index}]' if class_specific_data else check_importance_type
     overall_importance_label_name: str = 'all_classes'
-    class_importance_label_name: str = 'class_[%s]' % class_index
+    class_importance_label_name: str = f'class_[{class_index}]'
     data: Dict[Any, Any] = load_data(filename, importance_name, timed_name)
 
     for percent, percent_data in data.items():
@@ -181,8 +180,8 @@ def create_importance_plot_compare_class_vs_all(filename: str, importance_name: 
     plot: Axes = df.plot(legend=True)
     plot.set_ylabel('Prediction Accuracy')
 
-    save_plot('%s_class_compare_%s_%i' %
-              (importance_name, check_importance_type, class_index))
+    save_plot(
+        f'{importance_name}_class_compare_{check_importance_type}_{class_index}')
 
     if show:
         plt.show()
@@ -195,9 +194,8 @@ def create_importance_plot_compare_classes_vs_all(filename: str, importance_name
     converted_data: List[List[Any]] = []
 
     for i in range(10):
-        importance_data_name: str = '%s_[%s]' % (
-            check_importance_type, i) if class_specific_data else check_importance_type
-        class_importance_label_name: str = "Digit \"%s\"" % i
+        importance_data_name: str = f'{check_importance_type}_[{i}]' if class_specific_data else check_importance_type
+        class_importance_label_name: str = f"Digit \"{i}\""
         data: Dict[Any, Any] = load_data(filename, importance_name, timed_name)
 
         for percent, percent_data in data.items():
@@ -223,7 +221,7 @@ def create_importance_plot_compare_classes_vs_all(filename: str, importance_name
     for line in plot.lines:
         plt.setp(line, linewidth=3, alpha=0.7)
 
-    save_plot('%s_class_compare_%s' % (importance_name, check_importance_type))
+    save_plot(f'{importance_name}_class_compare_{check_importance_type}')
 
     if show:
         plt.show()

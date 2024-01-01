@@ -33,13 +33,13 @@ basic_model_data: ModelData = create(name=name, batch_size=128, epochs=15, layer
 split_suffix: str = ''
 if class_selection is not None:
     ('_' + ''.join(str(e) + '_' for e in class_selection))
-if not os.path.exists('%smnist/mnist_train_split%s' % (DATA_PATH, split_suffix)) or not os.path.exists(
-        '%smnist/mnist_test_split' % DATA_PATH):
+if not os.path.exists(f'{DATA_PATH}mnist/mnist_train_split{split_suffix}') or not os.path.exists(
+        f'{DATA_PATH}mnist/mnist_test_split'):
     split_mnist_data(class_selection)
 
 pn = ProcessedNetwork(model_data=basic_model_data)
-pn.generate_importance_data('mnist/mnist_train_split%s' % split_suffix,
-                            'mnist/mnist_test_split%s' % split_suffix,
+pn.generate_importance_data(f'mnist/mnist_train_split{split_suffix}',
+                            f'mnist/mnist_test_split{split_suffix}',
                             importance_type)
 basic_model_data.store_model_data()
 basic_model_data.save_data()
