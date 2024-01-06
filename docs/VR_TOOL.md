@@ -1,6 +1,6 @@
 <h1 align="center">VR TOOL</h2>
 <p align="center">
-<img align="center" src="./docs/images/vr_tool.gif" />
+<img align="center" src="./images/vr_tool.gif" />
 </p>
 <p align="center">
 Visualization of neural network architectures and parameters in VR.
